@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__godot-ai__filesystem_manage",
+      "mcp__godot-ai__scene_manage",
+      "mcp__godot-ai__node_create",
+      "mcp__godot-ai__node_set_property",
+      "mcp__godot-ai__script_attach",
+      "mcp__godot-ai__scene_save",
+      "mcp__godot-ai__project_run",
+      "mcp__godot-ai__logs_read"
+    ]
+  }
+}
