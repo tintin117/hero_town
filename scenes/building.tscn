@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/building.gd" id="1_building"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_click"]
+size = Vector2(120, 116)
+
+[node name="Building" type="Node2D"]
+script = ExtResource("1_building")
+
+[node name="WallVisual" type="Polygon2D" parent="."]
+color = Color(0.6, 0.42, 0.22, 1)
+polygon = PackedVector2Array(-54, -62, 54, -62, 54, 0, -54, 0)
+
+[node name="RoofVisual" type="Polygon2D" parent="."]
+color = Color(0.42, 0.2, 0.1, 1)
+polygon = PackedVector2Array(-60, -62, 60, -62, 0, -116)
+
+[node name="ClickArea" type="Area2D" parent="."]
+monitorable = false
+
+[node name="ClickShape" type="CollisionShape2D" parent="ClickArea"]
+position = Vector2(0, -58)
+shape = SubResource("RectangleShape2D_click")

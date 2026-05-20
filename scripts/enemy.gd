@@ -12,6 +12,7 @@ var attack_range := 40.0
 var hero: CharacterBody2D = null
 
 @onready var attack_timer: Timer = $AttackTimer
+@onready var health_bar: Node2D = $HealthBar
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -39,6 +40,7 @@ func _on_attack_timer_timeout() -> void:
 
 func take_damage(amount: int) -> void:
 	hp -= amount
+	health_bar.update_bar(hp, max_hp)
 	if hp <= 0:
 		die()
 

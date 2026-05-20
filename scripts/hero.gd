@@ -16,6 +16,7 @@ var enemies_in_range: Array = []
 
 @onready var attack_timer: Timer = $AttackTimer
 @onready var detection_area: Area2D = $DetectionArea
+@onready var health_bar: Node2D = $HealthBar
 
 func _ready() -> void:
 	attack_timer.timeout.connect(_on_attack_timer_timeout)
@@ -92,5 +93,7 @@ func _pick_target() -> void:
 
 func take_damage(amount: int) -> void:
 	hp -= amount
+	health_bar.update_bar(hp, max_hp)
 	if hp <= 0:
 		hp = max_hp
+		health_bar.update_bar(hp, max_hp)

@@ -8,7 +8,11 @@
       "mcp__godot-ai__script_attach",
       "mcp__godot-ai__scene_save",
       "mcp__godot-ai__project_run",
-      "mcp__godot-ai__logs_read"
+      "mcp__godot-ai__logs_read",
+      "mcp__godot-ai__editor_state",
+      "mcp__godot-ai__scene_get_hierarchy",
+      "mcp__godot-ai__editor_screenshot",
+      "mcp__godot-ai__project_manage"
     ]
   }
 }
