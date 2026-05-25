@@ -12,7 +12,7 @@ offset_bottom = 648.0
 color = Color(0.13, 0.55, 0.13, 1)
 
 [node name="Ground" type="ColorRect" parent="."]
-offset_top = 400.0
+offset_top = 597.0
 offset_right = 1152.0
 offset_bottom = 648.0
 color = Color(0.42, 0.28, 0.13, 1)

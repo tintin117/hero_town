@@ -7,7 +7,7 @@ const EnemyScene := preload("res://scenes/enemy.tscn")
 const BuildingScene := preload("res://scenes/building.tscn")
 
 const TILE_SIZE := 64
-const GROUND_Y := 400.0
+const GROUND_Y := 900.0
 const BUILDING_COSTS := {"house": 30}
 const BUILDING_FOOTPRINTS := {"house": Vector2i(2, 1)}
 const SAVE_PATH := "user://buildings.sav"
