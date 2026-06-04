@@ -1,39 +1,39 @@
-[gd_scene load_steps=3 format=3 uid="uid://ncuvc5qu5rx8"]
+[gd_scene format=3 uid="uid://ncuvc5qu5rx8"]
 
 [ext_resource type="Script" uid="uid://byitqubjl1h7d" path="res://scripts/main.gd" id="1_o5qli"]
 [ext_resource type="Script" uid="uid://cfy6x4daulm4w" path="res://scripts/grid_overlay.gd" id="2_grid"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=1894447199]
 script = ExtResource("1_o5qli")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=1114928400]
 offset_right = 1152.0
 offset_bottom = 648.0
 color = Color(0.13, 0.55, 0.13, 1)
 
-[node name="Ground" type="ColorRect" parent="."]
+[node name="Ground" type="ColorRect" parent="." unique_id=1725012947]
 offset_top = 597.0
 offset_right = 1152.0
 offset_bottom = 648.0
 color = Color(0.42, 0.28, 0.13, 1)
 
-[node name="BuildingLayer" type="Node2D" parent="."]
+[node name="BuildingLayer" type="Node2D" parent="." unique_id=618799245]
 
-[node name="GridOverlay" type="Node2D" parent="."]
+[node name="GridOverlay" type="Node2D" parent="." unique_id=323876990]
 visible = false
 script = ExtResource("2_grid")
 
-[node name="HeroesLayer" type="Node2D" parent="."]
+[node name="HeroesLayer" type="Node2D" parent="." unique_id=2022093565]
 
-[node name="EnemiesLayer" type="Node2D" parent="."]
+[node name="EnemiesLayer" type="Node2D" parent="." unique_id=1148683616]
 
-[node name="EnemySpawner" type="Timer" parent="."]
+[node name="EnemySpawner" type="Timer" parent="." unique_id=1333914735]
 wait_time = 3.0
 autostart = true
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=1047692910]
 
-[node name="GoldLabel" type="Label" parent="UI"]
+[node name="GoldLabel" type="Label" parent="UI" unique_id=403653761]
 offset_left = 16.0
 offset_top = 16.0
 offset_right = 70.0

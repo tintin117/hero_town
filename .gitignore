@@ -1,3 +1,4 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+new_geh_dev_run_claude_code.bat

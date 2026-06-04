@@ -1,7 +1,14 @@
-[gd_scene load_steps=5 format=3 uid="uid://ci5sdkn2w1tmi"]
+[gd_scene load_steps=12 format=3 uid="uid://ci5sdkn2w1tmi"]
 
 [ext_resource type="Script" uid="uid://daeeycfiy1iax" path="res://scripts/hero.gd" id="1_3uyx6"]
 [ext_resource type="Script" uid="uid://df75gt6jsadq" path="res://scripts/health_bar.gd" id="2_hbar"]
+[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Cape.png" id="3_cape"]
+[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Body.png" id="4_body"]
+[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Leg.png" id="5_leg"]
+[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Leg2.png" id="6_leg2"]
+[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Head.png" id="7_head"]
+[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Mouth.png" id="8_mouth"]
+[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Weapon.png" id="9_weapon"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yvbpl"]
 size = Vector2(32, 32)
@@ -12,9 +19,38 @@ radius = 150.0
 [node name="Hero" type="CharacterBody2D"]
 script = ExtResource("1_3uyx6")
 
-[node name="Visual" type="Polygon2D" parent="."]
-color = Color(0.2, 0.45, 0.9, 1)
-polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+[node name="Visual" type="Node2D" parent="."]
+scale = Vector2(0.4, 0.4)
+
+[node name="Cape" type="Sprite2D" parent="Visual"]
+texture = ExtResource("3_cape")
+position = Vector2(0, -5)
+
+[node name="Body" type="Sprite2D" parent="Visual"]
+texture = ExtResource("4_body")
+
+[node name="Leg" type="Sprite2D" parent="Visual"]
+texture = ExtResource("5_leg")
+position = Vector2(-8, 25)
+offset = Vector2(0, 10)
+
+[node name="Leg2" type="Sprite2D" parent="Visual"]
+texture = ExtResource("6_leg2")
+position = Vector2(8, 25)
+offset = Vector2(0, 10)
+
+[node name="Head" type="Sprite2D" parent="Visual"]
+texture = ExtResource("7_head")
+position = Vector2(0, -62)
+
+[node name="Mouth" type="Sprite2D" parent="Visual"]
+texture = ExtResource("8_mouth")
+position = Vector2(5, -53)
+
+[node name="Weapon" type="Sprite2D" parent="Visual"]
+texture = ExtResource("9_weapon")
+position = Vector2(42, -25)
+offset = Vector2(0, 46)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_yvbpl")
@@ -26,5 +62,8 @@ shape = SubResource("CircleShape2D_06baw")
 
 [node name="AttackTimer" type="Timer" parent="."]
 
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+
 [node name="HealthBar" type="Node2D" parent="."]
+position = Vector2(0, -32)
 script = ExtResource("2_hbar")
