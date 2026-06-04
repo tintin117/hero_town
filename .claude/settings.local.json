@@ -14,7 +14,13 @@
       "mcp__godot-ai__editor_screenshot",
       "mcp__godot-ai__project_manage",
       "Bash(Get-ChildItem -Path \"D:\\\\Personal Stuff\\\\Godot\\\\hero_town\\\\asset\\\\\" -Recurse | Select-Object FullName, PSIsContainer | Format-Table -AutoSize)",
-      "PowerShell(head -30)"
+      "PowerShell(head -30)",
+      "Bash(Get-ChildItem -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(python3)",
+      "Bash(ls \"D:\\\\Optics Team\\\\Godot\\\\[Optics] Hero_Town_GDD\")",
+      "Read(//d/Optics Team/Godot/[Optics] Hero_Town_GDD/**)",
+      "Bash(dir /s *.html)"
     ]
   }
 }

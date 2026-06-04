@@ -2,13 +2,13 @@
 
 [ext_resource type="Script" uid="uid://daeeycfiy1iax" path="res://scripts/hero.gd" id="1_3uyx6"]
 [ext_resource type="Script" uid="uid://df75gt6jsadq" path="res://scripts/health_bar.gd" id="2_hbar"]
-[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Cape.png" id="3_cape"]
-[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Body.png" id="4_body"]
-[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Leg.png" id="5_leg"]
-[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Leg2.png" id="6_leg2"]
-[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Head.png" id="7_head"]
-[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Mouth.png" id="8_mouth"]
-[ext_resource type="Texture2D" path="res://asset/2D Minimal Characters/PNG/character/character_1/Weapon.png" id="9_weapon"]
+[ext_resource type="Texture2D" uid="uid://bdey6cl23sqg4" path="res://asset/2D Minimal Characters/PNG/character/character_1/Cape.png" id="3_cape"]
+[ext_resource type="Texture2D" uid="uid://bs68haw0qqqs5" path="res://asset/2D Minimal Characters/PNG/character/character_1/Body.png" id="4_body"]
+[ext_resource type="Texture2D" uid="uid://c1m8h8x4mhdg3" path="res://asset/2D Minimal Characters/PNG/character/character_1/Leg.png" id="5_leg"]
+[ext_resource type="Texture2D" uid="uid://bech4k7w6ns6r" path="res://asset/2D Minimal Characters/PNG/character/character_1/Leg2.png" id="6_leg2"]
+[ext_resource type="Texture2D" uid="uid://ci5lfmile1x7h" path="res://asset/2D Minimal Characters/PNG/character/character_1/Head.png" id="7_head"]
+[ext_resource type="Texture2D" uid="uid://bs0f6bb31rew3" path="res://asset/2D Minimal Characters/PNG/character/character_1/Mouth.png" id="8_mouth"]
+[ext_resource type="Texture2D" uid="uid://6e3elcaiydbq" path="res://asset/2D Minimal Characters/PNG/character/character_1/Weapon.png" id="9_weapon"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yvbpl"]
 size = Vector2(32, 32)
@@ -23,33 +23,34 @@ script = ExtResource("1_3uyx6")
 scale = Vector2(0.4, 0.4)
 
 [node name="Cape" type="Sprite2D" parent="Visual"]
-texture = ExtResource("3_cape")
 position = Vector2(0, -5)
+texture = ExtResource("3_cape")
 
 [node name="Body" type="Sprite2D" parent="Visual"]
 texture = ExtResource("4_body")
 
 [node name="Leg" type="Sprite2D" parent="Visual"]
-texture = ExtResource("5_leg")
 position = Vector2(-8, 25)
+texture = ExtResource("5_leg")
 offset = Vector2(0, 10)
 
 [node name="Leg2" type="Sprite2D" parent="Visual"]
-texture = ExtResource("6_leg2")
 position = Vector2(8, 25)
+texture = ExtResource("6_leg2")
 offset = Vector2(0, 10)
 
 [node name="Head" type="Sprite2D" parent="Visual"]
-texture = ExtResource("7_head")
 position = Vector2(0, -62)
+texture = ExtResource("7_head")
 
 [node name="Mouth" type="Sprite2D" parent="Visual"]
-texture = ExtResource("8_mouth")
 position = Vector2(5, -53)
+texture = ExtResource("8_mouth")
 
 [node name="Weapon" type="Sprite2D" parent="Visual"]
+position = Vector2(97.49999, -52.5)
+rotation = 0.92723787
 texture = ExtResource("9_weapon")
-position = Vector2(42, -25)
 offset = Vector2(0, 46)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

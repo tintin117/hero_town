@@ -1,239 +1,194 @@
 extends Node2D
 
-var gold := 200
-
+const GD = preload("res://scripts/game_data.gd")
 const HeroScene := preload("res://scenes/hero.tscn")
 const EnemyScene := preload("res://scenes/enemy.tscn")
-const BuildingScene := preload("res://scenes/building.tscn")
 
-const TILE_SIZE := 64
-const GROUND_Y := 400.0
-const BUILDING_COSTS := {"house": 30}
-const BUILDING_FOOTPRINTS := {"house": Vector2i(2, 1)}
-const SAVE_PATH := "user://buildings.sav"
+const GROUND_Y := 500.0
+const HERO_X := 700.0
+const ENEMY_SPAWN_X := 1050.0
+
+var gold := 50
+var shards := 0
+var first_kill_done := false
 
 @onready var heroes_layer: Node2D = $HeroesLayer
 @onready var enemies_layer: Node2D = $EnemiesLayer
-@onready var building_layer: Node2D = $BuildingLayer
-@onready var enemy_spawner: Timer = $EnemySpawner
 @onready var gold_label: Label = $UI/GoldLabel
-@onready var grid_overlay: Node2D = $GridOverlay
+@onready var shard_label: Label = $UI/ShardLabel
+@onready var portal: Node2D = $Portal
+@onready var town_hall: Node2D = $TownHall
+@onready var hero_card: Control = $UI/HeroCard
 
 var hero_instance: CharacterBody2D = null
-var occupied_cells: Dictionary = {}
-var placement_mode := false
-var moving_building: Node2D = null
-var ghost_building: Node2D = null
-var pending_type := ""
-var build_buttons: Dictionary = {}
-var _just_placed := false
 
 func _ready() -> void:
-	enemy_spawner.timeout.connect(_on_enemy_spawner_timeout)
-	_add_ground_strip()
 	_spawn_hero()
-	_create_build_ui()
-	_load_buildings()
-	gold_label.text = "Gold: %d" % gold
-	_update_build_buttons()
-
-func _add_ground_strip() -> void:
-	var ground := ColorRect.new()
-	ground.color = Color(0.42, 0.28, 0.13, 1)
-	ground.offset_top = GROUND_Y
-	ground.offset_right = 1152.0
-	ground.offset_bottom = 648.0
-	add_child(ground)
-	move_child(ground, 1)
-
-func _create_build_ui() -> void:
-	var panel := PanelContainer.new()
-	panel.position = Vector2(16.0, 600.0)
-	$UI.add_child(panel)
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 8)
-	margin.add_theme_constant_override("margin_right", 8)
-	margin.add_theme_constant_override("margin_top", 6)
-	margin.add_theme_constant_override("margin_bottom", 6)
-	panel.add_child(margin)
-	var hbox := HBoxContainer.new()
-	margin.add_child(hbox)
-	var btn := Button.new()
-	btn.text = "House  30g"
-	btn.disabled = true
-	btn.pressed.connect(func(): start_build("house"))
-	hbox.add_child(btn)
-	build_buttons["house"] = btn
+	_connect_buildings()
+	_build_ui()
+	_refresh_hud()
 
 func _spawn_hero() -> void:
 	hero_instance = HeroScene.instantiate()
-	hero_instance.position = Vector2(300.0, GROUND_Y)
+	hero_instance.position = Vector2(HERO_X, GROUND_Y)
 	heroes_layer.add_child(hero_instance)
+	hero_instance.setup(GD.HEROES["H001"])
+	hero_instance.stats_changed.connect(_refresh_hero_card)
 
-func _on_enemy_spawner_timeout() -> void:
+func _connect_buildings() -> void:
+	portal.setup(GD.BUILDINGS["portal"]["levels"], GD.ENEMIES)
+	town_hall.setup(GD.BUILDINGS["town_hall"]["levels"])
+	portal.enemy_ready.connect(_on_enemy_ready)
+	town_hall.level_cap_changed.connect(_on_level_cap_changed)
+
+# ---- Enemy spawning ----
+
+func _on_enemy_ready(enemy_id: String) -> void:
 	var enemy: CharacterBody2D = EnemyScene.instantiate()
-	enemy.position = Vector2(1100.0, GROUND_Y)
+	enemy.position = Vector2(ENEMY_SPAWN_X, GROUND_Y)
 	enemies_layer.add_child(enemy)
-	enemy.setup(hero_instance)
-	enemy.died.connect(_on_enemy_died)
+	enemy.setup(hero_instance, GD.ENEMIES.get(enemy_id, {}))
+	enemy.died.connect(_on_enemy_died.bind(enemy))
 
-func _on_enemy_died(amount: int) -> void:
-	add_gold(amount)
+func _on_enemy_died(gold_amount: int, shard_amount: int, _enemy: Node) -> void:
+	if not first_kill_done:
+		first_kill_done = true
+		gold_amount += 50
+		shard_amount += 5
+	add_rewards(gold_amount, shard_amount)
+	portal.on_enemy_died()
 
-func add_gold(amount: int) -> void:
-	gold = max(0, gold + amount)
+# ---- Economy ----
+
+func add_rewards(gold_amount: int, shard_amount: int) -> void:
+	gold += gold_amount
+	shards += shard_amount
+	_refresh_hud()
+
+func spend(gold_cost: int, shard_cost: int = 0) -> bool:
+	if gold < gold_cost or shards < shard_cost:
+		return false
+	gold -= gold_cost
+	shards -= shard_cost
+	_refresh_hud()
+	return true
+
+# ---- Building callbacks ----
+
+func _on_level_cap_changed(new_cap: int) -> void:
+	hero_instance.max_level = new_cap
+	_refresh_hero_card()
+
+func try_upgrade_town_hall() -> void:
+	var cost: int = town_hall.next_upgrade_cost()
+	if cost < 0 or gold < cost:
+		return
+	gold = town_hall.upgrade(gold)
+	_refresh_hud()
+	_refresh_building_panels()
+
+func try_upgrade_portal() -> void:
+	var new_gold: int = portal.upgrade(gold)
+	if new_gold == gold:
+		return
+	gold = new_gold
+	_refresh_hud()
+	_refresh_building_panels()
+
+func try_upgrade_hero() -> void:
+	if not is_instance_valid(hero_instance):
+		return
+	var gc: int = hero_instance.upgrade_gold_cost()
+	var sc: int = hero_instance.upgrade_shard_cost()
+	if not spend(gc, sc):
+		return
+	hero_instance.upgrade_level()
+	_refresh_hero_card()
+
+# ---- HUD & UI ----
+
+func _refresh_hud() -> void:
 	gold_label.text = "Gold: %d" % gold
-	_update_build_buttons()
+	shard_label.text = "Shards: %d" % shards
+	_refresh_hero_card()
+	_refresh_building_panels()
 
-func _update_build_buttons() -> void:
-	for type in build_buttons:
-		var cost: int = BUILDING_COSTS.get(type, 9999)
-		build_buttons[type].disabled = gold < cost
+func _build_ui() -> void:
+	var th_btn: Button = $UI/TownHallPanel/VBox/UpgradeButton
+	if th_btn:
+		th_btn.pressed.connect(try_upgrade_town_hall)
+	var p_btn: Button = $UI/PortalPanel/VBox/UpgradeButton
+	if p_btn:
+		p_btn.pressed.connect(try_upgrade_portal)
+	var h_btn: Button = $UI/HeroCard/VBox/UpgradeButton
+	if h_btn:
+		h_btn.pressed.connect(try_upgrade_hero)
+	_refresh_hero_card()
+	_refresh_building_panels()
 
-# --- Footprint helpers ---
-
-# Buildings only snap on the X axis; Y is always GROUND_Y.
-func _fp_to_world(gpos: Vector2i, fp: Vector2i) -> Vector2:
-	return Vector2(gpos.x * TILE_SIZE + fp.x * TILE_SIZE * 0.5, GROUND_Y)
-
-func _get_current_fp() -> Vector2i:
-	if placement_mode:
-		return BUILDING_FOOTPRINTS.get(pending_type, Vector2i(1, 1))
-	if moving_building:
-		return moving_building.footprint
-	return Vector2i(1, 1)
-
-func _is_footprint_occupied(gpos: Vector2i, fp: Vector2i, ignore: Node2D = null) -> bool:
-	for dy in fp.y:
-		for dx in fp.x:
-			var cell := gpos + Vector2i(dx, dy)
-			if occupied_cells.has(cell) and occupied_cells.get(cell) != ignore:
-				return true
-	return false
-
-func _register_footprint(gpos: Vector2i, fp: Vector2i, building: Node2D) -> void:
-	for dy in fp.y:
-		for dx in fp.x:
-			occupied_cells[gpos + Vector2i(dx, dy)] = building
-
-func _unregister_footprint(gpos: Vector2i, fp: Vector2i) -> void:
-	for dy in fp.y:
-		for dx in fp.x:
-			occupied_cells.erase(gpos + Vector2i(dx, dy))
-
-# --- Placement ---
-
-func _process(_delta: float) -> void:
-	_just_placed = false
-	if ghost_building and (placement_mode or moving_building):
-		var gpos := _world_to_grid(get_global_mouse_position())
-		var fp := _get_current_fp()
-		ghost_building.position = _fp_to_world(gpos, fp)
-		var occupied: bool = _is_footprint_occupied(gpos, fp, moving_building)
-		ghost_building.modulate = Color(0.4, 1.0, 0.4, 0.55) if not occupied else Color(1.0, 0.3, 0.3, 0.55)
-
-func _unhandled_input(event: InputEvent) -> void:
-	if not (placement_mode or moving_building):
+func _refresh_hero_card() -> void:
+	if not is_instance_valid(hero_instance):
 		return
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			_handle_place_click(get_global_mouse_position())
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			_cancel_placement()
-	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		_cancel_placement()
+	var name_lbl: Label = hero_card.get_node_or_null("VBox/NameLabel")
+	var level_lbl: Label = hero_card.get_node_or_null("VBox/LevelLabel")
+	var power_lbl: Label = hero_card.get_node_or_null("VBox/PowerLabel")
+	var upgrade_btn: Button = hero_card.get_node_or_null("VBox/UpgradeButton")
+	if name_lbl:
+		name_lbl.text = "Militia Ratcatcher"
+	if level_lbl:
+		level_lbl.text = "Lv %d / %d" % [hero_instance.level, hero_instance.max_level]
+	if power_lbl:
+		power_lbl.text = "Power: %d" % hero_instance.power()
+	if upgrade_btn:
+		var gc: int = hero_instance.upgrade_gold_cost()
+		var sc: int = hero_instance.upgrade_shard_cost()
+		upgrade_btn.text = "Upgrade  %dg / %ds" % [gc, sc]
+		upgrade_btn.disabled = (
+			hero_instance.level >= hero_instance.max_level or
+			gold < gc or shards < sc
+		)
 
-func _world_to_grid(world_pos: Vector2) -> Vector2i:
-	return Vector2i(int(floor(world_pos.x / TILE_SIZE)), 0)
+func _refresh_building_panels() -> void:
+	_refresh_th_panel()
+	_refresh_portal_panel()
 
-func start_build(type: String) -> void:
-	if placement_mode or moving_building:
-		_cancel_placement()
-	pending_type = type
-	placement_mode = true
-	grid_overlay.visible = true
-	_spawn_ghost()
-
-func _spawn_ghost() -> void:
-	if ghost_building:
-		ghost_building.queue_free()
-	ghost_building = BuildingScene.instantiate()
-	ghost_building.set_meta("is_ghost", true)
-	building_layer.add_child(ghost_building)
-
-func _handle_place_click(world_pos: Vector2) -> void:
-	var gpos := _world_to_grid(world_pos)
-	var fp := _get_current_fp()
-	var occupied: bool = _is_footprint_occupied(gpos, fp, moving_building)
-	if occupied:
+func _refresh_th_panel() -> void:
+	var panel: Control = $UI/TownHallPanel
+	if not panel:
 		return
-	if placement_mode:
-		var cost: int = BUILDING_COSTS.get(pending_type, 9999)
-		if gold < cost:
-			return
-		_place_building(pending_type, gpos)
-		_just_placed = true
-		add_gold(-cost)
-		_cancel_placement()
-		_save_buildings()
-	elif moving_building:
-		_unregister_footprint(moving_building.grid_pos, moving_building.footprint)
-		moving_building.grid_pos = gpos
-		moving_building.position = _fp_to_world(gpos, moving_building.footprint)
-		moving_building.modulate = Color.WHITE
-		_register_footprint(gpos, moving_building.footprint, moving_building)
-		moving_building = null
-		_cancel_placement()
-		_save_buildings()
+	var cost: int = town_hall.next_upgrade_cost()
+	var info_lbl: Label = panel.get_node_or_null("VBox/InfoLabel")
+	var btn: Button = panel.get_node_or_null("VBox/UpgradeButton")
+	if info_lbl:
+		if cost < 0:
+			info_lbl.text = "Town Hall Lv%d (MAX)\nHero cap: %d" % [town_hall.level, town_hall.hero_level_cap()]
+		else:
+			info_lbl.text = "Town Hall Lv%d\nHero cap: %d\nUpgrade → cap %d\nCost: %dg" % [
+				town_hall.level, town_hall.hero_level_cap(),
+				town_hall.next_hero_cap(), cost
+			]
+	if btn:
+		btn.text = "Upgrade" if cost >= 0 else "MAX"
+		btn.disabled = cost < 0 or gold < cost
 
-func _place_building(type: String, gpos: Vector2i) -> void:
-	var fp: Vector2i = BUILDING_FOOTPRINTS.get(type, Vector2i(1, 1))
-	var b: Node2D = BuildingScene.instantiate()
-	b.grid_pos = gpos
-	b.footprint = fp
-	b.building_type = type
-	b.position = _fp_to_world(gpos, fp)
-	building_layer.add_child(b)
-	_register_footprint(gpos, fp, b)
-	b.clicked.connect(_on_building_clicked)
-
-func _on_building_clicked(building: Node2D) -> void:
-	if placement_mode or moving_building or _just_placed:
+func _refresh_portal_panel() -> void:
+	var panel: Control = $UI/PortalPanel
+	if not panel:
 		return
-	moving_building = building
-	building.modulate = Color(1.0, 1.0, 0.5, 0.75)
-	grid_overlay.visible = true
-	_spawn_ghost()
-
-func _save_buildings() -> void:
-	var data: Array = []
-	for child in building_layer.get_children():
-		if child.has_meta("is_ghost"):
-			continue
-		data.append({"type": child.building_type, "gx": child.grid_pos.x})
-	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file:
-		file.store_string(JSON.stringify(data))
-
-func _load_buildings() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
-		return
-	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if not file:
-		return
-	var result: Variant = JSON.parse_string(file.get_as_text())
-	if not result is Array:
-		return
-	for entry: Dictionary in (result as Array):
-		_place_building(entry["type"], Vector2i(int(entry["gx"]), 0))
-
-func _cancel_placement() -> void:
-	placement_mode = false
-	pending_type = ""
-	if moving_building:
-		moving_building.modulate = Color.WHITE
-		moving_building = null
-	grid_overlay.visible = false
-	if ghost_building:
-		ghost_building.queue_free()
-		ghost_building = null
+	var tier: int = GD.BUILDINGS["portal"]["levels"][portal.level - 1]["enemy_tier"]
+	var levels: Array = GD.BUILDINGS["portal"]["levels"]
+	var at_max: bool = portal.level >= levels.size()
+	var info_lbl: Label = panel.get_node_or_null("VBox/InfoLabel")
+	var btn: Button = panel.get_node_or_null("VBox/UpgradeButton")
+	if info_lbl:
+		if at_max:
+			info_lbl.text = "Portal Lv%d (MAX)\nTier %d enemies" % [portal.level, tier]
+		else:
+			var next_cost: int = levels[portal.level]["cost"]
+			var next_tier: int = levels[portal.level]["enemy_tier"]
+			info_lbl.text = "Portal Lv%d\nTier %d enemies\nUpgrade → Tier %d\nCost: %dg" % [
+				portal.level, tier, next_tier, next_cost
+			]
+	if btn:
+		btn.text = "Upgrade Portal" if not at_max else "MAX"
+		btn.disabled = at_max or (not at_max and gold < (levels[portal.level]["cost"] as int))

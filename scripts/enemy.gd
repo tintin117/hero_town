@@ -1,12 +1,16 @@
 extends CharacterBody2D
 
-signal died(gold_reward: int)
+signal died(gold_reward: int, shard_reward: int)
 
 var speed := 50.0
-var attack_damage := 5
 var max_hp := 30
 var hp := 30
-var gold_reward := 5
+var atk := 4
+var def := 0
+var gold_min := 8
+var gold_max := 12
+var shard_min := 1
+var shard_max := 2
 var attack_range := 40.0
 
 var hero: CharacterBody2D = null
@@ -22,6 +26,20 @@ func _ready() -> void:
 	anim.animation_finished.connect(_on_anim_finished)
 	_setup_animations()
 	anim.play("idle")
+
+func setup(hero_ref: CharacterBody2D, data: Dictionary) -> void:
+	hero = hero_ref
+	if data.is_empty():
+		return
+	max_hp = data["hp"] as int
+	hp = max_hp
+	atk = data["atk"] as int
+	def = data["def"] as int
+	gold_min = data["gold_min"] as int
+	gold_max = data["gold_max"] as int
+	shard_min = data["shard_min"] as int
+	shard_max = data["shard_max"] as int
+	health_bar.update_bar(hp, max_hp)
 
 func _setup_animations() -> void:
 	var lib := AnimationLibrary.new()
@@ -63,9 +81,6 @@ func _setup_animations() -> void:
 
 	anim.add_animation_library("", lib)
 
-func setup(hero_ref: CharacterBody2D) -> void:
-	hero = hero_ref
-
 func _physics_process(_delta: float) -> void:
 	if not is_instance_valid(hero):
 		return
@@ -86,7 +101,8 @@ func _physics_process(_delta: float) -> void:
 
 func _on_attack_timer_timeout() -> void:
 	if is_instance_valid(hero):
-		hero.take_damage(attack_damage)
+		var dmg := maxi(1, atk - (hero.def if "def" in hero else 0))
+		hero.take_damage(dmg)
 		anim.play("attack")
 
 func _on_anim_finished(anim_name: String) -> void:
@@ -94,11 +110,14 @@ func _on_anim_finished(anim_name: String) -> void:
 		anim.play("idle")
 
 func take_damage(amount: int) -> void:
-	hp -= amount
+	var dmg := maxi(1, amount - def)
+	hp -= dmg
 	health_bar.update_bar(hp, max_hp)
 	if hp <= 0:
 		die()
 
 func die() -> void:
-	emit_signal("died", gold_reward)
+	var gold := randi_range(gold_min, gold_max)
+	var shard := randi_range(shard_min, shard_max)
+	emit_signal("died", gold, shard)
 	queue_free()

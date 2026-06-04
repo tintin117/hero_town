@@ -1,16 +1,22 @@
 extends CharacterBody2D
 
-enum State { PATROL, CHASE, ATTACK }
+signal stats_changed
 
-var speed := 80.0
-var attack_damage := 10
+enum State { IDLE, COMBAT }
+
+const HERO_ID := "H001"
+
+var level := 1
+var max_level := 10
+
+var _data: Dictionary = {}
 var max_hp := 100
 var hp := 100
-var patrol_left := 100.0
-var patrol_right := 600.0
-var patrol_direction := 1.0
+var atk := 8
+var def := 0
+var atk_speed := 1.6
 
-var state := State.PATROL
+var state := State.IDLE
 var target: CharacterBody2D = null
 var enemies_in_range: Array = []
 
@@ -20,13 +26,27 @@ var enemies_in_range: Array = []
 @onready var anim: AnimationPlayer = $AnimationPlayer
 @onready var visual: Node2D = $Visual
 
+func setup(hero_data: Dictionary) -> void:
+	_data = hero_data
+
 func _ready() -> void:
+	_apply_stats()
+	attack_timer.wait_time = atk_speed
 	attack_timer.timeout.connect(_on_attack_timer_timeout)
 	detection_area.body_entered.connect(_on_body_entered)
 	detection_area.body_exited.connect(_on_body_exited)
 	anim.animation_finished.connect(_on_anim_finished)
 	_setup_animations()
 	anim.play("idle")
+
+func _apply_stats() -> void:
+	if _data.is_empty():
+		return
+	max_hp = (_data["hp"] as int) + (level - 1) * 5
+	hp = max_hp
+	atk = (_data["atk"] as int) + (level - 1) * 2
+	def = _data["def"] as int
+	atk_speed = _data["atk_speed"] as float
 
 func _setup_animations() -> void:
 	var lib := AnimationLibrary.new()
@@ -70,55 +90,26 @@ func _setup_animations() -> void:
 
 func _physics_process(_delta: float) -> void:
 	match state:
-		State.PATROL:
-			_do_patrol()
-		State.CHASE:
-			_do_chase()
-		State.ATTACK:
+		State.IDLE:
+			velocity = Vector2.ZERO
+			if anim.current_animation != "idle":
+				anim.play("idle")
+		State.COMBAT:
 			velocity = Vector2.ZERO
 			if anim.current_animation != "attack":
 				anim.play("idle")
 
-func _do_patrol() -> void:
-	velocity = Vector2(speed * patrol_direction, 0.0)
-	move_and_slide()
-	visual.scale.x = 0.4 * patrol_direction
-	if anim.current_animation != "walk":
-		anim.play("walk")
-	if position.x >= patrol_right:
-		patrol_direction = -1.0
-	elif position.x <= patrol_left:
-		patrol_direction = 1.0
-
-func _do_chase() -> void:
-	if not is_instance_valid(target):
-		_pick_target()
-		return
-	var dist := position.distance_to(target.position)
-	if dist <= 40.0:
-		state = State.ATTACK
-		velocity = Vector2.ZERO
-		if attack_timer.is_stopped():
-			attack_timer.start()
-		return
-	var dir := (target.position - position).normalized()
-	velocity = dir * speed
-	move_and_slide()
-	visual.scale.x = 0.4 * sign(dir.x) if dir.x != 0.0 else visual.scale.x
-	if anim.current_animation != "walk":
-		anim.play("walk")
-
 func _on_attack_timer_timeout() -> void:
-	if state != State.ATTACK:
+	if state != State.COMBAT:
 		return
-	if not is_instance_valid(target):
-		_pick_target()
-		return
-	if position.distance_to(target.position) > 50.0:
-		state = State.CHASE
+	enemies_in_range = enemies_in_range.filter(func(e): return is_instance_valid(e))
+	if enemies_in_range.is_empty():
+		state = State.IDLE
 		attack_timer.stop()
 		return
-	target.take_damage(attack_damage)
+	target = enemies_in_range[0]
+	var dmg := maxi(1, atk - target.def) if "def" in target else atk
+	target.take_damage(dmg)
 	anim.play("attack")
 
 func _on_anim_finished(anim_name: String) -> void:
@@ -128,30 +119,42 @@ func _on_anim_finished(anim_name: String) -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("enemies"):
 		enemies_in_range.append(body)
-		_pick_target()
+		if state == State.IDLE:
+			state = State.COMBAT
+			attack_timer.wait_time = atk_speed
+			attack_timer.start()
 
 func _on_body_exited(body: Node2D) -> void:
 	enemies_in_range.erase(body)
-	if enemies_in_range.is_empty():
-		state = State.PATROL
-		target = null
-		attack_timer.stop()
-	else:
-		_pick_target()
-
-func _pick_target() -> void:
 	enemies_in_range = enemies_in_range.filter(func(e): return is_instance_valid(e))
 	if enemies_in_range.is_empty():
-		state = State.PATROL
+		state = State.IDLE
 		target = null
 		attack_timer.stop()
-		return
-	target = enemies_in_range[0]
-	state = State.CHASE
 
 func take_damage(amount: int) -> void:
-	hp -= amount
+	var dmg := maxi(1, amount - def)
+	hp -= dmg
 	health_bar.update_bar(hp, max_hp)
 	if hp <= 0:
 		hp = max_hp
 		health_bar.update_bar(hp, max_hp)
+
+func upgrade_level() -> void:
+	if level >= max_level:
+		return
+	level += 1
+	_apply_stats()
+	health_bar.update_bar(hp, max_hp)
+	emit_signal("stats_changed")
+
+func power() -> int:
+	if _data.is_empty():
+		return 0
+	return roundi((_data["base_power"] as float) + (_data["power_per_level"] as float) * (level - 1))
+
+func upgrade_gold_cost() -> int:
+	return roundi(20.0 * pow(level, 1.35))
+
+func upgrade_shard_cost() -> int:
+	return roundi(2.0 * pow(level, 1.20))

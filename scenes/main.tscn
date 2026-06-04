@@ -1,41 +1,97 @@
-[gd_scene format=3 uid="uid://ncuvc5qu5rx8"]
+[gd_scene load_steps=4 format=3 uid="uid://ncuvc5qu5rx8"]
 
 [ext_resource type="Script" uid="uid://byitqubjl1h7d" path="res://scripts/main.gd" id="1_o5qli"]
-[ext_resource type="Script" uid="uid://cfy6x4daulm4w" path="res://scripts/grid_overlay.gd" id="2_grid"]
+[ext_resource type="Script" uid="uid://dus3gostsmfyl" path="res://scripts/town_hall.gd" id="2_sugp2"]
+[ext_resource type="Script" uid="uid://daq8fbp707lkh" path="res://scripts/portal.gd" id="3_jyhfs"]
 
-[node name="Main" type="Node2D" unique_id=1894447199]
+[node name="Main" type="Node2D"]
 script = ExtResource("1_o5qli")
 
-[node name="Background" type="ColorRect" parent="." unique_id=1114928400]
+[node name="Background" type="ColorRect" parent="."]
 offset_right = 1152.0
 offset_bottom = 648.0
 color = Color(0.13, 0.55, 0.13, 1)
 
-[node name="Ground" type="ColorRect" parent="." unique_id=1725012947]
+[node name="Ground" type="ColorRect" parent="."]
 offset_top = 597.0
 offset_right = 1152.0
 offset_bottom = 648.0
 color = Color(0.42, 0.28, 0.13, 1)
 
-[node name="BuildingLayer" type="Node2D" parent="." unique_id=618799245]
+[node name="HeroesLayer" type="Node2D" parent="."]
 
-[node name="GridOverlay" type="Node2D" parent="." unique_id=323876990]
-visible = false
-script = ExtResource("2_grid")
+[node name="EnemiesLayer" type="Node2D" parent="."]
 
-[node name="HeroesLayer" type="Node2D" parent="." unique_id=2022093565]
+[node name="UI" type="CanvasLayer" parent="."]
 
-[node name="EnemiesLayer" type="Node2D" parent="." unique_id=1148683616]
-
-[node name="EnemySpawner" type="Timer" parent="." unique_id=1333914735]
-wait_time = 3.0
-autostart = true
-
-[node name="UI" type="CanvasLayer" parent="." unique_id=1047692910]
-
-[node name="GoldLabel" type="Label" parent="UI" unique_id=403653761]
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 70.0
-offset_bottom = 39.0
+[node name="GoldLabel" type="Label" parent="UI"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 62.0
+offset_bottom = 31.0
 text = "Gold: 0"
+
+[node name="ShardLabel" type="Label" parent="UI"]
+offset_left = 8.0
+offset_top = 32.0
+offset_right = 9.0
+offset_bottom = 55.0
+
+[node name="HeroCard" type="PanelContainer" parent="UI"]
+offset_left = 8.0
+offset_top = 440.0
+offset_right = 16.0
+offset_bottom = 529.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/HeroCard"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="UI/HeroCard/VBox"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="UI/HeroCard/VBox"]
+layout_mode = 2
+
+[node name="PowerLabel" type="Label" parent="UI/HeroCard/VBox"]
+layout_mode = 2
+
+[node name="UpgradeButton" type="Button" parent="UI/HeroCard/VBox"]
+layout_mode = 2
+
+[node name="TownHallPanel" type="PanelContainer" parent="UI"]
+offset_left = 8.0
+offset_top = 300.0
+offset_right = 16.0
+offset_bottom = 335.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/TownHallPanel"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="UI/TownHallPanel/VBox"]
+layout_mode = 2
+
+[node name="UpgradeButton" type="Button" parent="UI/TownHallPanel/VBox"]
+layout_mode = 2
+
+[node name="PortalPanel" type="PanelContainer" parent="UI"]
+offset_left = 800.0
+offset_top = 300.0
+offset_right = 808.0
+offset_bottom = 335.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/PortalPanel"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="UI/PortalPanel/VBox"]
+layout_mode = 2
+
+[node name="UpgradeButton" type="Button" parent="UI/PortalPanel/VBox"]
+layout_mode = 2
+
+[node name="TownHall" type="Node2D" parent="."]
+script = ExtResource("2_sugp2")
+
+[node name="Portal" type="Node2D" parent="."]
+script = ExtResource("3_jyhfs")
+
+[node name="SpawnTimer" type="Timer" parent="Portal"]
