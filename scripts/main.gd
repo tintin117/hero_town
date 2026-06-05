@@ -7,10 +7,12 @@ const EnemyScene := preload("res://scenes/enemy.tscn")
 const GROUND_Y := 500.0
 const HERO_X := 700.0
 const ENEMY_SPAWN_X := 1050.0
+const SAVE_PATH := "user://save.json"
 
 var gold := 50
 var shards := 0
 var first_kill_done := false
+var _overlay_active := false
 
 @onready var heroes_layer: Node2D = $HeroesLayer
 @onready var enemies_layer: Node2D = $EnemiesLayer
@@ -25,8 +27,58 @@ var hero_instance: CharacterBody2D = null
 func _ready() -> void:
 	_spawn_hero()
 	_connect_buildings()
+	_apply_save(load_game())
 	_build_ui()
 	_refresh_hud()
+	# If launched in compact mode, activate overlay immediately
+	if DisplayServer.window_get_flag(DisplayServer.WINDOW_FLAG_BORDERLESS):
+		_enter_overlay_ui()
+
+# ---- Save / Load ----
+
+func save_game() -> void:
+	var data := {
+		"gold": gold,
+		"shards": shards,
+		"first_kill_done": first_kill_done,
+		"hero_level": hero_instance.level if is_instance_valid(hero_instance) else 1,
+		"town_hall_level": town_hall.level,
+		"portal_level": portal.level,
+	}
+	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(data))
+		file.close()
+
+func load_game() -> Dictionary:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return {}
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if not file:
+		return {}
+	var result = JSON.parse_string(file.get_as_text())
+	file.close()
+	return result if result is Dictionary else {}
+
+func _apply_save(data: Dictionary) -> void:
+	if data.is_empty():
+		return
+	gold = data.get("gold", gold)
+	shards = data.get("shards", shards)
+	first_kill_done = data.get("first_kill_done", false)
+	# Restore building levels before hero so level cap is correct
+	town_hall.level = data.get("town_hall_level", 1)
+	portal.level = data.get("portal_level", 1)
+	portal._refresh_enemy_pool()
+	town_hall.level_cap_changed.emit(town_hall.hero_level_cap())
+	# Restore hero level
+	var saved_hero_level: int = data.get("hero_level", 1)
+	if is_instance_valid(hero_instance) and saved_hero_level > 1:
+		hero_instance.level = saved_hero_level
+		hero_instance._apply_stats()
+		hero_instance.stats_changed.emit()
+
+# ---- Hero ----
 
 func _spawn_hero() -> void:
 	hero_instance = HeroScene.instantiate()
@@ -64,6 +116,7 @@ func add_rewards(gold_amount: int, shard_amount: int) -> void:
 	gold += gold_amount
 	shards += shard_amount
 	_refresh_hud()
+	save_game()
 
 func spend(gold_cost: int, shard_cost: int = 0) -> bool:
 	if gold < gold_cost or shards < shard_cost:
@@ -86,6 +139,7 @@ func try_upgrade_town_hall() -> void:
 	gold = town_hall.upgrade(gold)
 	_refresh_hud()
 	_refresh_building_panels()
+	save_game()
 
 func try_upgrade_portal() -> void:
 	var new_gold: int = portal.upgrade(gold)
@@ -94,6 +148,7 @@ func try_upgrade_portal() -> void:
 	gold = new_gold
 	_refresh_hud()
 	_refresh_building_panels()
+	save_game()
 
 func try_upgrade_hero() -> void:
 	if not is_instance_valid(hero_instance):
@@ -104,6 +159,7 @@ func try_upgrade_hero() -> void:
 		return
 	hero_instance.upgrade_level()
 	_refresh_hero_card()
+	save_game()
 
 # ---- HUD & UI ----
 
@@ -112,6 +168,7 @@ func _refresh_hud() -> void:
 	shard_label.text = "Shards: %d" % shards
 	_refresh_hero_card()
 	_refresh_building_panels()
+	_refresh_overlay_bar()
 
 func _build_ui() -> void:
 	var th_btn: Button = $UI/TownHallPanel/VBox/UpgradeButton
@@ -123,8 +180,105 @@ func _build_ui() -> void:
 	var h_btn: Button = $UI/HeroCard/VBox/UpgradeButton
 	if h_btn:
 		h_btn.pressed.connect(try_upgrade_hero)
+	var menu_btn: Button = $UI/MenuButton
+	if menu_btn:
+		menu_btn.pressed.connect(_on_menu_pressed)
+	var compact_btn: Button = $UI/CompactButton
+	if compact_btn:
+		compact_btn.pressed.connect(_on_compact_pressed)
+	var expand_btn: Button = $UI/OverlayBar/HBox/ExpandButton
+	if expand_btn:
+		expand_btn.pressed.connect(_on_expand_pressed)
 	_refresh_hero_card()
-	_refresh_building_panels()
+
+func _on_menu_pressed() -> void:
+	save_game()
+	_exit_overlay_mode()
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+
+func _on_compact_pressed() -> void:
+	_enter_overlay_mode()
+
+func _on_expand_pressed() -> void:
+	_exit_overlay_mode()
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel") and _overlay_active:
+		_exit_overlay_mode()
+
+# ---- Overlay / Compact mode ----
+
+func _enter_overlay_mode() -> void:
+	var sw := DisplayServer.screen_get_size().x
+	var sh := DisplayServer.screen_get_size().y
+	const OVERLAY_H := 120
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_TRANSPARENT, true)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
+	DisplayServer.window_set_size(Vector2i(sw, OVERLAY_H))
+	DisplayServer.window_set_position(Vector2i(0, sh - OVERLAY_H))
+	get_tree().root.transparent_bg = true
+	# Rescale the viewport to exactly match the overlay window so UI nodes
+	# are rendered at actual pixel size (not squished from 648px → 120px)
+	get_tree().root.content_scale_size = Vector2i(sw, OVERLAY_H)
+	_enter_overlay_ui()
+
+func _exit_overlay_mode() -> void:
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, false)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_TRANSPARENT, false)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
+	# Restore viewport scale to the game's native resolution
+	get_tree().root.content_scale_size = Vector2i(1152, 648)
+	DisplayServer.window_set_size(Vector2i(1152, 648))
+	DisplayServer.window_set_position(Vector2i(
+		(DisplayServer.screen_get_size().x - 1152) / 2.0,
+		(DisplayServer.screen_get_size().y - 648) / 2.0
+	))
+	get_tree().root.transparent_bg = false
+	_exit_overlay_ui()
+
+func _enter_overlay_ui() -> void:
+	_overlay_active = true
+	$UI/GoldLabel.visible = false
+	$UI/ShardLabel.visible = false
+	$UI/HeroCard.visible = false
+	$UI/TownHallPanel.visible = false
+	$UI/PortalPanel.visible = false
+	$UI/MenuButton.visible = false
+	$UI/CompactButton.visible = false
+	$UI/OverlayBar.visible = true
+	$Background.visible = false
+	$Ground.visible = false
+	_refresh_overlay_bar()
+
+func _exit_overlay_ui() -> void:
+	_overlay_active = false
+	$UI/GoldLabel.visible = true
+	$UI/ShardLabel.visible = true
+	$UI/HeroCard.visible = true
+	$UI/TownHallPanel.visible = true
+	$UI/PortalPanel.visible = true
+	$UI/MenuButton.visible = true
+	$UI/CompactButton.visible = true
+	$UI/OverlayBar.visible = false
+	$Background.visible = true
+	$Ground.visible = true
+
+func _refresh_overlay_bar() -> void:
+	if not _overlay_active:
+		return
+	var bar: Control = $UI/OverlayBar
+	if not bar:
+		return
+	var lbl_gold: Label = bar.get_node_or_null("HBox/GoldLabel")
+	var lbl_shards: Label = bar.get_node_or_null("HBox/ShardLabel")
+	var lbl_hero: Label = bar.get_node_or_null("HBox/HeroLabel")
+	if lbl_gold:
+		lbl_gold.text = "Gold: %d" % gold
+	if lbl_shards:
+		lbl_shards.text = "  Shards: %d" % shards
+	if lbl_hero and is_instance_valid(hero_instance):
+		lbl_hero.text = "  Hero Lv%d  Power: %d" % [hero_instance.level, hero_instance.power()]
 
 func _refresh_hero_card() -> void:
 	if not is_instance_valid(hero_instance):

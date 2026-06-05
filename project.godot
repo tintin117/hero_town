@@ -15,8 +15,8 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="hero town"
-run/main_scene="uid://ncuvc5qu5rx8"
-config/features=PackedStringArray("4.5", "Forward Plus")
+run/main_scene="res://scenes/main_menu.tscn"
+config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -28,6 +28,7 @@ _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 window/size/mode=3
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/per_pixel_transparency/allowed=true
 
 [editor_plugins]
 
