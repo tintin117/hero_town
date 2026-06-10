@@ -3,11 +3,22 @@
 [ext_resource type="Script" uid="uid://byitqubjl1h7d" path="res://scripts/main.gd" id="1_o5qli"]
 [ext_resource type="Script" uid="uid://dus3gostsmfyl" path="res://scripts/town_hall.gd" id="2_sugp2"]
 [ext_resource type="Script" uid="uid://daq8fbp707lkh" path="res://scripts/portal.gd" id="3_jyhfs"]
+[ext_resource type="Texture2D" uid="uid://dwlm13xdy4irc" path="res://asset/hero_town/grass_land.png" id="4_jyhfs"]
+[ext_resource type="Texture2D" uid="uid://bgjp3xa56wwo1" path="res://asset/hero_town/tower.png" id="4_tefeu"]
+[ext_resource type="Texture2D" uid="uid://j5gylxon4pes" path="res://asset/hero_town/tree.png" id="5_choun"]
+[ext_resource type="Texture2D" uid="uid://c0op1nq65nfra" path="res://asset/hero_town/main_house.png" id="5_o6xl0"]
+[ext_resource type="Texture2D" uid="uid://bvcfgsxsmwcsj" path="res://asset/hero_town/tree_small.png" id="6_ya4ey"]
+[ext_resource type="Texture2D" uid="uid://k8lwelcfsulp" path="res://asset/hero_town/grass_2.png" id="8_eb6dy"]
+[ext_resource type="Texture2D" uid="uid://c7lrn32bm2jku" path="res://asset/hero_town/monster_house.png" id="8_trceg"]
+[ext_resource type="Texture2D" uid="uid://bje6v2f8pjs1v" path="res://asset/hero_town/decor_rock_1.png" id="9_trceg"]
+[ext_resource type="Texture2D" uid="uid://crvg6tv6m3o0h" path="res://asset/hero_town/grass.png" id="10_a8y0u"]
+[ext_resource type="Texture2D" uid="uid://gp1745ut8wil" path="res://asset/hero_town/decor_rock_2.png" id="12_jkv2x"]
 
 [node name="Main" type="Node2D" unique_id=1574638799]
 script = ExtResource("1_o5qli")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1914806318]
+visible = false
 offset_right = 1152.0
 offset_bottom = 648.0
 color = Color(0.13, 0.55, 0.13, 1)
@@ -150,3 +161,63 @@ script = ExtResource("2_sugp2")
 script = ExtResource("3_jyhfs")
 
 [node name="SpawnTimer" type="Timer" parent="Portal" unique_id=1935514748]
+
+[node name="tower" type="Sprite2D" parent="." unique_id=25288064]
+position = Vector2(603, 422.99997)
+scale = Vector2(0.398017, 0.36771652)
+texture = ExtResource("4_tefeu")
+
+[node name="big_tree" type="Sprite2D" parent="." unique_id=318176969]
+position = Vector2(88.00001, 399)
+scale = Vector2(0.20509383, 0.18500002)
+texture = ExtResource("5_choun")
+
+[node name="big_tree2" type="Sprite2D" parent="." unique_id=2110879336]
+position = Vector2(1021, 417)
+scale = Vector2(0.20509383, 0.18500002)
+texture = ExtResource("5_choun")
+
+[node name="small_tree" type="Sprite2D" parent="." unique_id=550855648]
+position = Vector2(283.00003, 437)
+scale = Vector2(0.20509383, 0.18500002)
+texture = ExtResource("6_ya4ey")
+
+[node name="small_tree2" type="Sprite2D" parent="." unique_id=928060330]
+position = Vector2(519, 469)
+scale = Vector2(0.11666455, 0.11510401)
+texture = ExtResource("6_ya4ey")
+
+[node name="house" type="Sprite2D" parent="." unique_id=1352702501]
+position = Vector2(194, 445)
+scale = Vector2(0.37318844, 0.3248561)
+texture = ExtResource("5_o6xl0")
+
+[node name="monster_house" type="Sprite2D" parent="." unique_id=1449437395]
+position = Vector2(1065, 479)
+scale = Vector2(0.37318844, 0.3248561)
+texture = ExtResource("8_trceg")
+
+[node name="grass" type="Sprite2D" parent="." unique_id=133399575]
+position = Vector2(427.99997, 498.99997)
+scale = Vector2(0.37755108, 0.31367925)
+texture = ExtResource("8_eb6dy")
+
+[node name="grass2" type="Sprite2D" parent="." unique_id=2089206792]
+position = Vector2(882, 516)
+scale = Vector2(0.37755108, 0.31367925)
+texture = ExtResource("10_a8y0u")
+
+[node name="rock" type="Sprite2D" parent="." unique_id=495682024]
+position = Vector2(487.00012, 510)
+scale = Vector2(0.22826087, 0.20707071)
+texture = ExtResource("9_trceg")
+
+[node name="frog_rock" type="Sprite2D" parent="." unique_id=1662879293]
+position = Vector2(934, 513)
+scale = Vector2(0.22826087, 0.20707071)
+texture = ExtResource("12_jkv2x")
+
+[node name="land" type="Sprite2D" parent="." unique_id=214772378]
+position = Vector2(572, 720)
+scale = Vector2(1.2285155, 1.1950866)
+texture = ExtResource("4_jyhfs")
