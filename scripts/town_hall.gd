@@ -1,9 +1,18 @@
 extends Node2D
 
 signal level_cap_changed(new_cap: int)
+signal clicked
 
 var level := 1
 var _th_levels: Array = []
+
+func _ready() -> void:
+	if has_node("ClickArea"):
+		$ClickArea.input_event.connect(_on_click_area_input_event)
+
+func _on_click_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		clicked.emit()
 
 func setup(th_levels: Array) -> void:
 	_th_levels = th_levels

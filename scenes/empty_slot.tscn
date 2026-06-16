@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://rbx7jrlgs5a6"]
+
+[ext_resource type="Script" path="res://scripts/empty_slot.gd" id="1_eslot"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_slot"]
+size = Vector2(120, 80)
+
+[node name="EmptySlot" type="Node2D"]
+script = ExtResource("1_eslot")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.8, 0.8, 0.6, 0.25)
+polygon = PackedVector2Array(-60, -80, 60, -80, 60, 0, -60, 0)
+
+[node name="Label" type="Label" parent="."]
+offset_left = -12.0
+offset_top = -56.0
+offset_right = 12.0
+offset_bottom = -30.0
+text = "+"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 1, 0.7, 0.8)
+
+[node name="ClickArea" type="Area2D" parent="."]
+monitorable = false
+
+[node name="ClickShape" type="CollisionShape2D" parent="ClickArea"]
+position = Vector2(0, -40)
+shape = SubResource("RectangleShape2D_slot")

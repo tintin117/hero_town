@@ -13,6 +13,14 @@
 [ext_resource type="Texture2D" uid="uid://bje6v2f8pjs1v" path="res://asset/hero_town/decor_rock_1.png" id="9_trceg"]
 [ext_resource type="Texture2D" uid="uid://crvg6tv6m3o0h" path="res://asset/hero_town/grass.png" id="10_a8y0u"]
 [ext_resource type="Texture2D" uid="uid://gp1745ut8wil" path="res://asset/hero_town/decor_rock_2.png" id="12_jkv2x"]
+[ext_resource type="PackedScene" path="res://scenes/building_popup.tscn" id="20_bpop"]
+[ext_resource type="PackedScene" path="res://scenes/build_menu_popup.tscn" id="21_bmenu"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_th_click"]
+size = Vector2(120, 116)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_portal_click"]
+size = Vector2(120, 116)
 
 [node name="Main" type="Node2D" unique_id=1574638799]
 script = ExtResource("1_o5qli")
@@ -29,9 +37,84 @@ offset_right = 1152.0
 offset_bottom = 648.0
 color = Color(0.42, 0.28, 0.13, 1)
 
+[node name="BuildingGrid" type="Node2D" parent="."]
+
+[node name="BackRow" type="Node2D" parent="BuildingGrid"]
+z_index = 10
+
+[node name="MidRow" type="Node2D" parent="BuildingGrid"]
+z_index = 20
+
+[node name="TownHall" type="Node2D" parent="BuildingGrid/MidRow" unique_id=162850961]
+position = Vector2(288, 463)
+scale = Vector2(0.875, 0.875)
+script = ExtResource("2_sugp2")
+
+[node name="WallVisual" type="Polygon2D" parent="BuildingGrid/MidRow/TownHall"]
+color = Color(0.55, 0.38, 0.18, 1)
+polygon = PackedVector2Array(-54, -62, 54, -62, 54, 0, -54, 0)
+
+[node name="RoofVisual" type="Polygon2D" parent="BuildingGrid/MidRow/TownHall"]
+color = Color(0.35, 0.18, 0.08, 1)
+polygon = PackedVector2Array(-60, -62, 60, -62, 0, -116)
+
+[node name="NameLabel" type="Label" parent="BuildingGrid/MidRow/TownHall"]
+offset_left = -54.0
+offset_top = -80.0
+offset_right = 54.0
+offset_bottom = -62.0
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 9
+theme_override_colors/font_color = Color(1, 1, 0.8, 1)
+text = "Town Hall"
+
+[node name="ClickArea" type="Area2D" parent="BuildingGrid/MidRow/TownHall"]
+monitorable = false
+
+[node name="ClickShape" type="CollisionShape2D" parent="BuildingGrid/MidRow/TownHall/ClickArea"]
+position = Vector2(0, -58)
+shape = SubResource("RectangleShape2D_th_click")
+
+[node name="Portal" type="Node2D" parent="BuildingGrid/MidRow" unique_id=1594696371]
+position = Vector2(864, 463)
+scale = Vector2(0.875, 0.875)
+script = ExtResource("3_jyhfs")
+
+[node name="WallVisual" type="Polygon2D" parent="BuildingGrid/MidRow/Portal"]
+color = Color(0.25, 0.12, 0.42, 1)
+polygon = PackedVector2Array(-54, -62, 54, -62, 54, 0, -54, 0)
+
+[node name="RoofVisual" type="Polygon2D" parent="BuildingGrid/MidRow/Portal"]
+color = Color(0.45, 0.08, 0.55, 1)
+polygon = PackedVector2Array(-60, -62, 60, -62, 0, -116)
+
+[node name="NameLabel" type="Label" parent="BuildingGrid/MidRow/Portal"]
+offset_left = -54.0
+offset_top = -80.0
+offset_right = 54.0
+offset_bottom = -62.0
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 9
+theme_override_colors/font_color = Color(1, 0.8, 1, 1)
+text = "Portal"
+
+[node name="SpawnTimer" type="Timer" parent="BuildingGrid/MidRow/Portal" unique_id=1935514748]
+
+[node name="ClickArea" type="Area2D" parent="BuildingGrid/MidRow/Portal"]
+monitorable = false
+
+[node name="ClickShape" type="CollisionShape2D" parent="BuildingGrid/MidRow/Portal/ClickArea"]
+position = Vector2(0, -58)
+shape = SubResource("RectangleShape2D_portal_click")
+
+[node name="FrontRow" type="Node2D" parent="BuildingGrid"]
+z_index = 30
+
 [node name="HeroesLayer" type="Node2D" parent="." unique_id=391703573]
+z_index = 40
 
 [node name="EnemiesLayer" type="Node2D" parent="." unique_id=201053618]
+z_index = 40
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1087816167]
 
@@ -48,56 +131,49 @@ offset_top = 32.0
 offset_right = 9.0
 offset_bottom = 55.0
 
-[node name="HeroCard" type="PanelContainer" parent="UI" unique_id=265775342]
+[node name="HeroAvatar" type="PanelContainer" parent="UI"]
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 8.0
-offset_top = 440.0
-offset_right = 16.0
-offset_bottom = 529.0
+offset_top = -108.0
+offset_right = 196.0
+offset_bottom = -8.0
+mouse_filter = 0
 
-[node name="VBox" type="VBoxContainer" parent="UI/HeroCard" unique_id=512798575]
+[node name="HBox" type="HBoxContainer" parent="UI/HeroAvatar"]
 layout_mode = 2
+theme_override_constants/separation = 6
 
-[node name="NameLabel" type="Label" parent="UI/HeroCard/VBox" unique_id=1606227133]
+[node name="Portrait" type="ColorRect" parent="UI/HeroAvatar/HBox"]
 layout_mode = 2
+custom_minimum_size = Vector2(60, 0)
+size_flags_vertical = 3
+color = Color(0.18, 0.35, 0.55, 1)
 
-[node name="LevelLabel" type="Label" parent="UI/HeroCard/VBox" unique_id=60817035]
+[node name="VBox" type="VBoxContainer" parent="UI/HeroAvatar/HBox"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="PowerLabel" type="Label" parent="UI/HeroCard/VBox" unique_id=1703340365]
+[node name="NameLabel" type="Label" parent="UI/HeroAvatar/HBox/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Ratcatcher"
 
-[node name="UpgradeButton" type="Button" parent="UI/HeroCard/VBox" unique_id=930650289]
+[node name="LevelLabel" type="Label" parent="UI/HeroAvatar/HBox/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Lv 1 / 10"
 
-[node name="TownHallPanel" type="PanelContainer" parent="UI" unique_id=1106391280]
-offset_left = 8.0
-offset_top = 300.0
-offset_right = 16.0
-offset_bottom = 335.0
-
-[node name="VBox" type="VBoxContainer" parent="UI/TownHallPanel" unique_id=866827999]
+[node name="PowerLabel" type="Label" parent="UI/HeroAvatar/HBox/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Power: 12"
 
-[node name="InfoLabel" type="Label" parent="UI/TownHallPanel/VBox" unique_id=903536622]
+[node name="ManageButton" type="Button" parent="UI/HeroAvatar/HBox/VBox"]
 layout_mode = 2
-
-[node name="UpgradeButton" type="Button" parent="UI/TownHallPanel/VBox" unique_id=561712254]
-layout_mode = 2
-
-[node name="PortalPanel" type="PanelContainer" parent="UI" unique_id=1564671008]
-offset_left = 800.0
-offset_top = 300.0
-offset_right = 808.0
-offset_bottom = 335.0
-
-[node name="VBox" type="VBoxContainer" parent="UI/PortalPanel" unique_id=1487534606]
-layout_mode = 2
-
-[node name="InfoLabel" type="Label" parent="UI/PortalPanel/VBox" unique_id=972539155]
-layout_mode = 2
-
-[node name="UpgradeButton" type="Button" parent="UI/PortalPanel/VBox" unique_id=634322776]
-layout_mode = 2
+custom_minimum_size = Vector2(0, 28)
+text = "Manage ▶"
 
 [node name="MenuButton" type="Button" parent="UI" unique_id=1710665814]
 anchors_preset = 1
@@ -154,13 +230,9 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Expand ↗"
 
-[node name="TownHall" type="Node2D" parent="." unique_id=162850961]
-script = ExtResource("2_sugp2")
+[node name="BuildingPopup" parent="UI" instance=ExtResource("20_bpop")]
 
-[node name="Portal" type="Node2D" parent="." unique_id=1594696371]
-script = ExtResource("3_jyhfs")
-
-[node name="SpawnTimer" type="Timer" parent="Portal" unique_id=1935514748]
+[node name="BuildMenuPopup" parent="UI" instance=ExtResource("21_bmenu")]
 
 [node name="tower" type="Sprite2D" parent="." unique_id=25288064]
 position = Vector2(603, 422.99997)

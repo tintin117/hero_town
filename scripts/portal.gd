@@ -1,6 +1,7 @@
 extends Node2D
 
 signal enemy_ready(enemy_id: String)
+signal clicked
 
 var level := 1
 var _portal_levels: Array = []
@@ -9,6 +10,10 @@ var _available_enemies: Array = []
 var _enemy_active := false
 
 @onready var spawn_timer: Timer = $SpawnTimer
+
+func _ready() -> void:
+	if has_node("ClickArea"):
+		$ClickArea.input_event.connect(_on_click_area_input_event)
 
 func setup(portal_levels: Array, enemies: Dictionary) -> void:
 	_portal_levels = portal_levels
@@ -47,6 +52,10 @@ func _on_spawn_timer_timeout() -> void:
 func on_enemy_died() -> void:
 	_enemy_active = false
 	spawn_timer.start(_get_spawn_time())
+
+func _on_click_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		clicked.emit()
 
 func upgrade(current_gold: int) -> int:
 	if level >= _portal_levels.size():

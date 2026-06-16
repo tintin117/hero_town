@@ -29,15 +29,50 @@ const HEROES := {
 
 const BUILDINGS := {
 	"town_hall": {
+		"display_name": "Town Hall",
+		"build_cost": 0,
+		"unlock_th_level": 1,
+		"cells_wide": 2,
 		"levels": [
 			{"cost": 0,   "hero_level_cap": 10, "label": "Lv1"},
 			{"cost": 250, "hero_level_cap": 20, "label": "Lv2"},
 		]
 	},
 	"portal": {
+		"display_name": "Portal",
+		"build_cost": 0,
+		"unlock_th_level": 1,
+		"cells_wide": 2,
 		"levels": [
 			{"cost": 0,   "enemy_tier": 1, "label": "Lv1"},
 			{"cost": 300, "enemy_tier": 2, "label": "Lv2"},
+		]
+	},
+	"shrine": {
+		"display_name": "Shrine",
+		"build_cost": 0,
+		"unlock_th_level": 2,
+		"cells_wide": 1,
+		"levels": [
+			{"cost": 0, "label": "Lv1"},
+		]
+	},
+	"tavern": {
+		"display_name": "Tavern",
+		"build_cost": 700,
+		"unlock_th_level": 3,
+		"cells_wide": 2,
+		"levels": [
+			{"cost": 0, "label": "Lv1"},
+		]
+	},
+	"blacksmith": {
+		"display_name": "Blacksmith",
+		"build_cost": 600,
+		"unlock_th_level": 3,
+		"cells_wide": 1,
+		"levels": [
+			{"cost": 0, "label": "Lv1"},
 		]
 	},
 }
