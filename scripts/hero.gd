@@ -2,10 +2,16 @@ extends CharacterBody2D
 
 signal stats_changed
 
-enum State { IDLE, COMBAT }
+enum State { IDLE, PATROL, CHASE, COMBAT }
 
-const HERO_ID := "H001"
+const PATROL_SPEED := 50.0
+const CHASE_SPEED := 90.0
+const ATTACK_RANGE := 55.0
+var patrol_max_x := 700.0   # set by main.gd based on portal position
 
+const RESPAWN_DELAY := 10.0
+
+var hero_id := "H001"
 var level := 1
 var max_level := 10
 
@@ -15,6 +21,7 @@ var hp := 100
 var atk := 8
 var def := 0
 var atk_speed := 1.6
+var crit_chance := 0.02
 
 var state := State.IDLE
 var target: CharacterBody2D = null
@@ -28,9 +35,13 @@ var enemies_in_range: Array = []
 
 func setup(hero_data: Dictionary) -> void:
 	_data = hero_data
+	if "id" in hero_data:
+		hero_id = hero_data["id"]
 
 func _ready() -> void:
 	_apply_stats()
+	# Heroes don't physically block each other — combat range is handled by DetectionArea
+	collision_mask = 0
 	attack_timer.wait_time = atk_speed
 	attack_timer.timeout.connect(_on_attack_timer_timeout)
 	detection_area.body_entered.connect(_on_body_entered)
@@ -42,11 +53,16 @@ func _ready() -> void:
 func _apply_stats() -> void:
 	if _data.is_empty():
 		return
-	max_hp = (_data["hp"] as int) + (level - 1) * 5
+	var base_hp: int = _data.get("base_hp", _data.get("hp", 100)) as int
+	max_hp = base_hp + (level - 1) * 5
 	hp = max_hp
-	atk = (_data["atk"] as int) + (level - 1) * 2
-	def = _data["def"] as int
-	atk_speed = _data["atk_speed"] as float
+	# Derive atk from base_power for heroes defined by power, else legacy field
+	var bp: float = _data.get("base_power", 0.0) as float
+	var ppl: float = _data.get("power_per_level", 0.0) as float
+	atk = roundi(bp + ppl * (level - 1)) if bp > 0 else (_data.get("atk", 8) as int) + (level - 1) * 2
+	def = _data.get("def", 0) as int
+	atk_speed = _data.get("atk_speed", 1.6) as float
+	crit_chance = _data.get("crit_chance", 0.02) as float
 
 #func _setup_animations() -> void:
 	#var lib := AnimationLibrary.new()
@@ -91,7 +107,37 @@ func _apply_stats() -> void:
 func _physics_process(_delta: float) -> void:
 	match state:
 		State.IDLE:
-			velocity = Vector2.ZERO
+			# Start patrolling rightward immediately
+			state = State.PATROL
+		State.PATROL:
+			if not enemies_in_range.is_empty():
+				state = State.CHASE
+				return
+			if global_position.x < patrol_max_x:
+				velocity = Vector2(PATROL_SPEED, 0)
+				visual.scale.x = 1.0
+			else:
+				velocity = Vector2.ZERO
+			move_and_slide()
+			if anim.current_animation != "idle":
+				anim.play("idle")
+		State.CHASE:
+			enemies_in_range = enemies_in_range.filter(func(e): return is_instance_valid(e))
+			if enemies_in_range.is_empty():
+				state = State.PATROL
+				return
+			target = enemies_in_range[0]
+			var dist := global_position.distance_to(target.global_position)
+			if dist <= ATTACK_RANGE:
+				state = State.COMBAT
+				attack_timer.wait_time = atk_speed
+				attack_timer.start()
+				velocity = Vector2.ZERO
+			else:
+				var dir: float = sign(target.global_position.x - global_position.x)
+				velocity = Vector2(dir * CHASE_SPEED, 0)
+				visual.scale.x = dir
+			move_and_slide()
 			if anim.current_animation != "idle":
 				anim.play("idle")
 		State.COMBAT:
@@ -104,11 +150,13 @@ func _on_attack_timer_timeout() -> void:
 		return
 	enemies_in_range = enemies_in_range.filter(func(e): return is_instance_valid(e))
 	if enemies_in_range.is_empty():
-		state = State.IDLE
+		state = State.PATROL
 		attack_timer.stop()
 		return
 	target = enemies_in_range[0]
-	var dmg := maxi(1, atk - target.def) if "def" in target else atk
+	var dmg := maxi(1, atk - (target.def if "def" in target else 0))
+	if randf() < crit_chance:
+		dmg *= 2
 	target.take_damage(dmg)
 	anim.play("attack")
 
@@ -119,16 +167,14 @@ func _on_anim_finished(anim_name: String) -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("enemies"):
 		enemies_in_range.append(body)
-		if state == State.IDLE:
-			state = State.COMBAT
-			attack_timer.wait_time = atk_speed
-			attack_timer.start()
+		if state == State.PATROL or state == State.IDLE:
+			state = State.CHASE
 
 func _on_body_exited(body: Node2D) -> void:
 	enemies_in_range.erase(body)
 	enemies_in_range = enemies_in_range.filter(func(e): return is_instance_valid(e))
 	if enemies_in_range.is_empty():
-		state = State.IDLE
+		state = State.PATROL
 		target = null
 		attack_timer.stop()
 
@@ -137,8 +183,21 @@ func take_damage(amount: int) -> void:
 	hp -= dmg
 	health_bar.update_bar(hp, max_hp)
 	if hp <= 0:
-		hp = max_hp
-		health_bar.update_bar(hp, max_hp)
+		_die()
+
+func _die() -> void:
+	state = State.PATROL
+	attack_timer.stop()
+	enemies_in_range.clear()
+	target = null
+	visual.visible = false
+	await get_tree().create_timer(RESPAWN_DELAY).timeout
+	if not is_instance_valid(self):
+		return
+	hp = max_hp
+	health_bar.update_bar(hp, max_hp)
+	visual.visible = true
+	anim.play("idle")
 
 func upgrade_level() -> void:
 	if level >= max_level:
@@ -154,7 +213,9 @@ func power() -> int:
 	return roundi((_data["base_power"] as float) + (_data["power_per_level"] as float) * (level - 1))
 
 func upgrade_gold_cost() -> int:
-	return roundi(20.0 * pow(level, 1.35))
+	var base: float = _data.get("upgrade_gold_base", 20.0) as float
+	return roundi(base * pow(level, 1.35))
 
 func upgrade_shard_cost() -> int:
-	return roundi(2.0 * pow(level, 1.20))
+	var base: float = _data.get("upgrade_shard_base", 2.0) as float
+	return roundi(base * pow(level, 1.20))

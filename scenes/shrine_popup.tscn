@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/shrine_popup.gd" id="1_spop"]
+
+[node name="ShrinePopup" type="PanelContainer"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -150.0
+offset_right = 160.0
+offset_bottom = 150.0
+script = ExtResource("1_spop")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+text = "Shrine"
+
+[node name="CostLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "Roll cost: 100g + 10s"
+
+[node name="ResultLabel" type="Label" parent="VBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="RollButton" type="Button" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 36)
+text = "Roll Hero"
+
+[node name="UpgradeButton" type="Button" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 36)
+text = "Upgrade Shrine"
+
+[node name="CloseButton" type="Button" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 36)
+text = "Close"

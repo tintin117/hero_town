@@ -7,7 +7,7 @@ var level := 1
 var _portal_levels: Array = []
 var _enemies: Dictionary = {}
 var _available_enemies: Array = []
-var _enemy_active := false
+var _active_enemy_count := 0
 
 @onready var spawn_timer: Timer = $SpawnTimer
 
@@ -43,14 +43,22 @@ func _pick_enemy_id() -> String:
 			best = id
 	return best
 
+func _active_slots() -> int:
+	if _portal_levels.is_empty():
+		return 1
+	return _portal_levels[level - 1].get("active_slots", 1) as int
+
 func _on_spawn_timer_timeout() -> void:
-	if _enemy_active:
+	if _active_enemy_count >= _active_slots():
+		spawn_timer.start(_get_spawn_time())
 		return
-	_enemy_active = true
+	_active_enemy_count += 1
 	emit_signal("enemy_ready", _pick_enemy_id())
+	if _active_enemy_count < _active_slots():
+		spawn_timer.start(_get_spawn_time())
 
 func on_enemy_died() -> void:
-	_enemy_active = false
+	_active_enemy_count = maxi(0, _active_enemy_count - 1)
 	spawn_timer.start(_get_spawn_time())
 
 func _on_click_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:

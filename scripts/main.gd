@@ -4,6 +4,7 @@ const GD = preload("res://scripts/game_data.gd")
 const HeroScene := preload("res://scenes/hero.tscn")
 const EnemyScene := preload("res://scenes/enemy.tscn")
 const BuildingScene := preload("res://scenes/building.tscn")
+const ShrineScene := preload("res://scenes/shrine.tscn")
 const EmptySlotScene := preload("res://scenes/empty_slot.tscn")
 
 const GROUND_Y := 500.0
@@ -29,7 +30,16 @@ const PORTAL_DEFAULT_COL   := 3
 var gold := 50
 var shards := 0
 var first_kill_done := false
+var first_th2_done := false
+var first_shrine_roll_done := false
+var first_tier3_kill_done := false
+var discovered_heroes: Array[String] = ["H001"]
+var active_hero_id := "H001"
 var _overlay_active := false
+var _build_mode_active := false
+
+# Shrine node reference (set when shrine is placed)
+var _shrine_node: Node2D = null
 
 # Grid state: _grid[layer][col] = "" or building_type
 var _grid: Array = []
@@ -39,6 +49,9 @@ var _active_build_layer: int = -1
 var _active_build_col: int = -1
 var _empty_slot_nodes: Array = []   # flat list of all live EmptySlot nodes
 
+# Hero instances keyed by hero_id
+var _hero_instances: Dictionary = {}
+
 @onready var heroes_layer: Node2D = $HeroesLayer
 @onready var enemies_layer: Node2D = $EnemiesLayer
 @onready var gold_label: Label = $UI/GoldLabel
@@ -46,6 +59,7 @@ var _empty_slot_nodes: Array = []   # flat list of all live EmptySlot nodes
 @onready var hero_avatar: Control = $UI/HeroAvatar
 @onready var building_popup: Control = $UI/BuildingPopup
 @onready var build_menu_popup: Control = $UI/BuildMenuPopup
+@onready var shrine_popup: Control = $UI/ShrinePopup
 @onready var back_row: Node2D = $BuildingGrid/BackRow
 @onready var mid_row: Node2D = $BuildingGrid/MidRow
 @onready var front_row: Node2D = $BuildingGrid/FrontRow
@@ -80,13 +94,23 @@ func save_game() -> void:
 				if _building_nodes[r][c] != null:
 					slots_data.append({"layer": r, "col": c, "type": t})
 
+	var shrine_level := 1
+	if is_instance_valid(_shrine_node):
+		shrine_level = _shrine_node.level
+
 	var data := {
 		"gold": gold,
 		"shards": shards,
 		"first_kill_done": first_kill_done,
+		"first_th2_done": first_th2_done,
+		"first_shrine_roll_done": first_shrine_roll_done,
+		"first_tier3_kill_done": first_tier3_kill_done,
+		"discovered_heroes": discovered_heroes,
+		"active_hero_id": active_hero_id,
 		"hero_level": hero_instance.level if is_instance_valid(hero_instance) else 1,
 		"town_hall_level": town_hall.level,
 		"portal_level": portal.level,
+		"shrine_level": shrine_level,
 		"building_slots": slots_data,
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -110,6 +134,12 @@ func _apply_save(data: Dictionary) -> void:
 	gold = data.get("gold", gold)
 	shards = data.get("shards", shards)
 	first_kill_done = data.get("first_kill_done", false)
+	first_th2_done = data.get("first_th2_done", false)
+	first_shrine_roll_done = data.get("first_shrine_roll_done", false)
+	first_tier3_kill_done = data.get("first_tier3_kill_done", false)
+	var saved_discovered = data.get("discovered_heroes", ["H001"])
+	discovered_heroes = Array(saved_discovered, TYPE_STRING, "", null)
+	active_hero_id = data.get("active_hero_id", "H001")
 
 	# Restore building levels before hero so level cap is correct
 	town_hall.level = data.get("town_hall_level", 1)
@@ -117,14 +147,20 @@ func _apply_save(data: Dictionary) -> void:
 	portal._refresh_enemy_pool()
 	town_hall.level_cap_changed.emit(town_hall.hero_level_cap())
 
-	# Restore hero level
+	# Restore hero level for H001
 	var saved_hero_level: int = data.get("hero_level", 1)
 	if is_instance_valid(hero_instance) and saved_hero_level > 1:
 		hero_instance.level = saved_hero_level
 		hero_instance._apply_stats()
 		hero_instance.stats_changed.emit()
 
+	# Spawn any additional discovered heroes (H001 already spawned at startup)
+	for hid in discovered_heroes:
+		if hid != "H001":
+			_spawn_hero_by_id(hid)
+
 	# Restore constructed buildings
+	var saved_shrine_level: int = data.get("shrine_level", 1)
 	var saved_slots: Array = data.get("building_slots", [])
 	for entry in saved_slots:
 		var t: String = entry.get("type", "")
@@ -138,6 +174,10 @@ func _apply_save(data: Dictionary) -> void:
 				_move_portal(r, c)
 		else:
 			_place_building(r, c, t)
+
+	# Restore shrine level now that the node is placed
+	if is_instance_valid(_shrine_node) and saved_shrine_level > 1:
+		_shrine_node.level = saved_shrine_level
 
 	_refresh_empty_slots()
 
@@ -199,8 +239,17 @@ func _place_building(layer: int, col: int, building_type: String) -> void:
 	for i in cells_wide:
 		_grid[layer][col + i] = building_type
 
-	# Instantiate building visual
-	var node: Node2D = BuildingScene.instantiate()
+	# Instantiate building visual (shrine gets its own dedicated scene)
+	var node: Node2D
+	if building_type == "shrine":
+		node = ShrineScene.instantiate()
+		_shrine_node = node
+		node.setup(GD.BUILDINGS["shrine"]["levels"], GD.HEROES)
+		node.th_level = town_hall.level
+		node.hero_rolled.connect(_on_shrine_hero_rolled)
+		node.clicked.connect(func(): _on_building_clicked("shrine"))
+	else:
+		node = BuildingScene.instantiate()
 	var row_node := _get_row_node(layer)
 	row_node.add_child(node)
 
@@ -212,8 +261,9 @@ func _place_building(layer: int, col: int, building_type: String) -> void:
 
 	_building_nodes[layer][col] = node
 
-	# Connect click signal
-	node.clicked.connect(func(_n): _on_building_clicked(building_type))
+	# Shrine wires its own signals above; other buildings get generic click
+	if building_type != "shrine":
+		node.clicked.connect(func(_n): _on_building_clicked(building_type))
 
 func _move_portal(new_layer: int, new_col: int) -> void:
 	var p_data: Dictionary = GD.BUILDINGS["portal"]
@@ -253,7 +303,10 @@ func _refresh_empty_slots() -> void:
 			s.queue_free()
 	_empty_slot_nodes.clear()
 
-	# Check what buildings can potentially be placed (by any player)
+	if not _build_mode_active:
+		return
+
+	# Check what buildings can potentially be placed
 	var any_buildable := false
 	for btype in GD.BUILDINGS:
 		if btype == "town_hall" or btype == "portal":
@@ -299,11 +352,27 @@ func _refresh_empty_slots() -> void:
 # ---- Hero ----
 
 func _spawn_hero() -> void:
-	hero_instance = HeroScene.instantiate()
-	hero_instance.position = Vector2(HERO_X, GROUND_Y)
-	heroes_layer.add_child(hero_instance)
-	hero_instance.setup(GD.HEROES["H001"])
-	hero_instance.stats_changed.connect(_refresh_hero_card)
+	_spawn_hero_by_id("H001")
+	hero_instance = _hero_instances.get("H001")
+
+func _spawn_hero_by_id(hero_id: String) -> void:
+	if hero_id in _hero_instances:
+		return
+	var hdata: Dictionary = GD.HEROES.get(hero_id, {})
+	if hdata.is_empty():
+		return
+	var inst: CharacterBody2D = HeroScene.instantiate()
+	inst.position = Vector2(_hero_spawn_x(_hero_instances.size()), GROUND_Y)
+	inst.patrol_max_x = portal.global_position.x - 150.0
+	heroes_layer.add_child(inst)
+	inst.setup(hdata)
+	inst.stats_changed.connect(_refresh_hero_card)
+	_hero_instances[hero_id] = inst
+	if hero_id == "H001" or hero_instance == null:
+		hero_instance = inst
+
+func _hero_spawn_x(index: int) -> float:
+	return HERO_X - index * 70.0
 
 # ---- Buildings ----
 
@@ -327,11 +396,18 @@ func _on_enemy_ready(enemy_id: String) -> void:
 	enemy.setup(hero_instance, GD.ENEMIES.get(enemy_id, {}))
 	enemy.died.connect(_on_enemy_died.bind(enemy))
 
-func _on_enemy_died(gold_amount: int, shard_amount: int, _enemy: Node) -> void:
+func _on_enemy_died(gold_amount: int, shard_amount: int, enemy: Node) -> void:
 	if not first_kill_done:
 		first_kill_done = true
 		gold_amount += 50
 		shard_amount += 5
+	# M004: first Tier 3 enemy kill
+	if not first_tier3_kill_done and is_instance_valid(enemy):
+		var edata: Dictionary = enemy.get_data() if enemy.has_method("get_data") else {}
+		if edata.get("tier", 0) >= 3:
+			first_tier3_kill_done = true
+			gold_amount += 400
+			shard_amount += 40
 	add_rewards(gold_amount, shard_amount)
 	portal.on_enemy_died()
 
@@ -362,6 +438,13 @@ func try_upgrade_town_hall() -> void:
 	if cost < 0 or gold < cost:
 		return
 	gold = town_hall.upgrade(gold)
+	# M002: first TH Lv2 upgrade
+	if town_hall.level >= 2 and not first_th2_done:
+		first_th2_done = true
+		add_rewards(100, 10)
+	# Keep shrine th_level in sync
+	if is_instance_valid(_shrine_node):
+		_shrine_node.th_level = town_hall.level
 	_refresh_hud()
 	_refresh_empty_slots()
 	save_game()
@@ -374,14 +457,15 @@ func try_upgrade_portal() -> void:
 	_refresh_hud()
 	save_game()
 
-func try_upgrade_hero() -> void:
-	if not is_instance_valid(hero_instance):
+func try_upgrade_hero(hero_id: String = "H001") -> void:
+	var hinst = _hero_instances.get(hero_id)
+	if not is_instance_valid(hinst):
 		return
-	var gc: int = hero_instance.upgrade_gold_cost()
-	var sc: int = hero_instance.upgrade_shard_cost()
+	var gc: int = hinst.upgrade_gold_cost()
+	var sc: int = hinst.upgrade_shard_cost()
 	if not spend(gc, sc):
 		return
-	hero_instance.upgrade_level()
+	hinst.upgrade_level()
 	_refresh_hero_card()
 	save_game()
 
@@ -423,21 +507,11 @@ func _show_building_popup(context: String) -> void:
 				upgrade_label = "Upgrade  %dg" % next_cost
 				can_upgrade = gold >= next_cost
 		"hero":
-			title = "Hero — %s" % (GD.HEROES["H001"]["name"] as String)
-			var gc: int = hero_instance.upgrade_gold_cost()
-			var sc: int = hero_instance.upgrade_shard_cost()
-			info = "Level: %d / %d\nPower: %d\nUpgrade cost: %dg + %ds" % [
-				hero_instance.level, hero_instance.max_level,
-				hero_instance.power(), gc, sc]
-			if hero_instance.level >= hero_instance.max_level:
-				upgrade_label = "At level cap"
-			else:
-				upgrade_label = "Upgrade  %dg / %ds" % [gc, sc]
-				can_upgrade = gold >= gc and shards >= sc
+			_show_building_popup("hero_H001")
+			return
 		"shrine":
-			title = "Shrine"
-			info = "Hero gacha (Phase 2)"
-			upgrade_label = "Coming soon"
+			_show_shrine_popup()
+			return
 		"tavern":
 			title = "Tavern"
 			info = "Visitor heroes (Phase 3)"
@@ -446,6 +520,25 @@ func _show_building_popup(context: String) -> void:
 			title = "Blacksmith"
 			info = "Power bonus (Phase 3)"
 			upgrade_label = "Coming soon"
+		_:
+			if context.begins_with("hero_"):
+				var hero_popup_id: String = context.substr(5)
+				var hinst = _hero_instances.get(hero_popup_id)
+				var hdata: Dictionary = GD.HEROES.get(hero_popup_id, {})
+				if not is_instance_valid(hinst) or hdata.is_empty():
+					return
+				title = "%s  (%s)" % [hdata.get("name", "Hero") as String, (hdata.get("rarity", "") as String).capitalize()]
+				var gc: int = hinst.upgrade_gold_cost()
+				var sc: int = hinst.upgrade_shard_cost()
+				info = "Level: %d / %d\nPower: %d\nUpgrade cost: %dg + %ds" % [
+					hinst.level, hinst.max_level, hinst.power(), gc, sc]
+				if hinst.level >= hinst.max_level:
+					upgrade_label = "At level cap"
+				else:
+					upgrade_label = "Upgrade  %dg / %ds" % [gc, sc]
+					can_upgrade = gold >= gc and shards >= sc
+			else:
+				return
 
 	building_popup.show_for(context, title, info, upgrade_label, can_upgrade)
 
@@ -455,9 +548,63 @@ func _on_popup_upgrade_requested(context: String) -> void:
 			try_upgrade_town_hall()
 		"portal":
 			try_upgrade_portal()
-		"hero":
-			try_upgrade_hero()
+		_:
+			if context.begins_with("hero_"):
+				try_upgrade_hero(context.substr(5))
 	_show_building_popup(context)
+
+# ---- Shrine ----
+
+func _show_shrine_popup() -> void:
+	if not is_instance_valid(_shrine_node):
+		return
+	var roll_gold: int = _shrine_node.roll_cost_gold()
+	var roll_shard: int = _shrine_node.roll_cost_shard()
+	var upgrade_cost: int = _shrine_node.next_upgrade_cost()
+	var can_roll: bool = gold >= roll_gold and shards >= roll_shard
+	var can_upgrade: bool = upgrade_cost >= 0 and gold >= upgrade_cost
+	shrine_popup.show_for(_shrine_node.level, roll_gold, roll_shard, upgrade_cost, can_roll, can_upgrade)
+
+func _on_shrine_roll_requested() -> void:
+	if not is_instance_valid(_shrine_node):
+		return
+	var roll_gold: int = _shrine_node.roll_cost_gold()
+	var roll_shard: int = _shrine_node.roll_cost_shard()
+	if not spend(roll_gold, roll_shard):
+		return
+	# M003: first shrine roll bonus
+	if not first_shrine_roll_done:
+		first_shrine_roll_done = true
+		add_rewards(0, 20)
+	_shrine_node.roll(discovered_heroes)
+	# Refresh button states without clearing the roll result
+	var upgrade_cost: int = _shrine_node.next_upgrade_cost()
+	var can_roll: bool = gold >= _shrine_node.roll_cost_gold() and shards >= _shrine_node.roll_cost_shard()
+	var can_upgrade: bool = upgrade_cost >= 0 and gold >= upgrade_cost
+	shrine_popup.refresh_buttons(roll_gold, roll_shard, upgrade_cost, can_roll, can_upgrade)
+
+func _on_shrine_upgrade_requested() -> void:
+	if not is_instance_valid(_shrine_node):
+		return
+	var cost: int = _shrine_node.next_upgrade_cost()
+	if cost < 0 or gold < cost:
+		return
+	gold = _shrine_node.upgrade(gold)
+	_refresh_hud()
+	save_game()
+	_show_shrine_popup()
+
+func _on_shrine_hero_rolled(hero_id: String, is_duplicate: bool, shard_gain: int) -> void:
+	if not is_duplicate:
+		discovered_heroes.append(hero_id)
+		_spawn_hero_by_id(hero_id)
+	else:
+		add_rewards(0, shard_gain)
+	var hdata: Dictionary = GD.HEROES.get(hero_id, {})
+	var hero_name: String = hdata.get("name", "Unknown") as String
+	var rarity: String = hdata.get("rarity", "common") as String
+	shrine_popup.show_result(hero_name, rarity, is_duplicate, shard_gain)
+	save_game()
 
 func _refresh_open_popup() -> void:
 	if building_popup.visible and building_popup._context != "":
@@ -504,6 +651,7 @@ func _on_build_requested(building_type: String) -> void:
 	_place_building(_active_build_layer, _active_build_col, building_type)
 	_active_build_layer = -1
 	_active_build_col = -1
+	_build_mode_active = false
 	_refresh_empty_slots()
 	save_game()
 
@@ -517,9 +665,23 @@ func _refresh_hud() -> void:
 	_refresh_overlay_bar()
 
 func _build_ui() -> void:
-	var manage_btn: Button = $UI/HeroAvatar/HBox/VBox/ManageButton
-	if manage_btn:
-		manage_btn.pressed.connect(_on_hero_card_clicked)
+	# Replace static HBox content with a ScrollContainer for multi-hero list
+	var old_hbox := hero_avatar.get_node_or_null("HBox")
+	if old_hbox:
+		old_hbox.queue_free()
+	var scroll := ScrollContainer.new()
+	scroll.name = "ScrollContainer"
+	scroll.custom_minimum_size = Vector2(0, 0)
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hero_avatar.add_child(scroll)
+	var vbox := VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 2)
+	scroll.add_child(vbox)
+	# Resize panel to fit more heroes
+	hero_avatar.offset_top = -200.0
 	var menu_btn: Button = $UI/MenuButton
 	if menu_btn:
 		menu_btn.pressed.connect(_on_menu_pressed)
@@ -530,10 +692,25 @@ func _build_ui() -> void:
 	if expand_btn:
 		expand_btn.pressed.connect(_on_expand_pressed)
 
+	var build_btn: Button = $UI/BuildButton
+	if build_btn:
+		build_btn.pressed.connect(_on_build_btn_pressed)
+
 	building_popup.upgrade_requested.connect(_on_popup_upgrade_requested)
 	build_menu_popup.build_requested.connect(_on_build_requested)
+	build_menu_popup.popup_hidden.connect(_on_build_menu_closed)
+	shrine_popup.roll_requested.connect(_on_shrine_roll_requested)
+	shrine_popup.upgrade_requested.connect(_on_shrine_upgrade_requested)
 
 	_refresh_hero_card()
+
+func _on_build_btn_pressed() -> void:
+	_build_mode_active = not _build_mode_active
+	_refresh_empty_slots()
+
+func _on_build_menu_closed() -> void:
+	_build_mode_active = false
+	_refresh_empty_slots()
 
 func _on_hero_card_clicked() -> void:
 	_show_building_popup("hero")
@@ -553,8 +730,15 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		if building_popup.visible:
 			building_popup.hide_popup()
+		elif shrine_popup.visible:
+			shrine_popup.visible = false
 		elif build_menu_popup.visible:
 			build_menu_popup.hide_popup()
+			_build_mode_active = false
+			_refresh_empty_slots()
+		elif _build_mode_active:
+			_build_mode_active = false
+			_refresh_empty_slots()
 		elif _overlay_active:
 			_exit_overlay_mode()
 
@@ -593,6 +777,7 @@ func _enter_overlay_ui() -> void:
 	$UI/HeroAvatar.visible = false
 	$UI/MenuButton.visible = false
 	$UI/CompactButton.visible = false
+	$UI/BuildButton.visible = false
 	$UI/OverlayBar.visible = true
 	$Background.visible = false
 	$Ground.visible = false
@@ -605,6 +790,7 @@ func _exit_overlay_ui() -> void:
 	$UI/HeroAvatar.visible = true
 	$UI/MenuButton.visible = true
 	$UI/CompactButton.visible = true
+	$UI/BuildButton.visible = true
 	$UI/OverlayBar.visible = false
 	$Background.visible = true
 	$Ground.visible = true
@@ -626,14 +812,44 @@ func _refresh_overlay_bar() -> void:
 		lbl_hero.text = "  Hero Lv%d  Power: %d" % [hero_instance.level, hero_instance.power()]
 
 func _refresh_hero_card() -> void:
-	if not is_instance_valid(hero_instance):
+	# Rebuild hero list dynamically inside HeroAvatar
+	var vbox: VBoxContainer = hero_avatar.get_node_or_null("ScrollContainer/VBox")
+	if not vbox:
 		return
-	var name_lbl: Label = hero_avatar.get_node_or_null("HBox/VBox/NameLabel")
-	var level_lbl: Label = hero_avatar.get_node_or_null("HBox/VBox/LevelLabel")
-	var power_lbl: Label = hero_avatar.get_node_or_null("HBox/VBox/PowerLabel")
-	if name_lbl:
-		name_lbl.text = "Ratcatcher"
-	if level_lbl:
-		level_lbl.text = "Lv %d / %d" % [hero_instance.level, hero_instance.max_level]
-	if power_lbl:
-		power_lbl.text = "Power: %d" % hero_instance.power()
+	for child in vbox.get_children():
+		child.queue_free()
+
+	for hid in discovered_heroes:
+		var inst = _hero_instances.get(hid)
+		var hdata: Dictionary = GD.HEROES.get(hid, {})
+		var hname: String = hdata.get("name", hid) as String
+		var rarity: String = hdata.get("rarity", "common") as String
+
+		var row := PanelContainer.new()
+		var hbox := HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 4)
+		row.add_child(hbox)
+
+		var info_vbox := VBoxContainer.new()
+		info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hbox.add_child(info_vbox)
+
+		var name_lbl := Label.new()
+		name_lbl.text = "[%s] %s" % [rarity[0].to_upper(), hname]
+		name_lbl.add_theme_font_size_override("font_size", 10)
+		info_vbox.add_child(name_lbl)
+
+		if is_instance_valid(inst):
+			var stat_lbl := Label.new()
+			stat_lbl.text = "Lv %d/%d  Pwr:%d" % [inst.level, inst.max_level, inst.power()]
+			stat_lbl.add_theme_font_size_override("font_size", 10)
+			info_vbox.add_child(stat_lbl)
+
+		var manage_btn := Button.new()
+		manage_btn.text = "▶"
+		manage_btn.custom_minimum_size = Vector2(28, 0)
+		var captured_id := hid
+		manage_btn.pressed.connect(func(): _show_building_popup("hero_" + captured_id))
+		hbox.add_child(manage_btn)
+
+		vbox.add_child(row)

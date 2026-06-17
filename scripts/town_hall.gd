@@ -41,3 +41,6 @@ func next_hero_cap() -> int:
 	if _th_levels.is_empty() or level >= _th_levels.size():
 		return hero_level_cap()
 	return _th_levels[level]["hero_level_cap"] as int
+
+func max_level() -> int:
+	return _th_levels.size()

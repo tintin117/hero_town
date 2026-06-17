@@ -1,6 +1,7 @@
 extends PanelContainer
 
 signal build_requested(building_type: String)
+signal popup_hidden
 
 var _pending_layer: int = -1
 var _pending_col: int = -1
@@ -38,6 +39,7 @@ func hide_popup() -> void:
 	visible = false
 	_pending_layer = -1
 	_pending_col = -1
+	popup_hidden.emit()
 
 func _on_option_pressed(building_type: String) -> void:
 	build_requested.emit(building_type)

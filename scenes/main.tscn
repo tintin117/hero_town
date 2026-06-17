@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://gp1745ut8wil" path="res://asset/hero_town/decor_rock_2.png" id="12_jkv2x"]
 [ext_resource type="PackedScene" path="res://scenes/building_popup.tscn" id="20_bpop"]
 [ext_resource type="PackedScene" path="res://scenes/build_menu_popup.tscn" id="21_bmenu"]
+[ext_resource type="PackedScene" path="res://scenes/shrine_popup.tscn" id="22_spop"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_th_click"]
 size = Vector2(120, 116)
@@ -195,6 +196,16 @@ offset_right = -120.0
 offset_bottom = 45.0
 text = "Compact"
 
+[node name="BuildButton" type="Button" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -350.0
+offset_top = 10.0
+offset_right = -240.0
+offset_bottom = 45.0
+text = "Build"
+
 [node name="OverlayBar" type="PanelContainer" parent="UI" unique_id=1939981409]
 visible = false
 anchors_preset = 15
@@ -233,6 +244,8 @@ text = "Expand ↗"
 [node name="BuildingPopup" parent="UI" instance=ExtResource("20_bpop")]
 
 [node name="BuildMenuPopup" parent="UI" instance=ExtResource("21_bmenu")]
+
+[node name="ShrinePopup" parent="UI" instance=ExtResource("22_spop")]
 
 [node name="tower" type="Sprite2D" parent="." unique_id=25288064]
 position = Vector2(603, 422.99997)

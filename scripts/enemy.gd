@@ -12,8 +12,10 @@ var gold_max := 12
 var shard_min := 1
 var shard_max := 2
 var attack_range := 40.0
+var _tier := 1
 
 var hero: CharacterBody2D = null
+var _data: Dictionary = {}
 
 @onready var attack_timer: Timer = $AttackTimer
 @onready var health_bar: Node2D = $HealthBar
@@ -22,6 +24,7 @@ var hero: CharacterBody2D = null
 
 func _ready() -> void:
 	add_to_group("enemies")
+	collision_mask = 0
 	attack_timer.timeout.connect(_on_attack_timer_timeout)
 	anim.animation_finished.connect(_on_anim_finished)
 	_setup_animations()
@@ -29,6 +32,7 @@ func _ready() -> void:
 
 func setup(hero_ref: CharacterBody2D, data: Dictionary) -> void:
 	hero = hero_ref
+	_data = data
 	if data.is_empty():
 		return
 	max_hp = data["hp"] as int
@@ -39,7 +43,11 @@ func setup(hero_ref: CharacterBody2D, data: Dictionary) -> void:
 	gold_max = data["gold_max"] as int
 	shard_min = data["shard_min"] as int
 	shard_max = data["shard_max"] as int
+	_tier = data.get("tier", 1) as int
 	health_bar.update_bar(hp, max_hp)
+
+func get_data() -> Dictionary:
+	return _data
 
 func _setup_animations() -> void:
 	var lib := AnimationLibrary.new()
