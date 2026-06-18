@@ -1,53 +1,38 @@
-[gd_scene load_steps=9 format=3 uid="uid://b5kgwoij87jmg"]
+[gd_scene format=3 uid="uid://b5kgwoij87jmg"]
 
 [ext_resource type="Script" uid="uid://c6l5lbi8uppni" path="res://scripts/enemy.gd" id="1_7p1mj"]
+[ext_resource type="Texture2D" uid="uid://ncmkcdln1g51" path="res://asset/2D Character - Casual Monsters/_PNG/slime/slime_green/slime/body.png" id="2_5uy6h"]
 [ext_resource type="Script" uid="uid://df75gt6jsadq" path="res://scripts/health_bar.gd" id="2_hbar"]
-[ext_resource type="Texture2D" uid="uid://dgvhxa07t233y" path="res://asset/2D Character - Casual Monsters/_PNG/goblin/goblin/goblin_warrior/body.png" id="3_gbody"]
-[ext_resource type="Texture2D" uid="uid://civbbjsimlfi0" path="res://asset/2D Character - Casual Monsters/_PNG/goblin/goblin/goblin_warrior/leg.png" id="4_gleg"]
-[ext_resource type="Texture2D" uid="uid://cw6dt6h8kmwho" path="res://asset/2D Character - Casual Monsters/_PNG/goblin/goblin/goblin_warrior/leg2.png" id="5_gleg2"]
-[ext_resource type="Texture2D" uid="uid://b5srhvu1gcw64" path="res://asset/2D Character - Casual Monsters/_PNG/goblin/goblin/goblin_warrior/arm.png" id="6_garm"]
-[ext_resource type="Texture2D" uid="uid://meor54evqpy4" path="res://asset/2D Character - Casual Monsters/_PNG/goblin/goblin/goblin_warrior/arm2.png" id="7_garm2"]
+[ext_resource type="Texture2D" uid="uid://l0ktacer5222" path="res://asset/2D Character - Casual Monsters/_PNG/slime/slime_green/slime/weapon.png" id="3_c4w8v"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_md0e3"]
-size = Vector2(32, 32)
+size = Vector2(30, 27)
 
-[node name="Enemy" type="CharacterBody2D"]
+[node name="Enemy" type="CharacterBody2D" unique_id=363182631]
 script = ExtResource("1_7p1mj")
 
-[node name="Visual" type="Node2D" parent="."]
-scale = Vector2(0.4, 0.4)
-
-[node name="Body" type="Sprite2D" parent="Visual"]
-position = Vector2(0, -10)
-texture = ExtResource("3_gbody")
-
-[node name="Leg" type="Sprite2D" parent="Visual"]
-position = Vector2(-10, 45)
-texture = ExtResource("4_gleg")
-offset = Vector2(0, 12)
-
-[node name="Leg2" type="Sprite2D" parent="Visual"]
-position = Vector2(10, 45)
-texture = ExtResource("5_gleg2")
-offset = Vector2(0, 12)
-
-[node name="Arm" type="Sprite2D" parent="Visual"]
-position = Vector2(55, -25)
-texture = ExtResource("6_garm")
-offset = Vector2(-56, 0)
-
-[node name="Arm2" type="Sprite2D" parent="Visual"]
-position = Vector2(-20, -15)
-texture = ExtResource("7_garm2")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1243931576]
+position = Vector2(0, -13.5)
 shape = SubResource("RectangleShape2D_md0e3")
 
-[node name="AttackTimer" type="Timer" parent="."]
+[node name="Visual" type="Node2D" parent="." unique_id=1569746530]
+position = Vector2(0, -8.999999)
+scale = Vector2(0.4, 0.4)
+
+[node name="body" type="Sprite2D" parent="Visual" unique_id=308365156]
+position = Vector2(0, -10)
+texture = ExtResource("2_5uy6h")
+
+[node name="weapon" type="Sprite2D" parent="Visual" unique_id=1168117781]
+position = Vector2(60, -37.5)
+texture = ExtResource("3_c4w8v")
+flip_h = true
+
+[node name="AttackTimer" type="Timer" parent="." unique_id=631602911]
 wait_time = 1.5
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=502156789]
 
-[node name="HealthBar" type="Node2D" parent="."]
+[node name="HealthBar" type="Node2D" parent="." unique_id=1337896699]
 position = Vector2(0, -32)
 script = ExtResource("2_hbar")

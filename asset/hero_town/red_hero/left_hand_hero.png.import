@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccnjv6r62180b"
-path="res://.godot/imported/right_hand_hero.png-a1b740c825cb4cde7403e0c509e0a456.ctex"
+uid="uid://brfqrswkcxeu7"
+path="res://.godot/imported/left_hand_hero.png-0107d60ff7e458d8f4cca7bdb4d4e84b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://asset/hero_town/right_hand_hero.png"
-dest_files=["res://.godot/imported/right_hand_hero.png-a1b740c825cb4cde7403e0c509e0a456.ctex"]
+source_file="res://asset/hero_town/red_hero/left_hand_hero.png"
+dest_files=["res://.godot/imported/left_hand_hero.png-0107d60ff7e458d8f4cca7bdb4d4e84b.ctex"]
 
 [params]
 

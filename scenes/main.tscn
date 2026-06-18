@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://byitqubjl1h7d" path="res://scripts/main.gd" id="1_o5qli"]
 [ext_resource type="Script" uid="uid://dus3gostsmfyl" path="res://scripts/town_hall.gd" id="2_sugp2"]
 [ext_resource type="Script" uid="uid://daq8fbp707lkh" path="res://scripts/portal.gd" id="3_jyhfs"]
-[ext_resource type="Texture2D" uid="uid://dwlm13xdy4irc" path="res://asset/hero_town/grass_land.png" id="4_jyhfs"]
 [ext_resource type="Texture2D" uid="uid://bgjp3xa56wwo1" path="res://asset/hero_town/tower.png" id="4_tefeu"]
 [ext_resource type="Texture2D" uid="uid://j5gylxon4pes" path="res://asset/hero_town/tree.png" id="5_choun"]
 [ext_resource type="Texture2D" uid="uid://c0op1nq65nfra" path="res://asset/hero_town/main_house.png" id="5_o6xl0"]
@@ -12,7 +11,16 @@
 [ext_resource type="Texture2D" uid="uid://c7lrn32bm2jku" path="res://asset/hero_town/monster_house.png" id="8_trceg"]
 [ext_resource type="Texture2D" uid="uid://bje6v2f8pjs1v" path="res://asset/hero_town/decor_rock_1.png" id="9_trceg"]
 [ext_resource type="Texture2D" uid="uid://crvg6tv6m3o0h" path="res://asset/hero_town/grass.png" id="10_a8y0u"]
+[ext_resource type="Texture2D" uid="uid://c63jlvadu3m3j" path="res://asset/hero_town/circle_tree_3.png" id="10_y6deb"]
+[ext_resource type="Texture2D" uid="uid://bx38hkpcjka70" path="res://asset/hero_town/cicrle_tree_2.png" id="11_og1vs"]
+[ext_resource type="Texture2D" uid="uid://dyohajy1ksb" path="res://asset/hero_town/circle_tree_1.png" id="12_2wyq8"]
 [ext_resource type="Texture2D" uid="uid://gp1745ut8wil" path="res://asset/hero_town/decor_rock_2.png" id="12_jkv2x"]
+[ext_resource type="Texture2D" uid="uid://d21or4vhu03ca" path="res://asset/hero_town/bg_grass.png" id="16_dp3eg"]
+[ext_resource type="Texture2D" uid="uid://d0dpjpg2dfwld" path="res://asset/hero_town/wind_milk.png" id="16_gqmmt"]
+[ext_resource type="Texture2D" uid="uid://rfe26d2wk5qo" path="res://asset/hero_town/bg_rock.png" id="17_0ld40"]
+[ext_resource type="Texture2D" uid="uid://dacaisn8os7kt" path="res://asset/hero_town/camp.png" id="17_jscy8"]
+[ext_resource type="Texture2D" uid="uid://ddebe34xkaoov" path="res://asset/hero_town/fire_tower.png" id="17_yc10j"]
+[ext_resource type="Texture2D" uid="uid://cqd5b53nio7as" path="res://asset/hero_town/bg_land.png" id="18_gqmmt"]
 [ext_resource type="PackedScene" path="res://scenes/building_popup.tscn" id="20_bpop"]
 [ext_resource type="PackedScene" path="res://scenes/build_menu_popup.tscn" id="21_bmenu"]
 [ext_resource type="PackedScene" path="res://scenes/shrine_popup.tscn" id="22_spop"]
@@ -33,17 +41,18 @@ offset_bottom = 648.0
 color = Color(0.13, 0.55, 0.13, 1)
 
 [node name="Ground" type="ColorRect" parent="." unique_id=1494944212]
+visible = false
 offset_top = 597.0
 offset_right = 1152.0
 offset_bottom = 648.0
 color = Color(0.42, 0.28, 0.13, 1)
 
-[node name="BuildingGrid" type="Node2D" parent="."]
+[node name="BuildingGrid" type="Node2D" parent="." unique_id=1351558925]
 
-[node name="BackRow" type="Node2D" parent="BuildingGrid"]
+[node name="BackRow" type="Node2D" parent="BuildingGrid" unique_id=394177843]
 z_index = 10
 
-[node name="MidRow" type="Node2D" parent="BuildingGrid"]
+[node name="MidRow" type="Node2D" parent="BuildingGrid" unique_id=257869920]
 z_index = 20
 
 [node name="TownHall" type="Node2D" parent="BuildingGrid/MidRow" unique_id=162850961]
@@ -51,28 +60,28 @@ position = Vector2(288, 463)
 scale = Vector2(0.875, 0.875)
 script = ExtResource("2_sugp2")
 
-[node name="WallVisual" type="Polygon2D" parent="BuildingGrid/MidRow/TownHall"]
+[node name="WallVisual" type="Polygon2D" parent="BuildingGrid/MidRow/TownHall" unique_id=2013857538]
 color = Color(0.55, 0.38, 0.18, 1)
 polygon = PackedVector2Array(-54, -62, 54, -62, 54, 0, -54, 0)
 
-[node name="RoofVisual" type="Polygon2D" parent="BuildingGrid/MidRow/TownHall"]
+[node name="RoofVisual" type="Polygon2D" parent="BuildingGrid/MidRow/TownHall" unique_id=1643740277]
 color = Color(0.35, 0.18, 0.08, 1)
 polygon = PackedVector2Array(-60, -62, 60, -62, 0, -116)
 
-[node name="NameLabel" type="Label" parent="BuildingGrid/MidRow/TownHall"]
+[node name="NameLabel" type="Label" parent="BuildingGrid/MidRow/TownHall" unique_id=1395544898]
 offset_left = -54.0
 offset_top = -80.0
 offset_right = 54.0
 offset_bottom = -62.0
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 9
 theme_override_colors/font_color = Color(1, 1, 0.8, 1)
+theme_override_font_sizes/font_size = 9
 text = "Town Hall"
+horizontal_alignment = 1
 
-[node name="ClickArea" type="Area2D" parent="BuildingGrid/MidRow/TownHall"]
+[node name="ClickArea" type="Area2D" parent="BuildingGrid/MidRow/TownHall" unique_id=1721065709]
 monitorable = false
 
-[node name="ClickShape" type="CollisionShape2D" parent="BuildingGrid/MidRow/TownHall/ClickArea"]
+[node name="ClickShape" type="CollisionShape2D" parent="BuildingGrid/MidRow/TownHall/ClickArea" unique_id=337289465]
 position = Vector2(0, -58)
 shape = SubResource("RectangleShape2D_th_click")
 
@@ -81,34 +90,34 @@ position = Vector2(864, 463)
 scale = Vector2(0.875, 0.875)
 script = ExtResource("3_jyhfs")
 
-[node name="WallVisual" type="Polygon2D" parent="BuildingGrid/MidRow/Portal"]
+[node name="WallVisual" type="Polygon2D" parent="BuildingGrid/MidRow/Portal" unique_id=248980555]
 color = Color(0.25, 0.12, 0.42, 1)
 polygon = PackedVector2Array(-54, -62, 54, -62, 54, 0, -54, 0)
 
-[node name="RoofVisual" type="Polygon2D" parent="BuildingGrid/MidRow/Portal"]
+[node name="RoofVisual" type="Polygon2D" parent="BuildingGrid/MidRow/Portal" unique_id=721017550]
 color = Color(0.45, 0.08, 0.55, 1)
 polygon = PackedVector2Array(-60, -62, 60, -62, 0, -116)
 
-[node name="NameLabel" type="Label" parent="BuildingGrid/MidRow/Portal"]
+[node name="NameLabel" type="Label" parent="BuildingGrid/MidRow/Portal" unique_id=1173998643]
 offset_left = -54.0
 offset_top = -80.0
 offset_right = 54.0
 offset_bottom = -62.0
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 9
 theme_override_colors/font_color = Color(1, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 9
 text = "Portal"
+horizontal_alignment = 1
 
 [node name="SpawnTimer" type="Timer" parent="BuildingGrid/MidRow/Portal" unique_id=1935514748]
 
-[node name="ClickArea" type="Area2D" parent="BuildingGrid/MidRow/Portal"]
+[node name="ClickArea" type="Area2D" parent="BuildingGrid/MidRow/Portal" unique_id=1236197256]
 monitorable = false
 
-[node name="ClickShape" type="CollisionShape2D" parent="BuildingGrid/MidRow/Portal/ClickArea"]
+[node name="ClickShape" type="CollisionShape2D" parent="BuildingGrid/MidRow/Portal/ClickArea" unique_id=155964944]
 position = Vector2(0, -58)
 shape = SubResource("RectangleShape2D_portal_click")
 
-[node name="FrontRow" type="Node2D" parent="BuildingGrid"]
+[node name="FrontRow" type="Node2D" parent="BuildingGrid" unique_id=2041375127]
 z_index = 30
 
 [node name="HeroesLayer" type="Node2D" parent="." unique_id=391703573]
@@ -132,48 +141,48 @@ offset_top = 32.0
 offset_right = 9.0
 offset_bottom = 55.0
 
-[node name="HeroAvatar" type="PanelContainer" parent="UI"]
+[node name="HeroAvatar" type="PanelContainer" parent="UI" unique_id=18626864]
+anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 8.0
 offset_top = -108.0
 offset_right = 196.0
 offset_bottom = -8.0
-mouse_filter = 0
 
-[node name="HBox" type="HBoxContainer" parent="UI/HeroAvatar"]
+[node name="HBox" type="HBoxContainer" parent="UI/HeroAvatar" unique_id=336186664]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Portrait" type="ColorRect" parent="UI/HeroAvatar/HBox"]
-layout_mode = 2
+[node name="Portrait" type="ColorRect" parent="UI/HeroAvatar/HBox" unique_id=1260966481]
 custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
 size_flags_vertical = 3
 color = Color(0.18, 0.35, 0.55, 1)
 
-[node name="VBox" type="VBoxContainer" parent="UI/HeroAvatar/HBox"]
+[node name="VBox" type="VBoxContainer" parent="UI/HeroAvatar/HBox" unique_id=895245399]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="NameLabel" type="Label" parent="UI/HeroAvatar/HBox/VBox"]
+[node name="NameLabel" type="Label" parent="UI/HeroAvatar/HBox/VBox" unique_id=43802129]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Ratcatcher"
 
-[node name="LevelLabel" type="Label" parent="UI/HeroAvatar/HBox/VBox"]
+[node name="LevelLabel" type="Label" parent="UI/HeroAvatar/HBox/VBox" unique_id=720829713]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Lv 1 / 10"
 
-[node name="PowerLabel" type="Label" parent="UI/HeroAvatar/HBox/VBox"]
+[node name="PowerLabel" type="Label" parent="UI/HeroAvatar/HBox/VBox" unique_id=301269271]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Power: 12"
 
-[node name="ManageButton" type="Button" parent="UI/HeroAvatar/HBox/VBox"]
-layout_mode = 2
+[node name="ManageButton" type="Button" parent="UI/HeroAvatar/HBox/VBox" unique_id=724334281]
 custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
 text = "Manage ▶"
 
 [node name="MenuButton" type="Button" parent="UI" unique_id=1710665814]
@@ -196,7 +205,7 @@ offset_right = -120.0
 offset_bottom = 45.0
 text = "Compact"
 
-[node name="BuildButton" type="Button" parent="UI"]
+[node name="BuildButton" type="Button" parent="UI" unique_id=501481676]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -241,68 +250,144 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Expand ↗"
 
-[node name="BuildingPopup" parent="UI" instance=ExtResource("20_bpop")]
+[node name="BuildingPopup" parent="UI" unique_id=471001211 instance=ExtResource("20_bpop")]
+anchors_preset = 8
 
-[node name="BuildMenuPopup" parent="UI" instance=ExtResource("21_bmenu")]
+[node name="BuildMenuPopup" parent="UI" unique_id=5126227 instance=ExtResource("21_bmenu")]
+anchors_preset = 8
 
-[node name="ShrinePopup" parent="UI" instance=ExtResource("22_spop")]
+[node name="ShrinePopup" parent="UI" unique_id=734150904 instance=ExtResource("22_spop")]
+anchors_preset = 8
 
-[node name="tower" type="Sprite2D" parent="." unique_id=25288064]
-position = Vector2(603, 422.99997)
-scale = Vector2(0.398017, 0.36771652)
+[node name="side_level" type="Node2D" parent="." unique_id=1546018902]
+
+[node name="tower" type="Sprite2D" parent="side_level" unique_id=25288064]
+position = Vector2(576.675, 498.605)
+scale = Vector2(0.09249292, 0.099543266)
 texture = ExtResource("4_tefeu")
 
-[node name="big_tree" type="Sprite2D" parent="." unique_id=318176969]
-position = Vector2(88.00001, 399)
-scale = Vector2(0.20509383, 0.18500002)
+[node name="big_tree" type="Sprite2D" parent="side_level" unique_id=318176969]
+position = Vector2(83, 497)
+scale = Vector2(0.048458446, 0.04096612)
 texture = ExtResource("5_choun")
 
-[node name="big_tree2" type="Sprite2D" parent="." unique_id=2110879336]
-position = Vector2(1021, 417)
-scale = Vector2(0.20509383, 0.18500002)
+[node name="big_tree2" type="Sprite2D" parent="side_level" unique_id=2110879336]
+position = Vector2(1089.0001, 507)
+scale = Vector2(0.045777604, 0.03791523)
 texture = ExtResource("5_choun")
 
-[node name="small_tree" type="Sprite2D" parent="." unique_id=550855648]
-position = Vector2(283.00003, 437)
-scale = Vector2(0.20509383, 0.18500002)
+[node name="small_tree" type="Sprite2D" parent="side_level" unique_id=550855648]
+position = Vector2(141, 500.99997)
+scale = Vector2(0.066470586, 0.045095865)
 texture = ExtResource("6_ya4ey")
 
-[node name="small_tree2" type="Sprite2D" parent="." unique_id=928060330]
-position = Vector2(519, 469)
-scale = Vector2(0.11666455, 0.11510401)
+[node name="small_tree2" type="Sprite2D" parent="side_level" unique_id=928060330]
+position = Vector2(464, 511.00003)
+scale = Vector2(0.037941158, 0.03204157)
 texture = ExtResource("6_ya4ey")
 
-[node name="house" type="Sprite2D" parent="." unique_id=1352702501]
-position = Vector2(194, 445)
-scale = Vector2(0.37318844, 0.3248561)
+[node name="circle_tree" type="Sprite2D" parent="side_level" unique_id=1731593952]
+position = Vector2(205.00002, 511.00003)
+scale = Vector2(0.04283528, 0.047548376)
+texture = ExtResource("10_y6deb")
+
+[node name="circle_tree2" type="Sprite2D" parent="side_level" unique_id=97312310]
+position = Vector2(474.00003, 514.00006)
+scale = Vector2(0.04283528, 0.047548376)
+texture = ExtResource("10_y6deb")
+
+[node name="circle_tree3" type="Sprite2D" parent="side_level" unique_id=1847708123]
+position = Vector2(1101, 519.00006)
+scale = Vector2(0.04283528, 0.047548376)
+texture = ExtResource("10_y6deb")
+
+[node name="circle_tree4" type="Sprite2D" parent="side_level" unique_id=1122106714]
+position = Vector2(368, 516)
+scale = Vector2(0.03223676, 0.030553915)
+texture = ExtResource("11_og1vs")
+
+[node name="circle_tree5" type="Sprite2D" parent="side_level" unique_id=1147908772]
+position = Vector2(374, 517)
+scale = Vector2(0.03223676, 0.030553915)
+texture = ExtResource("11_og1vs")
+
+[node name="circle_tree6" type="Sprite2D" parent="side_level" unique_id=1779731275]
+position = Vector2(501, 515)
+scale = Vector2(0.03223676, 0.030553915)
+texture = ExtResource("11_og1vs")
+
+[node name="circle_tree7" type="Sprite2D" parent="side_level" unique_id=2012787360]
+position = Vector2(510, 519)
+scale = Vector2(0.03223676, 0.030553915)
+texture = ExtResource("12_2wyq8")
+
+[node name="circle_tree8" type="Sprite2D" parent="side_level" unique_id=277783759]
+position = Vector2(214, 517)
+scale = Vector2(0.03223676, 0.030553915)
+texture = ExtResource("12_2wyq8")
+
+[node name="circle_tree9" type="Sprite2D" parent="side_level" unique_id=1280776321]
+position = Vector2(340, 520)
+scale = Vector2(0.03223676, 0.030553915)
+texture = ExtResource("12_2wyq8")
+
+[node name="house" type="Sprite2D" parent="side_level" unique_id=1352702501]
+position = Vector2(113, 501)
+scale = Vector2(0.1, 0.092)
 texture = ExtResource("5_o6xl0")
 
-[node name="monster_house" type="Sprite2D" parent="." unique_id=1449437395]
-position = Vector2(1065, 479)
-scale = Vector2(0.37318844, 0.3248561)
+[node name="monster_house" type="Sprite2D" parent="side_level" unique_id=1449437395]
+position = Vector2(1062, 515)
+scale = Vector2(0.1, 0.092)
 texture = ExtResource("8_trceg")
 
-[node name="grass" type="Sprite2D" parent="." unique_id=133399575]
-position = Vector2(427.99997, 498.99997)
-scale = Vector2(0.37755108, 0.31367925)
+[node name="grass" type="Sprite2D" parent="side_level" unique_id=133399575]
+position = Vector2(436, 521)
+scale = Vector2(0.075510204, 0.06958483)
 texture = ExtResource("8_eb6dy")
 
-[node name="grass2" type="Sprite2D" parent="." unique_id=2089206792]
-position = Vector2(882, 516)
-scale = Vector2(0.37755108, 0.31367925)
+[node name="grass2" type="Sprite2D" parent="side_level" unique_id=2089206792]
+position = Vector2(984.525, 526.169)
+scale = Vector2(0.09402516, 0.08048272)
 texture = ExtResource("10_a8y0u")
 
-[node name="rock" type="Sprite2D" parent="." unique_id=495682024]
-position = Vector2(494.00003, 506.00003)
-scale = Vector2(0.22826087, 0.20707071)
+[node name="rock" type="Sprite2D" parent="side_level" unique_id=495682024]
+position = Vector2(441, 524.00006)
+scale = Vector2(0.037681278, 0.034784827)
 texture = ExtResource("9_trceg")
 
-[node name="frog_rock" type="Sprite2D" parent="." unique_id=1662879293]
-position = Vector2(934, 513)
-scale = Vector2(0.22826087, 0.20707071)
+[node name="frog_rock" type="Sprite2D" parent="side_level" unique_id=1662879293]
+position = Vector2(996, 528)
+scale = Vector2(0.07166065, 0.054968666)
 texture = ExtResource("12_jkv2x")
 
-[node name="land" type="Sprite2D" parent="." unique_id=214772378]
-position = Vector2(572, 720)
-scale = Vector2(1.2285155, 1.1950866)
-texture = ExtResource("4_jyhfs")
+[node name="wind_milk" type="Sprite2D" parent="side_level" unique_id=779967239]
+position = Vector2(185, 491)
+scale = Vector2(0.11881188, 0.13653846)
+texture = ExtResource("16_gqmmt")
+
+[node name="camp" type="Sprite2D" parent="side_level" unique_id=1473324064]
+position = Vector2(351, 515)
+scale = Vector2(0.06725386, 0.065047964)
+texture = ExtResource("17_jscy8")
+
+[node name="fire_tower" type="Sprite2D" parent="side_level" unique_id=101755003]
+position = Vector2(489, 502.00003)
+scale = Vector2(0.115056865, 0.102996305)
+texture = ExtResource("17_yc10j")
+
+[node name="bg_grass" type="Sprite2D" parent="side_level" unique_id=2008434575]
+position = Vector2(590, 654)
+rotation = -0.007583827
+scale = Vector2(0.63630295, 0.5747885)
+texture = ExtResource("16_dp3eg")
+
+[node name="bg_rock" type="Sprite2D" parent="side_level" unique_id=890036793]
+position = Vector2(566.99994, 666.00006)
+scale = Vector2(0.5898494, 0.79347825)
+texture = ExtResource("17_0ld40")
+
+[node name="bg_land" type="Sprite2D" parent="side_level" unique_id=214772378]
+position = Vector2(566, 570)
+scale = Vector2(0.5931925, 0.330172)
+texture = ExtResource("18_gqmmt")

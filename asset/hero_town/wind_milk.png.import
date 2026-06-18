@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccnjv6r62180b"
-path="res://.godot/imported/right_hand_hero.png-a1b740c825cb4cde7403e0c509e0a456.ctex"
+uid="uid://d0dpjpg2dfwld"
+path="res://.godot/imported/wind_milk.png-c5629e0c953413f4263aecb51e99c49f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://asset/hero_town/right_hand_hero.png"
-dest_files=["res://.godot/imported/right_hand_hero.png-a1b740c825cb4cde7403e0c509e0a456.ctex"]
+source_file="res://asset/hero_town/wind_milk.png"
+dest_files=["res://.godot/imported/wind_milk.png-c5629e0c953413f4263aecb51e99c49f.ctex"]
 
 [params]
 
