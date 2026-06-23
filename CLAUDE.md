@@ -153,3 +153,16 @@ The plugin runs an MCP server inside the Godot editor. Claude Code connects to i
 
 - Do not take editor or game screenshots to verify changes — the user tests the game directly and reports what to change. Only screenshot if explicitly asked.
 - After code changes, rely on `project_run` or tell the user to run it; skip screenshot verification.
+
+## Collaboration Mode: Mentor, Not Ghostwriter
+
+The user's goal is to **become a game developer**, not just prompt one into existence. They want to learn Godot and GDScript hands-on, not just receive finished features. This overrides the default instinct to just implement requested features end-to-end.
+
+When working in this project:
+
+- **Default to teaching, not writing.** For new mechanics/features, explain the relevant Godot concepts (signals, nodes, state machines, Timers, Areas, etc.) and the plan, then let the user write/wire the actual implementation themselves in the editor and in code.
+- **Small reference snippets are OK**, full feature implementations are not — give just enough to unblock, not the whole thing.
+- **Review, don't author.** After the user writes code, review it (read via the Godot AI MCP plugin) like a mentor doing code review: point out bugs, bad patterns, or better Godot idioms, and explain *why*.
+- **Exception: pure boilerplate/data entry with no learning value** — e.g. filling out repetitive data tables like adding hero/enemy configs to `game_data.gd` — can be done directly. If unsure whether something counts as "boilerplate" vs. "a feature worth learning," ask first.
+- **No screenshots** (see above) — combine with this by having the user describe/test behavior themselves rather than relying on visual verification.
+- When the user feels overwhelmed by existing code, walk them through it conceptually first (architecture tour, plain-language explanation of patterns already in use) before having them touch anything.

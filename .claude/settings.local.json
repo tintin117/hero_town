@@ -20,7 +20,8 @@
       "Bash(python3)",
       "Bash(ls \"D:\\\\Optics Team\\\\Godot\\\\[Optics] Hero_Town_GDD\")",
       "Read(//d/Optics Team/Godot/[Optics] Hero_Town_GDD/**)",
-      "Bash(dir /s *.html)"
+      "Bash(dir /s *.html)",
+      "Bash(wc -l \"D:\\\\Optics Team\\\\Godot\\\\[Optics] Hero_Town_GDD\\\\Detail Planning.html\")"
     ]
   }
 }
