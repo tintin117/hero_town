@@ -1,9 +1,16 @@
 [gd_scene format=3 uid="uid://djmxrnq83rnk6"]
 
 [ext_resource type="Texture2D" uid="uid://cbd3quhevq7sa" path="res://asset/GUI - Card Frame/Sample_Character.png" id="1_kl6la"]
+[ext_resource type="Script" uid="uid://rxtm768cxnar" path="res://scenes/layer.gd" id="2_vv777"]
 
 [sub_resource type="Environment" id="Environment_kl6la"]
 background_energy_multiplier = 0.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
+size = Vector2(60, 30)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
+albedo_color = Color(0.25, 0.45, 0.3, 1)
 
 [node name="Test3dPrototype" type="Node3D" unique_id=476948428]
 
@@ -12,11 +19,18 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.052334577, 23.206974, 9.090
 projection = 1
 size = 48.19366
 
-[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1429696445]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1879445414]
+environment = SubResource("Environment_kl6la")
+
+[node name="Ground" type="MeshInstance3D" parent="." unique_id=2023096546]
+mesh = SubResource("PlaneMesh_ground")
+surface_material_override/0 = SubResource("StandardMaterial3D_ground")
+
+[node name="Node3D" type="Node3D" parent="." unique_id=1162760074]
+script = ExtResource("2_vv777")
+
+[node name="Sprite3D" type="Sprite3D" parent="Node3D" unique_id=1429696445]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.055603, 0)
 billboard = 1
 texture_filter = 0
 texture = ExtResource("1_kl6la")
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1879445414]
-environment = SubResource("Environment_kl6la")
