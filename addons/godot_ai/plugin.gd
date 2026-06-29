@@ -233,14 +233,14 @@ func _enter_tree() -> void:
 
 	_telemetry = Telemetry.new(_connection)
 
-	_debugger_plugin = DebuggerPlugin.new(_log_buffer, _game_log_buffer)
+	_debugger_plugin = DebuggerPlugin.new(_log_buffer, _game_log_buffer, _editor_log_buffer)
 	add_debugger_plugin(_debugger_plugin)
 	_ensure_game_helper_autoload()
 
 	var editor_handler := EditorHandler.new(_log_buffer, _connection, _debugger_plugin, _game_log_buffer, _editor_log_buffer)
 	var scene_handler := SceneHandler.new(_connection)
 	var node_handler := NodeHandler.new(get_undo_redo())
-	var project_handler := ProjectHandler.new(_connection, _debugger_plugin)
+	var project_handler := ProjectHandler.new(_connection, _debugger_plugin, _editor_log_buffer)
 	var client_handler := ClientHandler.new()
 	var script_handler := ScriptHandler.new(get_undo_redo(), _connection)
 	var resource_handler := ResourceHandler.new(get_undo_redo(), _connection)
@@ -1092,7 +1092,17 @@ func _evaluate_strong_port_occupant_proof(port: int, live: Dictionary = {}) -> D
 	var record_version := str(record.get("version", ""))
 
 	if record_pid > 1 and record_pid != OS.get_process_id():
-		if listener_pids.has(record_pid) and _pid_alive_for_proof(record_pid):
+		## Brand-verify the recorded PID before trusting it as a kill target.
+		## A recorded PID can outlive the server it named and be recycled by
+		## the kernel for an unrelated process that happens to bind the same
+		## port — without the cmdline brand gate (the same one the
+		## `pidfile_listener` branch enforces) that process could be killed.
+		## See #525.
+		if (
+			listener_pids.has(record_pid)
+			and _pid_alive_for_proof(record_pid)
+			and _pid_cmdline_is_godot_ai_for_proof(record_pid)
+		):
 			return {"proof": "managed_record", "pids": [record_pid]}
 
 	var legacy_targets := _legacy_pidfile_kill_targets(port, listener_pids)

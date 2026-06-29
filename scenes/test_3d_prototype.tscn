@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://djmxrnq83rnk6"]
+
+[ext_resource type="Texture2D" uid="uid://cbd3quhevq7sa" path="res://asset/GUI - Card Frame/Sample_Character.png" id="1_kl6la"]
+
+[node name="Test3dPrototype" type="Node3D" unique_id=476948428]
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=930282]
+projection = 1
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1429696445]
+transform = Transform3D(0.03217505, 0, 0, 0, 0.03217505, 0, 0, 0, 0.03217505, 0, 0, -0.37543583)
+billboard = 1
+texture_filter = 0
+texture = ExtResource("1_kl6la")
