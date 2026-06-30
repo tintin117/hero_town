@@ -30,6 +30,13 @@ Key files:
 - GDScript only
 - Godot AI MCP plugin (`addons/godot_ai`) — enables Claude Code to read/write scenes and scripts directly via the editor
 
+## World Rendering: Migrating to Full 3D
+
+The world is moving to a full 3D scene (`Node3D`, `Sprite3D`, slot-based `layer.gd` system — see `scenes/layer.gd`). Going forward, build all new world/placement/building features as `Node3D`-based, not `Node2D`.
+
+- `scripts/building.gd` and `scripts/empty_slot.gd` are still `Node2D` — legacy from before this migration. Don't extend them as-is for new features; either port them to `Node3D` when touched, or treat them as reference only until migrated.
+- UI (buttons, panels, HUD) stays `Control`/2D — only the world/scene objects move to 3D.
+
 ## File Structure
 
 ```

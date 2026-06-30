@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://qg54rfsf3ykd"]
+
+[ext_resource type="Script" uid="uid://da4whn50xfa2l" path="res://scenes/building_base.gd" id="1_ks1fu"]
+[ext_resource type="Texture2D" uid="uid://dacaisn8os7kt" path="res://asset/hero_town/camp.png" id="2_mah08"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_41q72"]
+size = Vector3(1, 1, 0.5)
+
+[node name="BuildingBase" type="Node3D" unique_id=344561134]
+script = ExtResource("1_ks1fu")
+
+[node name="Area3D" type="Area3D" parent="." unique_id=1143241402]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=693651414]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.021118164)
+shape = SubResource("BoxShape3D_41q72")
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1701407783]
+transform = Transform3D(0.32736498, 0, 0, 0, 0.32736498, 0, 0, 0, 0.32736498, 0, 0.16730988, 0)
+billboard = 1
+texture = ExtResource("2_mah08")

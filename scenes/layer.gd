@@ -10,7 +10,6 @@ var occupied_slots: Dictionary = {}
 func slot_to_world_x(slot_id: int) -> float:
 	return origin_x + slot_id * slot_width
 	
-
 func is_slot_free(start: int, end: int) -> bool:
 	for i in range(start, end + 1):
 		if occupied_slots.has(i):
@@ -22,10 +21,10 @@ func place_building(start: int, end: int, building: Node3D) -> bool:
 		return false
 	for i in range(start, end + 1):
 		occupied_slots[i] = building
-	building.position = Vector3(slot_to_world_x(start), 0.0, z_depth)
+	building.position = Vector3(slot_to_world_x(start), 2, z_depth)
 	return true
 	
 	
 func _ready() -> void:
 	var test_building = $Sprite3D
-	place_building(2, 3, test_building)
+	place_building(0, 3, test_building)
