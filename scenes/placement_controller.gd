@@ -6,6 +6,7 @@ var camera: Camera3D
 var ghost: Node3D
 
 func _ready() -> void:
+	get_viewport().physics_object_picking = true
 	camera = get_viewport().get_camera_3d()
 	ghost = BuildingBase.instantiate()
 	add_child(ghost)

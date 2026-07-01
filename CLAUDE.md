@@ -30,113 +30,48 @@ Key files:
 - GDScript only
 - Godot AI MCP plugin (`addons/godot_ai`) — enables Claude Code to read/write scenes and scripts directly via the editor
 
-## World Rendering: Migrating to Full 3D
+## Fresh Start: Full 3D
 
-The world is moving to a full 3D scene (`Node3D`, `Sprite3D`, slot-based `layer.gd` system — see `scenes/layer.gd`). Going forward, build all new world/placement/building features as `Node3D`-based, not `Node2D`.
+The project has restarted on a `Node3D`-based world. All prior `Node2D` gameplay (heroes, enemies,
+buildings, main loop) has been moved to `bck/` and is **not in use** — do not read, reference, or
+port logic from `bck/` unless explicitly asked. Treat it as archived material the user will
+cherry-pick from manually.
 
-- `scripts/building.gd` and `scripts/empty_slot.gd` are still `Node2D` — legacy from before this migration. Don't extend them as-is for new features; either port them to `Node3D` when touched, or treat them as reference only until migrated.
-- UI (buttons, panels, HUD) stays `Control`/2D — only the world/scene objects move to 3D.
+- Build all world/placement/building features as `Node3D`.
+- UI (buttons, panels, HUD) stays `Control`/2D — that part of the stack is unchanged.
+- `run/main_scene` is `scenes/main_menu.tscn`; its Play/Compact buttons currently load
+  `scenes/test_3d_prototype.tscn` as a placeholder until a real 3D game scene exists.
 
 ## File Structure
 
 ```
 scenes/
-  main.tscn         — root scene (1152×648 viewport)
-  main_menu.tscn    — main menu screen
-  hero.tscn         — hero CharacterBody2D
-  enemy.tscn        — enemy CharacterBody2D
+  main_menu.tscn          — main menu screen (Control, entry point)
+  building_base.tscn      — Node3D building base (Area3D click/overlap detection + Sprite3D)
+  building_base.gd
+  layer.gd                 — slot-based world layer (occupied_slots, place_building)
+  placement_controller.gd  — drag-ghost placement + physics picking setup
+  test_3d_prototype.tscn   — active 3D scratch scene
+  build_menu_popup.tscn    — UI popup (Control)
+  building_popup.tscn      — UI popup (Control)
+  shrine.tscn               — UI popup (Control) [name is legacy, root is PanelContainer]
+  shrine_popup.tscn         — UI popup (Control)
 scripts/
-  main.gd           — game manager: gold/shards, enemy spawning, building upgrades, save/load, overlay mode
-  hero.gd           — hero AI: IDLE ↔ COMBAT state machine, level/stats, upgrade costs
-  enemy.gd          — enemy AI: walk toward hero, attack on range, die → emit drops
-  building.gd       — base building script (level, upgrade, signal)
-  town_hall.gd      — Town Hall: hero level cap logic
-  portal.gd         — Portal: enemy tier pool, spawn timer, upgrade
-  health_bar.gd     — drawn health bar (Node2D using _draw, color-coded)
-  grid_overlay.gd   — tile grid drawn during placement mode
-  game_data.gd      — static data: HEROES, ENEMIES, BUILDINGS dicts
-  main_menu.gd      — main menu: start / quit
-addons/godot_ai/    — MCP plugin, do not modify
+  game_data.gd             — static data: HEROES, ENEMIES, BUILDINGS dicts
+  main_menu.gd              — main menu: start / compact / quit
+  build_menu_popup.gd
+  building_popup.gd
+  shrine_popup.gd
+addons/godot_ai/            — MCP plugin, do not modify
+bck/                         — archived Node2D prototype (main.gd, hero.gd, enemy.gd, building.gd,
+                                town_hall.gd, portal.gd, shrine.gd, grid_overlay.gd, health_bar.gd,
+                                and their scenes). Reference only if the user asks for it directly.
 ```
-
-## Key Constants
-
-| Constant | Value | Location |
-|---|---|---|
-| `GROUND_Y` | 500.0 | main.gd (hero/enemy walk line) |
-| `ENEMY_SPAWN_X` | 1050.0 | main.gd |
-| `SAVE_PATH` | `user://save.json` | main.gd |
-| Viewport | 1152 × 648 | project settings |
-
-## Build Phases
-
-The demo is scoped into three builds. **Do not implement features beyond the current build.**
-
-### Build 1 — Core loop proof (`v0.1.0`)
-Acceptance: player summons enemy, hero kills it, receives drops, upgrades Town Hall / Portal.
-
-| Feature | Status |
-|---|---|
-| Hero H001 (Militia Ratcatcher) auto-fights enemies | ✅ Done |
-| Enemies E001 (Cave Slime) + E002 (Tunnel Goblin), tiers 1-2 | ✅ Done |
-| Town Hall Lv1-2 (hero level cap gate) | ✅ Done |
-| Portal Lv1-2 (enemy tier unlock) | ✅ Done |
-| Gold + Shards economy, save/load (`user://save.json`) | ✅ Done |
-| Hero card UI (level, power, upgrade button) | ✅ Done |
-| Building panel UI (TH + Portal) | ✅ Done |
-| Main menu | ✅ Done |
-| Compact / overlay window mode | ✅ Done |
-| Hero respawn after death (10 s delay, no permanent death) | ❌ Missing — hero currently resets HP instantly |
-| First-kill milestone reward (+50g +5s) | ✅ Done (`first_kill_done` flag) |
-
-### Build 2 — Shrine + hero acquisition (`v0.2.0`)
-Acceptance: player rolls heroes at Shrine, upgrades hero with gold+shard, reaches Portal Lv3.
-
-| Feature | Status |
-|---|---|
-| Shrine building (scene node + script) | ❌ Not started |
-| Shrine gacha roll (gold + shard cost, rarity weights) | ❌ Not started |
-| Shrine panel UI (roll button, cost, result reveal, duplicate → shards) | ❌ Not started |
-| Shrine Lv1-2 unlock at TH Lv2 | ❌ Not started |
-| Hero roster — multiple heroes, active slot(s) | ❌ Not started |
-| All 15 hero configs in `game_data.gd` (H001–H015) | ❌ Partial — only H001 |
-| Enemies E003–E006 in `game_data.gd` (Tiers 2-3) | ❌ Partial — only E001-E002 |
-| Portal Lv3 (Tier 3 enemies, 2 active enemy slots) | ❌ Not started |
-| TH Lv3 unlock (hero cap 30) | ❌ Not started |
-| Crit system (crit_chance per hero, enabled Build 2+) | ❌ Not started |
-| Milestone M002 (TH Lv2 upgrade → +100g +10s) | ❌ Not started |
-| Milestone M003 (first shrine roll → +20s) | ❌ Not started |
-| Collection Book UI (discovered heroes, silhouettes for undiscovered) | ❌ Not started |
-
-### Build 3 — Vertical demo (`v0.3.0`)
-Acceptance: player reaches Portal Lv5, defeats Dungeon Heart boss, 10+ min play session.
-> Do not start Build 3 features until Build 2 acceptance is met.
-
-Planned: Tavern (visitor heroes), Blacksmith (power bonus), Portal Lv4-5, TH Lv4-5, Enemies E007–E010 (Tiers 4-5 + boss), Demo goal tracker UI, Settings/audio panel.
-
-## Core Game Loop
-
-```
-Upgrade TH / Portal → Summon enemies via Portal → Heroes auto-fight
-→ Collect Gold + Shards → Roll heroes at Shrine / upgrade hero
-→ Push higher portal tier → repeat → defeat Portal Lv5 boss
-```
-
-## Data Reference (game_data.gd)
-
-- **Heroes**: 15 total (H001–H015), Common → Legendary. Only H001 is implemented.
-- **Enemies**: 10 total (E001–E010), Tiers 1–5. Only E001–E002 are implemented.
-- **Buildings**: Town Hall (5 lvl), Portal (5 lvl), Shrine (5 lvl), Tavern (3 lvl), Blacksmith (3 lvl).
-  Only TH Lv1-2 and Portal Lv1-2 are implemented.
-
-Hero formula: `power = base_power + (level - 1) * power_per_level`
-Hero upgrade cost: `gold = ROUND(base_gold * level^1.35)` / `shards = ROUND(base_shard * level^1.20)`
-Hero max level: `Town Hall level * 10`
-Damage: `MAX(1, hero_atk - enemy_def)`
 
 ## Development Philosophy
 
-- **Build in phases** — only implement what the current build requires
+- **Build in phases** — only implement what's asked for right now; the old build-phase table is
+  gone along with the 2D prototype. Re-establish scope with the user as the 3D rebuild progresses.
 - **No premature abstraction** — three similar lines beats a helper no one needs yet
 - **No speculative features** — hard cuts: no manual combat, no decorations, no dialogue trees
 
@@ -170,6 +105,6 @@ When working in this project:
 - **Default to teaching, not writing.** For new mechanics/features, explain the relevant Godot concepts (signals, nodes, state machines, Timers, Areas, etc.) and the plan, then let the user write/wire the actual implementation themselves in the editor and in code.
 - **Small reference snippets are OK**, full feature implementations are not — give just enough to unblock, not the whole thing.
 - **Review, don't author.** After the user writes code, review it (read via the Godot AI MCP plugin) like a mentor doing code review: point out bugs, bad patterns, or better Godot idioms, and explain *why*.
-- **Exception: pure boilerplate/data entry with no learning value** — e.g. filling out repetitive data tables like adding hero/enemy configs to `game_data.gd` — can be done directly. If unsure whether something counts as "boilerplate" vs. "a feature worth learning," ask first.
+- **Exception: pure boilerplate/data entry with no learning value** — e.g. filling out repetitive data tables like adding hero/enemy configs to `game_data.gd`, or file/asset reorganization — can be done directly. If unsure whether something counts as "boilerplate" vs. "a feature worth learning," ask first.
 - **No screenshots** (see above) — combine with this by having the user describe/test behavior themselves rather than relying on visual verification.
 - When the user feels overwhelmed by existing code, walk them through it conceptually first (architecture tour, plain-language explanation of patterns already in use) before having them touch anything.

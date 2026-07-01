@@ -6,7 +6,7 @@ func _ready() -> void:
 	$Layout/QuitButton.pressed.connect(_on_quit_pressed)
 
 func _on_play_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	get_tree().change_scene_to_file("res://scenes/test_3d_prototype.tscn")
 
 func _on_compact_pressed() -> void:
 	const OVERLAY_H := 120
@@ -19,7 +19,7 @@ func _on_compact_pressed() -> void:
 	DisplayServer.window_set_position(Vector2i(0, sh - OVERLAY_H))
 	get_tree().root.transparent_bg = true
 	get_tree().root.content_scale_size = Vector2i(sw, OVERLAY_H)
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	get_tree().change_scene_to_file("res://scenes/test_3d_prototype.tscn")
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
