@@ -4,6 +4,8 @@
 [ext_resource type="Script" uid="uid://rxtm768cxnar" path="res://scenes/layer.gd" id="2_vv777"]
 [ext_resource type="Script" uid="uid://bt4mwi3rofoa3" path="res://scenes/placement_controller.gd" id="3_ypfpo"]
 [ext_resource type="PackedScene" uid="uid://qg54rfsf3ykd" path="res://scenes/building_base.tscn" id="4_d7rvk"]
+[ext_resource type="Script" uid="uid://dvtg33621yai" path="res://scenes/canvas_layer.gd" id="5_7wees"]
+[ext_resource type="PackedScene" uid="uid://b4da47wu7su3k" path="res://scenes/building_popup.tscn" id="6_ncamg"]
 
 [sub_resource type="Environment" id="Environment_kl6la"]
 background_energy_multiplier = 0.0
@@ -43,3 +45,9 @@ script = ExtResource("3_ypfpo")
 
 [node name="BuildingBase" parent="." unique_id=344561134 instance=ExtResource("4_d7rvk")]
 transform = Transform3D(7.8385043, 0, 0, 0, 7.8385043, 0, 0, 0, 7.8385043, 0.45000648, 0.7268841, 0.3022585)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2133490590]
+script = ExtResource("5_7wees")
+
+[node name="BuildingPopup" parent="CanvasLayer" unique_id=1259210009 instance=ExtResource("6_ncamg")]
+visible = false

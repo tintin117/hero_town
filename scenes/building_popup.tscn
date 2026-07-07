@@ -1,8 +1,9 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://b4da47wu7su3k"]
 
-[ext_resource type="Script" path="res://scripts/building_popup.gd" id="1_bpop"]
+[ext_resource type="Script" uid="uid://d3uxmfhb1o5ig" path="res://scripts/building_popup.gd" id="1_bpop"]
 
-[node name="BuildingPopup" type="PanelContainer"]
+[node name="BuildingPopup" type="PanelContainer" unique_id=48009164]
+anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -13,27 +14,27 @@ offset_right = 150.0
 offset_bottom = 125.0
 script = ExtResource("1_bpop")
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="VBox" type="VBoxContainer" parent="." unique_id=221224664]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="TitleLabel" type="Label" parent="VBox"]
+[node name="TitleLabel" type="Label" parent="VBox" unique_id=232356124]
 layout_mode = 2
-horizontal_alignment = 1
 theme_override_font_sizes/font_size = 18
 text = "Building"
+horizontal_alignment = 1
 
-[node name="InfoLabel" type="Label" parent="VBox"]
+[node name="InfoLabel" type="Label" parent="VBox" unique_id=831681447]
 layout_mode = 2
-autowrap_mode = 3
 text = "Info"
+autowrap_mode = 3
 
-[node name="UpgradeButton" type="Button" parent="VBox"]
-layout_mode = 2
+[node name="UpgradeButton" type="Button" parent="VBox" unique_id=999164960]
 custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
 text = "Upgrade"
 
-[node name="CloseButton" type="Button" parent="VBox"]
-layout_mode = 2
+[node name="CloseButton" type="Button" parent="VBox" unique_id=1161968851]
 custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
 text = "Close"
