@@ -64,8 +64,8 @@ scripts/
   shrine_popup.gd
 addons/godot_ai/            — MCP plugin, do not modify
 bck/                         — archived Node2D prototype (main.gd, hero.gd, enemy.gd, building.gd,
-                                town_hall.gd, portal.gd, shrine.gd, grid_overlay.gd, health_bar.gd,
-                                and their scenes). Reference only if the user asks for it directly.
+								town_hall.gd, portal.gd, shrine.gd, grid_overlay.gd, health_bar.gd,
+								and their scenes). Reference only if the user asks for it directly.
 ```
 
 ## Development Philosophy
