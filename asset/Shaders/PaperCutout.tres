@@ -1,0 +1,17 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://bt8kcw4ctkksg"]
+
+[ext_resource type="Shader" uid="uid://do3q4noubrhsl" path="res://asset/Shaders/paper_cutout.gdshader" id="1_s4cmo"]
+[ext_resource type="Texture2D" uid="uid://c700l84bkbd7m" path="res://asset/hand_draw/knight.png" id="2_yy487"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_s4cmo")
+shader_parameter/texture_albedo = ExtResource("2_yy487")
+shader_parameter/bevel_width = 8.898000398905
+shader_parameter/bevel_strength = 1.2
+shader_parameter/ao_strength = 0.4
+shader_parameter/rim_color = Color(0.5449743, 0.54497427, 0.54497427, 1)
+shader_parameter/rim_strength = 1.0
+shader_parameter/rim_power = 3.0
+shader_parameter/alpha_scissor = 0.3
+shader_parameter/roughness_value = 1.0
