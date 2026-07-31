@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cj5dnb81hhimj"
-path="res://.godot/imported/castle_6.png-f1b9c546bb1b3c19f984db26fd74f9d6.ctex"
+uid="uid://ikxlbnnkdqbd"
+path="res://.godot/imported/crusader_button.png-f8b7741e2af4a7ec0b724635d21ed4c4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://asset/hand_draw/castle_6.png"
-dest_files=["res://.godot/imported/castle_6.png-f1b9c546bb1b3c19f984db26fd74f9d6.ctex"]
+source_file="res://asset/hand_draw/ui/crusader_button.png"
+dest_files=["res://.godot/imported/crusader_button.png-f8b7741e2af4a7ec0b724635d21ed4c4.ctex"]
 
 [params]
 

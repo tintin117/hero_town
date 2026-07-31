@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://qg54rfsf3ykd"]
 
 [ext_resource type="Script" uid="uid://da4whn50xfa2l" path="res://scenes/building_base.gd" id="1_ks1fu"]
-[ext_resource type="Texture2D" uid="uid://cpfktdde40ede" path="res://asset/hand_draw/castle_1.png" id="2_mah08"]
+[ext_resource type="Texture2D" uid="uid://cpfktdde40ede" path="res://asset/hand_draw/level/castle_1.png" id="2_mah08"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_41q72"]
 size = Vector3(1, 1, 0.5)

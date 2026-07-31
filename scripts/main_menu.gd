@@ -1,9 +1,9 @@
 extends Control
 
 func _ready() -> void:
-	$Layout/PlayButton.pressed.connect(_on_play_pressed)
-	$Layout/CompactButton.pressed.connect(_on_compact_pressed)
-	$Layout/QuitButton.pressed.connect(_on_quit_pressed)
+	$front_ui/Layout/PlayButton.pressed.connect(_on_play_pressed)
+	$front_ui/Layout/CompactButton.pressed.connect(_on_compact_pressed)
+	$front_ui/Layout/QuitButton.pressed.connect(_on_quit_pressed)
 
 func _on_play_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/test_3d_prototype.tscn")

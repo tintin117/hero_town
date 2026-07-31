@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bi7fd7hk6mwye"
-path="res://.godot/imported/castle_4.png-0d23bea16fae49aab3a8d7e63f1a691b.ctex"
+uid="uid://cgsyxndr6tug4"
+path="res://.godot/imported/tree_3.png-b62e5f267ea95d1b96e98a970a8ec714.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://asset/hand_draw/castle_4.png"
-dest_files=["res://.godot/imported/castle_4.png-0d23bea16fae49aab3a8d7e63f1a691b.ctex"]
+source_file="res://asset/hand_draw/level/tree_3.png"
+dest_files=["res://.godot/imported/tree_3.png-b62e5f267ea95d1b96e98a970a8ec714.ctex"]
 
 [params]
 

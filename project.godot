@@ -25,7 +25,6 @@ _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
 
-window/size/mode=3
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/per_pixel_transparency/allowed=true
@@ -33,6 +32,10 @@ window/per_pixel_transparency/allowed=true
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
+
+[gui]
+
+theme/custom_font="uid://bws7oah63ge53"
 
 [physics]
 

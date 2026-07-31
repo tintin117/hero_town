@@ -1,14 +1,14 @@
 [gd_scene format=3 uid="uid://djmxrnq83rnk6"]
 
 [ext_resource type="Material" uid="uid://bt8kcw4ctkksg" path="res://asset/Shaders/PaperCutout.tres" id="2_lquev"]
-[ext_resource type="Texture2D" uid="uid://c700l84bkbd7m" path="res://asset/hand_draw/knight.png" id="2_ncamg"]
+[ext_resource type="Texture2D" uid="uid://c700l84bkbd7m" path="res://asset/hand_draw/chracter/knight.png" id="2_ncamg"]
 [ext_resource type="Script" uid="uid://rxtm768cxnar" path="res://scenes/layer.gd" id="2_vv777"]
 [ext_resource type="Shader" uid="uid://do3q4noubrhsl" path="res://asset/Shaders/paper_cutout.gdshader" id="3_ptodj"]
 [ext_resource type="Script" uid="uid://bt4mwi3rofoa3" path="res://scenes/placement_controller.gd" id="3_ypfpo"]
 [ext_resource type="PackedScene" uid="uid://qg54rfsf3ykd" path="res://scenes/building_base.tscn" id="4_d7rvk"]
 [ext_resource type="Script" uid="uid://dvtg33621yai" path="res://scenes/canvas_layer.gd" id="5_7wees"]
 [ext_resource type="PackedScene" uid="uid://b4da47wu7su3k" path="res://scenes/building_popup.tscn" id="6_ncamg"]
-[ext_resource type="Texture2D" uid="uid://csc4e2v4c63h6" path="res://asset/hand_draw/monster.png" id="7_ncamg"]
+[ext_resource type="Texture2D" uid="uid://csc4e2v4c63h6" path="res://asset/hand_draw/chracter/monster.png" id="7_ncamg"]
 
 [sub_resource type="Environment" id="Environment_kl6la"]
 background_energy_multiplier = 0.0

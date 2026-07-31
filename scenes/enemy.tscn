@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://clrsto6xithf0"]
 
 [ext_resource type="Script" uid="uid://beeklyitburpg" path="res://scripts/enemy.gd" id="1_md0e3"]
-[ext_resource type="Texture2D" uid="uid://csc4e2v4c63h6" path="res://asset/hand_draw/monster.png" id="2_4ra3w"]
+[ext_resource type="Texture2D" uid="uid://csc4e2v4c63h6" path="res://asset/hand_draw/chracter/monster.png" id="2_4ra3w"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_5uy6h"]
 radius = 0.4

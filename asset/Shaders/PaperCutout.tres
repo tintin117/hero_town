@@ -1,7 +1,7 @@
 [gd_resource type="ShaderMaterial" format=3 uid="uid://bt8kcw4ctkksg"]
 
 [ext_resource type="Shader" uid="uid://do3q4noubrhsl" path="res://asset/Shaders/paper_cutout.gdshader" id="1_s4cmo"]
-[ext_resource type="Texture2D" uid="uid://c700l84bkbd7m" path="res://asset/hand_draw/knight.png" id="2_yy487"]
+[ext_resource type="Texture2D" uid="uid://c700l84bkbd7m" path="res://asset/hand_draw/chracter/knight.png" id="2_yy487"]
 
 [resource]
 render_priority = 0
