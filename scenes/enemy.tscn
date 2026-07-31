@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://clrsto6xithf0"]
+
+[ext_resource type="Script" uid="uid://beeklyitburpg" path="res://scripts/enemy.gd" id="1_md0e3"]
+[ext_resource type="Texture2D" uid="uid://csc4e2v4c63h6" path="res://asset/hand_draw/monster.png" id="2_4ra3w"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_5uy6h"]
+radius = 0.4
+
+[node name="Enemy" type="CharacterBody3D" unique_id=1441882041]
+script = ExtResource("1_md0e3")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=313692301]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_5uy6h")
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1688491239]
+transform = Transform3D(0.1407, 0, 0, 0, 0.1407, 0, 0, 0, 0.1407, 0, 2.02, 0)
+billboard = 1
+shaded = true
+texture_filter = 1
+texture = ExtResource("2_4ra3w")

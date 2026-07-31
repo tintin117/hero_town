@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://77fssx2u0ies"]
+
+[ext_resource type="Script" uid="uid://5bgnt1ojhhl5" path="res://scripts/hero.gd" id="1_yvbpl"]
+[ext_resource type="Texture2D" uid="uid://c700l84bkbd7m" path="res://asset/hand_draw/knight.png" id="2_06baw"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_mv13s"]
+radius = 0.4
+
+[node name="Hero" type="CharacterBody3D" unique_id=2132630489]
+script = ExtResource("1_yvbpl")
+atk_speed = 0.5
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1400265664]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_mv13s")
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=637173425]
+transform = Transform3D(0.1083, 0, 0, 0, 0.1083, 0, 0, 0, 0.1083, 0, 2.05, 0)
+billboard = 1
+texture_filter = 0
+texture = ExtResource("2_06baw")
