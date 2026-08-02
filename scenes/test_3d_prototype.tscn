@@ -9,6 +9,8 @@
 [ext_resource type="Script" uid="uid://dvtg33621yai" path="res://scenes/canvas_layer.gd" id="5_7wees"]
 [ext_resource type="PackedScene" uid="uid://b4da47wu7su3k" path="res://scenes/building_popup.tscn" id="6_ncamg"]
 [ext_resource type="Texture2D" uid="uid://csc4e2v4c63h6" path="res://asset/hand_draw/chracter/monster.png" id="7_ncamg"]
+[ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="10_sf47j"]
+[ext_resource type="PackedScene" uid="uid://clrsto6xithf0" path="res://scenes/enemy.tscn" id="11_tp2x5"]
 
 [sub_resource type="Environment" id="Environment_kl6la"]
 background_energy_multiplier = 0.0
@@ -84,3 +86,9 @@ billboard = 2
 shaded = true
 texture_filter = 1
 texture = ExtResource("7_ncamg")
+
+[node name="Hero" parent="." unique_id=2132630489 instance=ExtResource("10_sf47j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.900888, 0, 0)
+
+[node name="Enemy" parent="." unique_id=1441882041 instance=ExtResource("11_tp2x5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.570271, 0, 0)
