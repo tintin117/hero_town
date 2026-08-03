@@ -55,6 +55,7 @@ anchor_bottom = 1.0
 offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_colors/default_color = Color(0.023371784, 0.023371786, 0.023371782, 1)
 theme_override_font_sizes/normal_font_size = 48
 text = "Play"
@@ -76,6 +77,7 @@ anchor_bottom = 1.0
 offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_colors/default_color = Color(0.023371784, 0.023371786, 0.023371782, 1)
 theme_override_font_sizes/normal_font_size = 48
 text = "Compact"
@@ -97,6 +99,7 @@ anchor_bottom = 1.0
 offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_colors/default_color = Color(0.023371784, 0.023371786, 0.023371782, 1)
 theme_override_font_sizes/normal_font_size = 48
 text = "Quit"
@@ -124,3 +127,7 @@ theme_override_colors/font_color = Color(0.516167, 0.4223574, 0.21081612, 1)
 theme_override_font_sizes/font_size = 48
 text = "An Idle Town Builder"
 horizontal_alignment = 1
+
+[connection signal="pressed" from="front_ui/Layout/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="front_ui/Layout/CompactButton" to="." method="_on_compact_button_pressed"]
+[connection signal="pressed" from="front_ui/Layout/QuitButton" to="." method="_on_quit_button_pressed"]

@@ -1,14 +1,14 @@
 extends Control
 
 func _ready() -> void:
-	$front_ui/Layout/PlayButton.pressed.connect(_on_play_pressed)
-	$front_ui/Layout/CompactButton.pressed.connect(_on_compact_pressed)
-	$front_ui/Layout/QuitButton.pressed.connect(_on_quit_pressed)
+	pass
 
-func _on_play_pressed() -> void:
+
+func _on_play_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/test_3d_prototype.tscn")
 
-func _on_compact_pressed() -> void:
+
+func _on_compact_button_pressed() -> void:
 	const OVERLAY_H := 120
 	var sw := DisplayServer.screen_get_size().x
 	var sh := DisplayServer.screen_get_size().y
@@ -20,6 +20,9 @@ func _on_compact_pressed() -> void:
 	get_tree().root.transparent_bg = true
 	get_tree().root.content_scale_size = Vector2i(sw, OVERLAY_H)
 	get_tree().change_scene_to_file("res://scenes/test_3d_prototype.tscn")
+	
 
-func _on_quit_pressed() -> void:
+
+
+func _on_quit_button_pressed() -> void:
 	get_tree().quit()
