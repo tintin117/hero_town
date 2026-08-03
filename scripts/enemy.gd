@@ -12,7 +12,7 @@ func _ready() -> void:
 
 func _update_move(_delta: float) -> void:
 	var hero := _find_nearest_in_group("heroes")
-	if hero != null and global_position.distance_to(hero.global_position) <= attack_range:
+	if hero != null and global_position.distance_to(hero.global_position) <= stats.attack_range:
 		_enter_combat(hero)
 		return
-	velocity = move_direction.normalized() * move_speed
+	velocity = move_direction.normalized() * stats.move_speed

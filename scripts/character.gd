@@ -5,16 +5,12 @@ signal died
 
 enum State { MOVE, COMBAT, KNOCKBACK, DEAD }
 
-@export var max_hp: float = 100.0
-@export var atk: float = 10.0
-@export var atk_speed: float = 1.5
-@export var move_speed: float = 2.5
-@export var attack_range: float = 1.5
+@export var stats: UnitStats
 
 const KNOCKBACK_FORCE := 6.0
 const KNOCKBACK_DURATION := 0.25
 const PLAYFIELD_MIN_X := -28.0
-const PLAYFIELD_MAX_X := 2.0
+const PLAYFIELD_MAX_X := 10.0
 
 var hp: float
 var state: State = State.MOVE
@@ -25,13 +21,13 @@ var _attack_timer: Timer
 
 
 func _ready() -> void:
-	hp = max_hp
+	hp = stats.max_hp
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	collision_layer = 0
 	collision_mask = 0
 
 	_attack_timer = Timer.new()
-	_attack_timer.wait_time = atk_speed
+	_attack_timer.wait_time = stats.atk_speed
 	_attack_timer.one_shot = false
 	_attack_timer.autostart = false
 	_attack_timer.timeout.connect(_on_attack_timeout)
@@ -52,7 +48,7 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector3.ZERO
 			if not is_instance_valid(target) or target.state == State.DEAD:
 				_exit_combat()
-			elif global_position.distance_to(target.global_position) > attack_range:
+			elif global_position.distance_to(target.global_position) > stats.attack_range:
 				_exit_combat()
 			move_and_slide()
 		State.MOVE:
@@ -94,8 +90,8 @@ func _exit_combat() -> void:
 func _on_attack_timeout() -> void:
 	if state != State.COMBAT or not is_instance_valid(target) or target.state == State.DEAD:
 		return
-	if global_position.distance_to(target.global_position) <= attack_range:
-		target.take_damage(atk, self)
+	if global_position.distance_to(target.global_position) <= stats.attack_range:
+		target.take_damage(stats.atk, self)
 
 
 func take_damage(amount: float, attacker: Character) -> void:

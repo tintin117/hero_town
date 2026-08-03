@@ -2,12 +2,14 @@
 
 [ext_resource type="Script" uid="uid://beeklyitburpg" path="res://scripts/enemy.gd" id="1_md0e3"]
 [ext_resource type="Texture2D" uid="uid://csc4e2v4c63h6" path="res://asset/hand_draw/chracter/monster.png" id="2_4ra3w"]
+[ext_resource type="Resource" uid="uid://cbjckio88rgco" path="res://resources/units/enemy_default.tres" id="2_5uy6h"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_5uy6h"]
 radius = 0.4
 
 [node name="Enemy" type="CharacterBody3D" unique_id=1441882041]
 script = ExtResource("1_md0e3")
+stats = ExtResource("2_5uy6h")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=313692301]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
