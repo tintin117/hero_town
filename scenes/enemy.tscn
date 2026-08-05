@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://beeklyitburpg" path="res://scripts/enemy.gd" id="1_md0e3"]
 [ext_resource type="Texture2D" uid="uid://csc4e2v4c63h6" path="res://asset/hand_draw/chracter/monster.png" id="2_4ra3w"]
 [ext_resource type="Resource" uid="uid://cbjckio88rgco" path="res://resources/units/enemy_default.tres" id="2_5uy6h"]
+[ext_resource type="Texture2D" uid="uid://bdh4gf17y2jyg" path="res://resources/textures/white.tres" id="4_5uy6h"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_5uy6h"]
 radius = 0.4
@@ -21,3 +22,16 @@ billboard = 1
 shaded = true
 texture_filter = 1
 texture = ExtResource("2_4ra3w")
+
+[node name="HealthBarBg" type="Sprite3D" parent="." unique_id=276761157]
+transform = Transform3D(3.9, 0, 0, 0, 0.3, 0, 0, 0, 1, 0, 4.4, -0.001)
+modulate = Color(0.1, 0.1, 0.1, 0.8)
+billboard = 1
+texture = ExtResource("4_5uy6h")
+
+[node name="HealthBarFill" type="Sprite3D" parent="." unique_id=98346087]
+transform = Transform3D(3.8, 0, 0, 0, 0.22, 0, 0, 0, 1, -1.9, 4.4, 0)
+centered = false
+modulate = Color(0, 1, 0, 1)
+billboard = 1
+texture = ExtResource("4_5uy6h")

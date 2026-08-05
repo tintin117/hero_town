@@ -18,6 +18,8 @@ var target: Character = null
 var knockback_timer: float = 0.0
 
 var _attack_timer: Timer
+@onready var _health_bar_fill: Sprite3D = $HealthBarFill
+var _health_bar_full_width: float
 
 
 func _ready() -> void:
@@ -32,6 +34,15 @@ func _ready() -> void:
 	_attack_timer.autostart = false
 	_attack_timer.timeout.connect(_on_attack_timeout)
 	add_child(_attack_timer)
+
+	_health_bar_full_width = _health_bar_fill.scale.x
+	_update_health_bar()
+
+
+func _update_health_bar() -> void:
+	var ratio := clampf(hp / stats.max_hp, 0.0, 1.0)
+	_health_bar_fill.scale.x = _health_bar_full_width * ratio
+	_health_bar_fill.modulate = Color.RED.lerp(Color.GREEN, ratio)
 
 
 func _physics_process(delta: float) -> void:
@@ -98,6 +109,7 @@ func take_damage(amount: float, attacker: Character) -> void:
 	if state == State.DEAD:
 		return
 	hp -= amount
+	_update_health_bar()
 	if hp <= 0.0:
 		state = State.DEAD
 		died.emit()

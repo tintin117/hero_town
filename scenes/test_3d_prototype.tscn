@@ -4,6 +4,8 @@
 [ext_resource type="PackedScene" uid="uid://qg54rfsf3ykd" path="res://scenes/building_base.tscn" id="4_d7rvk"]
 [ext_resource type="Script" uid="uid://dvtg33621yai" path="res://scenes/canvas_layer.gd" id="5_7wees"]
 [ext_resource type="PackedScene" uid="uid://b4da47wu7su3k" path="res://scenes/building_popup.tscn" id="6_ncamg"]
+[ext_resource type="Script" uid="uid://ck6dbrlr66dpe" path="res://scenes/grid_system.gd" id="7_lquev"]
+[ext_resource type="Material" uid="uid://bkqjr62ivqfhp" path="res://asset/Shaders/grid_overlay_material.tres" id="8_ptodj"]
 [ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="10_sf47j"]
 [ext_resource type="PackedScene" uid="uid://clrsto6xithf0" path="res://scenes/enemy.tscn" id="11_tp2x5"]
 
@@ -18,6 +20,8 @@ size = Vector2(60, 30)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
 albedo_color = Color(0.25, 0.45, 0.3, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_sf47j"]
 
 [node name="Test3dPrototype" type="Node3D" unique_id=476948428]
 
@@ -55,3 +59,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.900888, 0, 0)
 
 [node name="Enemy" parent="." unique_id=1441882041 instance=ExtResource("11_tp2x5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8282347, 0, 0)
+
+[node name="GridSystem" type="Node3D" parent="." unique_id=57193445]
+script = ExtResource("7_lquev")
+
+[node name="GridVisual" type="MeshInstance3D" parent="GridSystem" unique_id=2057738311]
+material_override = ExtResource("8_ptodj")
+mesh = SubResource("PlaneMesh_sf47j")
