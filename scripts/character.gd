@@ -21,6 +21,9 @@ var _attack_timer: Timer
 @onready var _health_bar_fill: Sprite3D = $HealthBarFill
 var _health_bar_full_width: float
 
+const damage_number_2d_template = preload("res://vfx/damage_number_2D.tscn")
+var damage_number_2d_pool:Array[DamageNumber2D] = []
+
 
 func _ready() -> void:
 	hp = stats.max_hp
@@ -108,6 +111,7 @@ func _on_attack_timeout() -> void:
 func take_damage(amount: float, attacker: Character) -> void:
 	if state == State.DEAD:
 		return
+	spawn_damage_number(amount)
 	hp -= amount
 	_update_health_bar()
 	if hp <= 0.0:
@@ -131,3 +135,57 @@ func _apply_knockback(from_position: Vector3) -> void:
 	velocity = dir * KNOCKBACK_FORCE
 	knockback_timer = KNOCKBACK_DURATION
 	state = State.KNOCKBACK
+	
+func spawn_damage_number(value:float):
+	if not is_inside_tree():
+		return
+
+	var camera = get_viewport().get_camera_3d()
+	if not camera:
+		return
+
+	# Convert 3D top position to 2D screen position
+	var top_world = global_position + Vector3(0, get_character_height(), 0)
+	var screen_pos = camera.unproject_position(top_world)
+
+	var damage_number = get_damage_number()
+	if not damage_number:
+		return
+
+	# Add to scene first, then animate
+	get_tree().current_scene.add_child(damage_number)
+	damage_number.set_values_and_animate(str(value), screen_pos, 200.0, 0.0)
+
+func get_character_height() -> float:
+	# change "CollisionShape3D" to your actual node name
+	var col = $CollisionShape3D
+
+	if col.shape is CapsuleShape3D:
+		return col.shape.height
+	elif col.shape is BoxShape3D:
+		return col.shape.size.y
+	elif col.shape is SphereShape3D:
+		return col.shape.radius * 2.0
+
+	return 1.8  # fallback
+
+func get_damage_number() -> DamageNumber2D:
+	# Validate pool entries — skip any that became invalid
+	while damage_number_2d_pool.size() > 0:
+		var pooled = damage_number_2d_pool.pop_front()
+		if is_instance_valid(pooled):
+			return pooled
+
+	# Create new instance
+	var new_damage_number = damage_number_2d_template.instantiate() as DamageNumber2D
+	if new_damage_number == null:
+		push_error("Cast failed — check DamageNumber2D.gd is attached to scene root")
+		return null
+
+	# Return to pool when removed from tree (not freed)
+	new_damage_number.tree_exited.connect(
+		func(): 
+			if is_instance_valid(new_damage_number):
+				damage_number_2d_pool.append(new_damage_number)
+	)
+	return new_damage_number
