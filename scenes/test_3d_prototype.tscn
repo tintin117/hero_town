@@ -54,6 +54,13 @@ script = ExtResource("5_7wees")
 [node name="BuildingPopup" parent="CanvasLayer" unique_id=1259210009 instance=ExtResource("6_ncamg")]
 visible = false
 
+[node name="PlacementButton" type="Button" parent="CanvasLayer" unique_id=572872575]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 102.0
+offset_bottom = 40.0
+text = "Place Building"
+
 [node name="Hero" parent="." unique_id=2132630489 instance=ExtResource("10_sf47j")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.900888, 0, 0)
 
@@ -66,3 +73,5 @@ script = ExtResource("7_lquev")
 [node name="GridVisual" type="MeshInstance3D" parent="GridSystem" unique_id=2057738311]
 material_override = ExtResource("8_ptodj")
 mesh = SubResource("PlaneMesh_sf47j")
+
+[connection signal="pressed" from="CanvasLayer/PlacementButton" to="CanvasLayer" method="_on_placement_button_pressed"]

@@ -12,6 +12,8 @@ var _grid_visual: MeshInstance3D
 var _shader_material: ShaderMaterial
 var _camera: Camera3D
 
+var hovered_cell: Vector2i = Vector2i(-1, -1)
+
 
 func _ready() -> void:
 	_init_occupancy()
@@ -38,6 +40,7 @@ func _process(_delta: float) -> void:
 	var cell := Vector2i(-1, -1)
 	if hit != null:
 		cell = world_to_grid(hit)
+	hovered_cell = cell
 
 	# ponytail: UV axis mapping on PlaneMesh isn't verified visually (no
 	# screenshots per CLAUDE.md) — if the highlight tracks the wrong cell,
