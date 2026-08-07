@@ -34,6 +34,10 @@ custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Upgrade"
 
+[node name="EnemyList" type="VBoxContainer" parent="VBox" unique_id=3717263845]
+layout_mode = 2
+theme_override_constants/separation = 6
+
 [node name="MoveButton" type="Button" parent="VBox" unique_id=1161968852]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2

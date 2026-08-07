@@ -9,6 +9,7 @@ extends CanvasLayer
 func _ready() -> void:
 	build_menu_popup.build_requested.connect(_on_build_requested)
 	building_popup.move_requested.connect(_on_move_requested)
+	building_popup.spawn_requested.connect(_on_spawn_requested)
 	GameState.currency_changed.connect(_on_currency_changed)
 	_on_currency_changed(GameState.gold, GameState.shard)
 
@@ -37,6 +38,16 @@ func _on_build_requested(building_type: String) -> void:
 
 func _on_move_requested(building: BuildingBase) -> void:
 	placement_controller.start_move(building)
+
+func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
+	var enemy_data: EnemyData = GameData.ENEMIES[enemy_id]
+	var enemy_instance: Enemy = preload("res://scenes/enemy.tscn").instantiate()
+	var stats := UnitStats.new()
+	stats.max_hp = enemy_data.hp
+	stats.atk = enemy_data.atk
+	enemy_instance.stats = stats
+	enemy_instance.global_position = building.global_position
+	get_tree().current_scene.add_child(enemy_instance)
 
 func _on_currency_changed(gold: int, shard: int) -> void:
 	currency_label.text = "Gold: %d   Shard: %d" % [gold, shard]

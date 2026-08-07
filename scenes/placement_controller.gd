@@ -4,7 +4,6 @@ const BuildingScene = preload("res://scenes/building_base.tscn")
 
 const PREBUILT_BUILDINGS := [
 	{"id": "town_hall", "cell": Vector2i(1, 0)},
-	{"id": "portal", "cell": Vector2i(1, 1)},
 	{"id": "shrine", "cell": Vector2i(1, 2)},
 ]
 
@@ -24,6 +23,8 @@ func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	for entry in PREBUILT_BUILDINGS:
 		_spawn_building(entry.id, entry.cell)
+	# Portal sits on the rightmost column so spawned enemies walk left toward the city.
+	_spawn_building("portal", Vector2i(1, grid_system.grid_cols - 1))
 
 func _spawn_building(building_id: String, cell: Vector2i) -> BuildingBase:
 	var building := BuildingScene.instantiate()
