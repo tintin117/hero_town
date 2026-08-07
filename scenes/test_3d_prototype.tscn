@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bt4mwi3rofoa3" path="res://scenes/placement_controller.gd" id="3_ypfpo"]
 [ext_resource type="PackedScene" uid="uid://qg54rfsf3ykd" path="res://scenes/building_base.tscn" id="4_d7rvk"]
 [ext_resource type="Script" uid="uid://dvtg33621yai" path="res://scenes/canvas_layer.gd" id="5_7wees"]
+[ext_resource type="PackedScene" path="res://scenes/build_menu_popup.tscn" id="5_ptodj"]
 [ext_resource type="PackedScene" uid="uid://b4da47wu7su3k" path="res://scenes/building_popup.tscn" id="6_ncamg"]
 [ext_resource type="Script" uid="uid://ck6dbrlr66dpe" path="res://scenes/grid_system.gd" id="7_lquev"]
 [ext_resource type="Material" uid="uid://bkqjr62ivqfhp" path="res://asset/Shaders/grid_overlay_material.tres" id="8_ptodj"]
@@ -60,6 +61,16 @@ offset_top = 16.0
 offset_right = 102.0
 offset_bottom = 40.0
 text = "Place Building"
+
+[node name="CurrencyLabel" type="Label" parent="CanvasLayer" unique_id=314159265]
+offset_left = 16.0
+offset_top = 48.0
+offset_right = 220.0
+offset_bottom = 72.0
+text = "Gold: 500   Shard: 0"
+
+[node name="BuildMenuPopup" parent="CanvasLayer" unique_id=1252131726 instance=ExtResource("5_ptodj")]
+anchors_preset = 8
 
 [node name="Hero" parent="." unique_id=2132630489 instance=ExtResource("10_sf47j")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.900888, 0, 0)

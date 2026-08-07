@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/building_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "shrine"
+display_name = "Shrine"
+build_cost = 0
+unlock_th_level = 2
+cells_wide = 1
+levels = Array[Dictionary]([{
+"cost": 0,
+"roll_gold": 100,
+"roll_shard": 10,
+"weights": {"common": 78, "uncommon": 20, "rare": 2, "epic": 0, "legendary": 0},
+"label": "Lv1"
+}, {
+"cost": 500,
+"roll_gold": 200,
+"roll_shard": 20,
+"weights": {"common": 68, "uncommon": 27, "rare": 5, "epic": 0, "legendary": 0},
+"label": "Lv2"
+}, {
+"cost": 1500,
+"roll_gold": 400,
+"roll_shard": 40,
+"weights": {"common": 58, "uncommon": 32, "rare": 9, "epic": 1, "legendary": 0},
+"label": "Lv3"
+}, {
+"cost": 4500,
+"roll_gold": 800,
+"roll_shard": 80,
+"weights": {"common": 48, "uncommon": 36, "rare": 13, "epic": 3, "legendary": 0},
+"label": "Lv4"
+}, {
+"cost": 12000,
+"roll_gold": 1500,
+"roll_shard": 150,
+"weights": {"common": 38, "uncommon": 40, "rare": 16, "epic": 5, "legendary": 1},
+"label": "Lv5"
+}])

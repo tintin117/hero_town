@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/building_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "portal"
+display_name = "Portal"
+build_cost = 0
+unlock_th_level = 1
+cells_wide = 2
+levels = Array[Dictionary]([{
+"cost": 0,
+"enemy_tier": 1,
+"active_slots": 1,
+"label": "Lv1"
+}, {
+"cost": 300,
+"enemy_tier": 2,
+"active_slots": 1,
+"label": "Lv2"
+}, {
+"cost": 1000,
+"enemy_tier": 3,
+"active_slots": 2,
+"label": "Lv3"
+}, {
+"cost": 3000,
+"enemy_tier": 4,
+"active_slots": 2,
+"label": "Lv4"
+}, {
+"cost": 8000,
+"enemy_tier": 5,
+"active_slots": 3,
+"label": "Lv5"
+}])

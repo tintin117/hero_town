@@ -2,6 +2,7 @@ extends Node3D
 
 signal clicked
 
+var building_id: String = ""
 var is_dragging: bool = false
 
 func is_overlapping() -> bool:

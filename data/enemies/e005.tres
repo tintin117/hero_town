@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "E005"
+display_name = "Grave Hound"
+tier = 3
+hp = 300.0
+atk = 21.0
+def = 6.0
+spawn_time = 15.0
+gold_min = 70
+gold_max = 100
+shard_min = 8
+shard_max = 12

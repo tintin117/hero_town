@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/hero_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "H008"
+display_name = "Field Priest"
+rarity = "uncommon"
+hero_class = "cleric"
+base_power = 18.0
+power_per_level = 2.8
+base_hp = 140.0
+atk_speed = 1.8
+crit_chance = 0.03
+upgrade_gold_base = 60
+upgrade_shard_base = 6
+dupe_shard = 15
+th_unlock = 2

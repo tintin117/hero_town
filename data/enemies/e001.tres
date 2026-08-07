@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "E001"
+display_name = "Cave Slime"
+tier = 1
+hp = 45.0
+atk = 4.0
+def = 0.0
+spawn_time = 5.0
+gold_min = 8
+gold_max = 12
+shard_min = 1
+shard_max = 2

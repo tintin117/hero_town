@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "E002"
+display_name = "Tunnel Goblin"
+tier = 1
+hp = 70.0
+atk = 6.0
+def = 1.0
+spawn_time = 7.0
+gold_min = 12
+gold_max = 18
+shard_min = 1
+shard_max = 3

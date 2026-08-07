@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/building_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "town_hall"
+display_name = "Town Hall"
+build_cost = 0
+unlock_th_level = 1
+cells_wide = 2
+levels = Array[Dictionary]([{
+"cost": 0,
+"hero_level_cap": 10,
+"label": "Lv1"
+}, {
+"cost": 250,
+"hero_level_cap": 20,
+"label": "Lv2"
+}, {
+"cost": 900,
+"hero_level_cap": 30,
+"label": "Lv3"
+}, {
+"cost": 2500,
+"hero_level_cap": 40,
+"label": "Lv4"
+}, {
+"cost": 7000,
+"hero_level_cap": 50,
+"label": "Lv5"
+}])

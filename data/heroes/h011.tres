@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/hero_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "H011"
+display_name = "Crypt Ranger"
+rarity = "rare"
+hero_class = "rogue"
+base_power = 38.0
+power_per_level = 4.9
+base_hp = 190.0
+atk_speed = 1.2
+crit_chance = 0.10
+upgrade_gold_base = 160
+upgrade_shard_base = 16
+dupe_shard = 45
+th_unlock = 3

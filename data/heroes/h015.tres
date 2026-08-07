@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/hero_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "H015"
+display_name = "Crowned Lichling"
+rarity = "legendary"
+hero_class = "mage"
+base_power = 100.0
+power_per_level = 10.0
+base_hp = 500.0
+atk_speed = 1.8
+crit_chance = 0.15
+upgrade_gold_base = 1000
+upgrade_shard_base = 100
+dupe_shard = 300
+th_unlock = 5

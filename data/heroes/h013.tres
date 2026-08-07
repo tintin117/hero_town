@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/hero_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "H013"
+display_name = "Ash Paladin"
+rarity = "epic"
+hero_class = "warrior"
+base_power = 68.0
+power_per_level = 7.0
+base_hp = 420.0
+atk_speed = 1.6
+crit_chance = 0.07
+upgrade_gold_base = 420
+upgrade_shard_base = 40
+dupe_shard = 120
+th_unlock = 4
