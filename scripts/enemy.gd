@@ -3,6 +3,7 @@ extends Character
 
 @export var move_direction: Vector3 = Vector3.LEFT
 @export var is_boss: bool = false
+@export var enemy_data: EnemyData
 
 
 func _ready() -> void:
@@ -11,8 +12,15 @@ func _ready() -> void:
 
 
 func _update_move(_delta: float) -> void:
-	var hero := _find_nearest_in_group("heroes")
-	if hero != null and global_position.distance_to(hero.global_position) <= stats.attack_range:
-		_enter_combat(hero)
-		return
+	_chase_and_engage("heroes")
+
+
+func _idle_move() -> void:
 	velocity = move_direction.normalized() * stats.move_speed
+
+
+func _on_death() -> void:
+	if enemy_data == null:
+		return
+	GameState.add(randi_range(enemy_data.gold_min, enemy_data.gold_max),
+			randi_range(enemy_data.shard_min, enemy_data.shard_max))

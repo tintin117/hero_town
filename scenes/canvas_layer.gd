@@ -46,6 +46,7 @@ func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
 	stats.max_hp = enemy_data.hp
 	stats.atk = enemy_data.atk
 	enemy_instance.stats = stats
+	enemy_instance.enemy_data = enemy_data
 	enemy_instance.global_position = building.global_position
 	get_tree().current_scene.add_child(enemy_instance)
 

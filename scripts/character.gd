@@ -68,11 +68,30 @@ func _physics_process(delta: float) -> void:
 		State.MOVE:
 			_update_move(delta)
 			move_and_slide()
+			global_position.x = clampf(global_position.x, PLAYFIELD_MIN_X, PLAYFIELD_MAX_X)
 
 
 ## Virtual: subclasses set `velocity` and call `_enter_combat` when a target is in range.
 func _update_move(_delta: float) -> void:
 	pass
+
+
+## Steer toward the nearest Character in `opponent_group`, or engage combat if in range.
+func _chase_and_engage(opponent_group: String) -> void:
+	var opponent := _find_nearest_in_group(opponent_group)
+	if opponent != null and global_position.distance_to(opponent.global_position) <= stats.attack_range:
+		_enter_combat(opponent)
+		return
+	if opponent != null:
+		var dir := signf(opponent.global_position.x - global_position.x)
+		velocity = Vector3(dir * stats.move_speed, 0.0, 0.0)
+	else:
+		_idle_move()
+
+
+## Virtual: movement when no opponent exists in the target group.
+func _idle_move() -> void:
+	velocity = Vector3.ZERO
 
 
 func _find_nearest_in_group(group_name: String) -> Character:
@@ -116,6 +135,7 @@ func take_damage(amount: float, attacker: Character) -> void:
 	_update_health_bar()
 	if hp <= 0.0:
 		state = State.DEAD
+		_on_death()
 		died.emit()
 		queue_free()
 		return
@@ -126,6 +146,11 @@ func take_damage(amount: float, attacker: Character) -> void:
 ## Virtual: return whether a hit from `attacker` should knock this character back.
 func _should_knockback(_attacker: Character) -> bool:
 	return true
+
+
+## Virtual: called once when hp reaches 0, before this character is freed.
+func _on_death() -> void:
+	pass
 
 
 func _apply_knockback(from_position: Vector3) -> void:

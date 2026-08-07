@@ -13,15 +13,11 @@ func _ready() -> void:
 
 
 func _update_move(_delta: float) -> void:
-	var enemy := _find_nearest_in_group("enemies")
-	if enemy != null and global_position.distance_to(enemy.global_position) <= stats.attack_range:
-		_enter_combat(enemy)
-		return
-	if enemy != null:
-		var dir := signf(enemy.global_position.x - global_position.x)
-		velocity = Vector3(dir * stats.move_speed, 0.0, 0.0)
-	else:
-		_patrol()
+	_chase_and_engage("enemies")
+
+
+func _idle_move() -> void:
+	_patrol()
 
 
 func _patrol() -> void:
