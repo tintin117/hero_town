@@ -2,7 +2,14 @@ extends Node3D
 
 const BuildingScene = preload("res://scenes/building_base.tscn")
 
+const PREBUILT_BUILDINGS := [
+	{"id": "town_hall", "cell": Vector2i(1, 0)},
+	{"id": "portal", "cell": Vector2i(1, 1)},
+	{"id": "shrine", "cell": Vector2i(1, 2)},
+]
+
 @onready var grid_system: GridSystem = get_node("../GridSystem")
+@onready var canvas_layer = get_node("../CanvasLayer")
 
 var camera: Camera3D
 var placement_mode: bool = false
@@ -13,6 +20,16 @@ var _last_hovered: Vector2i = Vector2i(-100, -100)
 func _ready() -> void:
 	get_viewport().physics_object_picking = true
 	camera = get_viewport().get_camera_3d()
+	for entry in PREBUILT_BUILDINGS:
+		_spawn_building(entry.id, entry.cell)
+
+func _spawn_building(building_id: String, cell: Vector2i) -> BuildingBase:
+	var building := BuildingScene.instantiate()
+	building.building_id = building_id
+	building.position = grid_system.grid_to_world(cell.x, cell.y)
+	get_parent().add_child.call_deferred(building)
+	canvas_layer.connect_building(building)
+	return building
 
 func start_placement(data: BuildingData) -> void:
 	if placement_mode:
@@ -55,9 +72,5 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not GameState.can_afford(selected_building.build_cost):
 		return
 	GameState.spend(selected_building.build_cost)
-	var building := BuildingScene.instantiate()
-	building.building_id = selected_building.id
-	get_parent().add_child(building)
-	building.position = grid_system.grid_to_world(cell.x, cell.y)
-	grid_system.occupy(cell.x, cell.y, building)
+	_spawn_building(selected_building.id, cell)
 	_cancel_placement()

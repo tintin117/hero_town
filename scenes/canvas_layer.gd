@@ -7,13 +7,15 @@ extends CanvasLayer
 @onready var currency_label: Label = $CurrencyLabel
 
 func _ready() -> void:
-	$"../BuildingBase".clicked.connect(_on_building_clicked)
 	build_menu_popup.build_requested.connect(_on_build_requested)
 	GameState.currency_changed.connect(_on_currency_changed)
 	_on_currency_changed(GameState.gold, GameState.shard)
 
-func _on_building_clicked() -> void:
-	building_popup.open()
+func connect_building(building: BuildingBase) -> void:
+	building.clicked.connect(_on_building_clicked.bind(building))
+
+func _on_building_clicked(building: BuildingBase) -> void:
+	building_popup.open(building)
 
 func _on_placement_button_pressed() -> void:
 	var options: Array = []

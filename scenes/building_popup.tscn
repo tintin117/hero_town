@@ -24,9 +24,20 @@ theme_override_font_sizes/font_size = 18
 text = "Building"
 horizontal_alignment = 1
 
+[node name="LevelLabel" type="Label" parent="VBox" unique_id=889666909]
+layout_mode = 2
+text = "Lv1"
+horizontal_alignment = 1
+
+[node name="UpgradeButton" type="Button" parent="VBox" unique_id=2027879401]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Upgrade"
+
 [node name="CloseButton" type="Button" parent="VBox" unique_id=1161968851]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Close"
 
+[connection signal="pressed" from="VBox/UpgradeButton" to="." method="_on_upgrade_button_pressed"]
 [connection signal="pressed" from="VBox/CloseButton" to="." method="_on_close_button_pressed"]

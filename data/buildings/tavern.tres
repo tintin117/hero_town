@@ -8,7 +8,6 @@ id = "tavern"
 display_name = "Tavern"
 build_cost = 700
 unlock_th_level = 3
-cells_wide = 2
 levels = Array[Dictionary]([{
 "cost": 0,
 "visitor_interval": 180,

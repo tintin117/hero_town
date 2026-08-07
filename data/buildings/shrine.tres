@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="BuildingData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/building_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://asset/hand_draw/level/castle_1_shrine.png" id="2"]
 
 [resource]
 script = ExtResource("1")
@@ -8,7 +9,7 @@ id = "shrine"
 display_name = "Shrine"
 build_cost = 0
 unlock_th_level = 2
-cells_wide = 1
+sprite_texture = ExtResource("2")
 levels = Array[Dictionary]([{
 "cost": 0,
 "roll_gold": 100,

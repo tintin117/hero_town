@@ -21,9 +21,9 @@ config/icon="uid://d21vtdhgwondi"
 
 [autoload]
 
-_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 GameData="*res://scripts/game_data.gd"
 GameState="*res://scripts/game_state.gd"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
 

@@ -8,7 +8,6 @@ id = "blacksmith"
 display_name = "Blacksmith"
 build_cost = 600
 unlock_th_level = 3
-cells_wide = 1
 levels = Array[Dictionary]([{
 "cost": 0,
 "power_bonus_pct": 5,
