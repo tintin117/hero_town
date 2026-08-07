@@ -8,6 +8,7 @@ extends CanvasLayer
 
 func _ready() -> void:
 	build_menu_popup.build_requested.connect(_on_build_requested)
+	building_popup.move_requested.connect(_on_move_requested)
 	GameState.currency_changed.connect(_on_currency_changed)
 	_on_currency_changed(GameState.gold, GameState.shard)
 
@@ -33,6 +34,9 @@ func _on_placement_button_pressed() -> void:
 
 func _on_build_requested(building_type: String) -> void:
 	placement_controller.start_placement(GameData.BUILDINGS[building_type])
+
+func _on_move_requested(building: BuildingBase) -> void:
+	placement_controller.start_move(building)
 
 func _on_currency_changed(gold: int, shard: int) -> void:
 	currency_label.text = "Gold: %d   Shard: %d" % [gold, shard]

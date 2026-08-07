@@ -1,5 +1,7 @@
 extends PanelContainer
 
+signal move_requested(building: BuildingBase)
+
 @onready var title_label: Label = $VBox/TitleLabel
 @onready var level_label: Label = $VBox/LevelLabel
 @onready var upgrade_btn: Button = $VBox/UpgradeButton
@@ -44,6 +46,11 @@ func _on_upgrade_button_pressed() -> void:
 	GameState.spend(cost)
 	building.upgrade()
 	_refresh()
+
+
+func _on_move_button_pressed() -> void:
+	move_requested.emit(building)
+	close()
 
 
 func _on_close_button_pressed() -> void:

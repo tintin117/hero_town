@@ -34,10 +34,16 @@ custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Upgrade"
 
+[node name="MoveButton" type="Button" parent="VBox" unique_id=1161968852]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Move"
+
 [node name="CloseButton" type="Button" parent="VBox" unique_id=1161968851]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Close"
 
 [connection signal="pressed" from="VBox/UpgradeButton" to="." method="_on_upgrade_button_pressed"]
+[connection signal="pressed" from="VBox/MoveButton" to="." method="_on_move_button_pressed"]
 [connection signal="pressed" from="VBox/CloseButton" to="." method="_on_close_button_pressed"]

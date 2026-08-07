@@ -15,6 +15,8 @@ var camera: Camera3D
 var placement_mode: bool = false
 var ghost: Node3D = null
 var selected_building: BuildingData = null
+var move_target: BuildingBase = null
+var move_origin_cell: Vector2i
 var _last_hovered: Vector2i = Vector2i(-100, -100)
 
 func _ready() -> void:
@@ -42,10 +44,29 @@ func start_placement(data: BuildingData) -> void:
 	ghost.get_node("Area3D").monitoring = false
 	ghost.get_node("Area3D").monitorable = false
 
+func start_move(building: BuildingBase) -> void:
+	if placement_mode:
+		_cancel_placement()
+	move_target = building
+	move_origin_cell = building.current_cell
+	grid_system.clear(move_origin_cell.x, move_origin_cell.y)
+	placement_mode = true
+	_last_hovered = Vector2i(-100, -100)
+	ghost = building
+	ghost.get_node("Area3D").monitoring = false
+	ghost.get_node("Area3D").monitorable = false
+
 func _cancel_placement() -> void:
 	placement_mode = false
 	selected_building = null
-	if ghost != null:
+	if move_target != null:
+		move_target.position = grid_system.grid_to_world(move_origin_cell.x, move_origin_cell.y)
+		grid_system.occupy(move_origin_cell.x, move_origin_cell.y, move_target)
+		move_target.get_node("Area3D").monitoring = true
+		move_target.get_node("Area3D").monitorable = true
+		move_target = null
+		ghost = null
+	elif ghost != null:
 		ghost.queue_free()
 		ghost = null
 
@@ -68,6 +89,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var cell := grid_system.hovered_cell
 	if cell == Vector2i(-1, -1) or not grid_system.is_free(cell.x, cell.y):
+		return
+	if move_target != null:
+		move_target.position = grid_system.grid_to_world(cell.x, cell.y)
+		move_target.current_cell = cell
+		grid_system.occupy(cell.x, cell.y, move_target)
+		move_target.suppress_next_click = true
+		move_target.get_node("Area3D").monitoring = true
+		move_target.get_node("Area3D").monitorable = true
+		move_target = null
+		ghost = null
+		placement_mode = false
 		return
 	if not GameState.can_afford(selected_building.build_cost):
 		return
