@@ -3,7 +3,8 @@ extends Node
 signal currency_changed(gold: int, shard: int)
 
 var gold: int = 5000
-var shard: int = 0
+var shard: int = 500
+var owned_heroes: Dictionary = {}  # hero_id -> true
 
 func can_afford(gold_cost: int, shard_cost: int = 0) -> bool:
 	return gold >= gold_cost and shard >= shard_cost

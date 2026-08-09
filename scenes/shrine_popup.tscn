@@ -1,8 +1,9 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cskanvmv36rhs"]
 
 [ext_resource type="Script" path="res://scripts/shrine_popup.gd" id="1_spop"]
 
-[node name="ShrinePopup" type="PanelContainer"]
+[node name="ShrinePopup" type="PanelContainer" unique_id=1198698245]
+anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -13,36 +14,35 @@ offset_right = 160.0
 offset_bottom = 150.0
 script = ExtResource("1_spop")
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="VBox" type="VBoxContainer" parent="." unique_id=1835166939]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="TitleLabel" type="Label" parent="VBox"]
+[node name="TitleLabel" type="Label" parent="VBox" unique_id=787810700]
 layout_mode = 2
-horizontal_alignment = 1
 theme_override_font_sizes/font_size = 18
 text = "Shrine"
+horizontal_alignment = 1
 
-[node name="CostLabel" type="Label" parent="VBox"]
+[node name="CostLabel" type="Label" parent="VBox" unique_id=2080322964]
 layout_mode = 2
 text = "Roll cost: 100g + 10s"
 
-[node name="ResultLabel" type="Label" parent="VBox"]
+[node name="ResultLabel" type="Label" parent="VBox" unique_id=1980985388]
 layout_mode = 2
 autowrap_mode = 3
-text = ""
 
-[node name="RollButton" type="Button" parent="VBox"]
-layout_mode = 2
+[node name="RollButton" type="Button" parent="VBox" unique_id=1682034661]
 custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
 text = "Roll Hero"
 
-[node name="UpgradeButton" type="Button" parent="VBox"]
-layout_mode = 2
+[node name="UpgradeButton" type="Button" parent="VBox" unique_id=1508706390]
 custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
 text = "Upgrade Shrine"
 
-[node name="CloseButton" type="Button" parent="VBox"]
-layout_mode = 2
+[node name="CloseButton" type="Button" parent="VBox" unique_id=870350224]
 custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
 text = "Close"

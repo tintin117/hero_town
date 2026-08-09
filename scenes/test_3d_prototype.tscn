@@ -49,7 +49,6 @@ script = ExtResource("3_ypfpo")
 script = ExtResource("5_7wees")
 
 [node name="BuildingPopup" parent="CanvasLayer" unique_id=1259210009 instance=ExtResource("6_ncamg")]
-visible = false
 
 [node name="PlacementButton" type="Button" parent="CanvasLayer" unique_id=572872575]
 offset_left = 16.0
