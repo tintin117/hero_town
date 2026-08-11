@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://bmmime0jw4n11" path="res://vfx/effects/impact/hit_flash.gd" id="1_script"]
+
+[node name="HitFlash" type="Node2D"]
+script = ExtResource("1_script")

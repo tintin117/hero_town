@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://bb3flg2fhm75n" path="res://vfx/effects/utility/smoke_pop.gd" id="1_script"]
+
+[node name="SmokePop" type="Node2D"]
+script = ExtResource("1_script")

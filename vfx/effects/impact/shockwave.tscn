@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dpw5iwaiutocx"]
+
+[ext_resource type="Script" uid="uid://voo7ngvq7xvl" path="res://vfx/effects/impact/shockwave.gd" id="1_script"]
+
+[node name="Shockwave" type="Node2D" unique_id=1017383197]
+script = ExtResource("1_script")
