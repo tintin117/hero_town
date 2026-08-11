@@ -4,7 +4,8 @@ extends CanvasLayer
 @onready var building_popup = $BuildingPopup
 @onready var build_menu_popup = $BuildMenuPopup
 @onready var placement_controller = $"../PlacementController"
-@onready var currency_label: Label = $CurrencyLabel
+@onready var currency_label: Label = $"Coin_HUD/CurrencyLabel"
+@onready var shard_label: Label = $"Shard_HUD/ShardLabel"
 
 func _ready() -> void:
 	build_menu_popup.build_requested.connect(_on_build_requested)
@@ -64,4 +65,6 @@ func _on_hero_acquired(hero_id: String, building: BuildingBase) -> void:
 
 
 func _on_currency_changed(gold: int, shard: int) -> void:
-	currency_label.text = "Gold: %d   Shard: %d" % [gold, shard]
+	#currency_label.text = "Gold: %d   Shard: %d" % [gold, shard]
+	currency_label.text = "%d" % [gold]
+	shard_label.text = "%d" % [shard]

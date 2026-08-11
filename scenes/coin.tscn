@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://w6kd57ujd3q5"]
+
+[ext_resource type="Script" uid="uid://b5pwyckeqfkf8" path="res://scenes/coin.gd" id="1_i64fm"]
+[ext_resource type="Texture2D" uid="uid://en1qfqpswagh" path="res://asset/GUI_Icons/icon20.png" id="1_rwqht"]
+
+[node name="coin" type="Node2D" unique_id=277659997]
+script = ExtResource("1_i64fm")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1884586497]
+texture = ExtResource("1_rwqht")

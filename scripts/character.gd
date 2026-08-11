@@ -127,7 +127,6 @@ func _on_attack_timeout() -> void:
 func take_damage(amount: float, attacker: Character) -> void:
 	if state == State.DEAD:
 		return
-	#spawn_damage_number(amount)
 	spawn_fx(amount)
 	hp -= amount
 	_update_health_bar()
