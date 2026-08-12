@@ -29,7 +29,6 @@ fx="*uid://u6sqyh22tpu3"
 [display]
 
 window/stretch/mode="viewport"
-window/per_pixel_transparency/allowed=true
 mouse_cursor/custom_image="uid://ctn20ajhfvcni"
 
 [editor_plugins]
