@@ -11,12 +11,7 @@
 [ext_resource type="Material" uid="uid://bkqjr62ivqfhp" path="res://asset/Shaders/grid_overlay_material.tres" id="8_ptodj"]
 [ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="10_sf47j"]
 [ext_resource type="PackedScene" uid="uid://clrsto6xithf0" path="res://scenes/enemy.tscn" id="11_tp2x5"]
-
-[sub_resource type="Environment" id="Environment_kl6la"]
-background_energy_multiplier = 0.0
-ambient_light_source = 2
-ambient_light_color = Color(0.9093076, 0.8604131, 0.9908331, 1)
-ambient_light_energy = 1.28
+[ext_resource type="PackedScene" uid="uid://bstrqcm5u0qm5" path="res://scenes/sky.tscn" id="12_der4m"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 size = Vector2(60, 30)
@@ -26,22 +21,25 @@ albedo_color = Color(0.25, 0.45, 0.3, 1)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_sf47j"]
 
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_der4m"]
+
+[sub_resource type="NoiseTexture3D" id="NoiseTexture3D_1wcjg"]
+noise = SubResource("FastNoiseLite_der4m")
+
+[sub_resource type="FogMaterial" id="FogMaterial_der4m"]
+emission = Color(0.63539076, 0.63539076, 0.63539076, 1)
+height_falloff = 1.5587206
+edge_fade = 1.0556039
+density_texture = SubResource("NoiseTexture3D_1wcjg")
+
 [node name="Test3dPrototype" type="Node3D" unique_id=476948428]
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2129089012]
-transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
-shadow_enabled = true
-
 [node name="Camera3D" type="Camera3D" parent="." unique_id=930282]
-transform = Transform3D(1, 0, 0, 0, 0.9659259, 0.25881907, 0, -0.25881907, 0.9659258, -2.0134907, 15.587563, 10.115)
-projection = 1
-current = true
-size = 31.333088
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1879445414]
-environment = SubResource("Environment_kl6la")
+transform = Transform3D(1, 0, 0, 0, 0.8660254, 0.5, 0, -0.5, 0.8660254, 0, 20, 21)
+size = 33.552
 
 [node name="Ground" type="MeshInstance3D" parent="." unique_id=2023096546]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = SubResource("PlaneMesh_ground")
 surface_material_override/0 = SubResource("StandardMaterial3D_ground")
 
@@ -54,9 +52,9 @@ script = ExtResource("5_7wees")
 [node name="BuildingPopup" parent="CanvasLayer" unique_id=1259210009 instance=ExtResource("6_ncamg")]
 
 [node name="PlacementButton" type="Button" parent="CanvasLayer" unique_id=572872575]
-offset_left = 16.0
+offset_left = 8.0
 offset_top = 16.0
-offset_right = 102.0
+offset_right = 94.0
 offset_bottom = 40.0
 text = "Place Building"
 
@@ -64,14 +62,16 @@ text = "Place Building"
 anchors_preset = 8
 
 [node name="Coin_HUD" type="Control" parent="CanvasLayer" unique_id=6754739]
+light_mask = 2
 layout_mode = 3
 anchors_preset = 0
-offset_left = 21.0
+offset_left = 26.0
 offset_top = 57.0
-offset_right = 21.0
+offset_right = 26.0
 offset_bottom = 57.0
 
 [node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/Coin_HUD" unique_id=63529880]
+z_index = 100
 texture = ExtResource("5_sf47j")
 
 [node name="CurrencyLabel" type="Label" parent="CanvasLayer/Coin_HUD" unique_id=314159265]
@@ -88,14 +88,16 @@ text = "999"
 vertical_alignment = 1
 
 [node name="Shard_HUD" type="Control" parent="CanvasLayer" unique_id=551488205]
+light_mask = 2
 layout_mode = 3
 anchors_preset = 0
-offset_left = 21.0
+offset_left = 26.0
 offset_top = 91.0
-offset_right = 21.0
+offset_right = 26.0
 offset_bottom = 91.0
 
 [node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/Shard_HUD" unique_id=1512304091]
+z_index = 100
 texture = ExtResource("7_tp2x5")
 
 [node name="ShardLabel" type="Label" parent="CanvasLayer/Shard_HUD" unique_id=1699001850]
@@ -111,17 +113,33 @@ theme_override_font_sizes/font_size = 18
 text = "999"
 vertical_alignment = 1
 
+[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer" unique_id=808753669]
+offset_left = 8.0
+offset_top = 42.0
+offset_right = 95.0
+offset_bottom = 106.0
+
 [node name="Hero" parent="." unique_id=2132630489 instance=ExtResource("10_sf47j")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.900888, 0, 0)
 
 [node name="Enemy" parent="." unique_id=1441882041 instance=ExtResource("11_tp2x5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8282347, 0, 0)
 
-[node name="GridSystem" type="Node3D" parent="." unique_id=57193445]
+[node name="GridSystem" type="Node3D" parent="." unique_id=57193445 node_paths=PackedStringArray("ground_mesh")]
 script = ExtResource("7_lquev")
+ground_mesh = NodePath("../Ground")
 
 [node name="GridVisual" type="MeshInstance3D" parent="GridSystem" unique_id=2057738311]
 material_override = ExtResource("8_ptodj")
 mesh = SubResource("PlaneMesh_sf47j")
+
+[node name="Sky" parent="." unique_id=2009927573 instance=ExtResource("12_der4m")]
+day_time = 14.9422
+use_day_time_for_shader = true
+
+[node name="FogVolume" type="FogVolume" parent="." unique_id=1664388706]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.6041327, 0)
+size = Vector3(100, 1.06, 30)
+material = SubResource("FogMaterial_der4m")
 
 [connection signal="pressed" from="CanvasLayer/PlacementButton" to="CanvasLayer" method="_on_placement_button_pressed"]

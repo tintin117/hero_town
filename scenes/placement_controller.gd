@@ -21,6 +21,7 @@ var _last_hovered: Vector2i = Vector2i(-100, -100)
 func _ready() -> void:
 	get_viewport().physics_object_picking = true
 	camera = get_viewport().get_camera_3d()
+	await grid_system.grid_ready
 	for entry in PREBUILT_BUILDINGS:
 		_spawn_building(entry.id, entry.cell)
 	# Portal sits on the rightmost column so spawned enemies walk left toward the city.

@@ -19,7 +19,6 @@ shape = SubResource("CapsuleShape3D_5uy6h")
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=1688491239]
 transform = Transform3D(0.1407, 0, 0, 0, 0.1407, 0, 0, 0, 0.1407, 0, 2.02, 0)
 billboard = 1
-shaded = true
 alpha_cut = 2
 texture_filter = 1
 texture = ExtResource("2_4ra3w")
