@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://c0n3ne2jw6aqo"]
+
+[node name="LevelTest25" type="Node3D" unique_id=450687341]
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=764270633]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 5)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=343397820]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 6)

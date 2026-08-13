@@ -35,7 +35,7 @@ mouse_cursor/custom_image="uid://ctn20ajhfvcni"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/ridiculous_coding/plugin.cfg")
 
 [gui]
 
