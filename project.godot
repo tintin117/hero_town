@@ -28,6 +28,8 @@ fx="*uid://u6sqyh22tpu3"
 
 [display]
 
+window/size/viewport_width=1920
+window/size/viewport_height=1080
 window/stretch/mode="viewport"
 mouse_cursor/custom_image="uid://ctn20ajhfvcni"
 

@@ -13,7 +13,7 @@ shader_parameter/night_top_color = Color(0.02, 0, 0.04, 1)
 shader_parameter/night_bottom_color = Color(0.1, 0, 0.2, 1)
 shader_parameter/horizon_color = Color(0, 0.7, 0.8, 1)
 shader_parameter/horizon_blur = 0.05
-shader_parameter/sun_color = Color(10, 8, 1, 1)
+shader_parameter/sun_color = Color(9.999998, 7.9977665, 0.94525707, 1)
 shader_parameter/sun_sunset_color = Color(10, 0, 0, 1)
 shader_parameter/sun_size = 0.2
 shader_parameter/sun_blur = 10.0
@@ -34,7 +34,7 @@ shader_parameter/clouds_blur = 0.25
 shader_parameter/stars_speed = 1.0
 shader_parameter/stars_scale = 1.0
 shader_parameter/stars_opacity = 1.0
-shader_parameter/overwritten_time = 0.0
+shader_parameter/overwritten_time = 3400.0
 
 [sub_resource type="Sky" id="Sky_qk45w"]
 sky_material = SubResource("ShaderMaterial_3hy4n")
@@ -45,7 +45,7 @@ sky = SubResource("Sky_qk45w")
 ambient_light_source = 3
 reflected_light_source = 2
 volumetric_fog_enabled = true
-volumetric_fog_density = 0.003
+volumetric_fog_density = 0.002
 
 [node name="Sky" type="Node3D" unique_id=2009927573]
 script = ExtResource("1_k1tqj")
@@ -59,7 +59,7 @@ light_energy = 0.0
 shadow_enabled = true
 
 [node name="Moon" type="DirectionalLight3D" parent="." unique_id=434419864]
-transform = Transform3D(0.9959788, 0, 0.08958963, 0.0189377, -0.9774032, -0.21053265, 0.08756521, 0.21138267, -0.97347283, 0, 0, 0)
+transform = Transform3D(0.9959788, 0, 0.08958962, 0.0189377, -0.9774031, -0.21053264, 0.08756521, 0.21138266, -0.9734727, 0, 0, 0)
 rotation_order = 4
 light_energy = 0.0
 

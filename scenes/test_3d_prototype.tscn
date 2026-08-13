@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="10_sf47j"]
 [ext_resource type="PackedScene" uid="uid://clrsto6xithf0" path="res://scenes/enemy.tscn" id="11_tp2x5"]
 [ext_resource type="PackedScene" uid="uid://bstrqcm5u0qm5" path="res://scenes/sky.tscn" id="12_der4m"]
+[ext_resource type="PackedScene" uid="uid://cjp2rabqdxsew" path="res://asset/popup_book/popupbook.fbx" id="13_1wcjg"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 size = Vector2(60, 30)
@@ -27,7 +28,7 @@ albedo_color = Color(0.25, 0.45, 0.3, 1)
 noise = SubResource("FastNoiseLite_der4m")
 
 [sub_resource type="FogMaterial" id="FogMaterial_der4m"]
-emission = Color(0.63539076, 0.63539076, 0.63539076, 1)
+emission = Color(1, 1, 1, 1)
 height_falloff = 1.5587206
 edge_fade = 1.0556039
 density_texture = SubResource("NoiseTexture3D_1wcjg")
@@ -35,12 +36,14 @@ density_texture = SubResource("NoiseTexture3D_1wcjg")
 [node name="Test3dPrototype" type="Node3D" unique_id=476948428]
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=930282]
-transform = Transform3D(1, 0, 0, 0, 0.8660254, 0.5, 0, -0.5, 0.8660254, 0, 20, 21)
+transform = Transform3D(1, 0, 0, 0, 0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, 0, 55.400097, 34.587807)
 current = true
+fov = 35.0
 size = 33.552
 
 [node name="Ground" type="MeshInstance3D" parent="." unique_id=2023096546]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.5, 0, 0, 0)
+visible = false
 mesh = SubResource("PlaneMesh_ground")
 surface_material_override/0 = SubResource("StandardMaterial3D_ground")
 
@@ -135,12 +138,15 @@ material_override = ExtResource("8_ptodj")
 mesh = SubResource("PlaneMesh_sf47j")
 
 [node name="Sky" parent="." unique_id=2009927573 instance=ExtResource("12_der4m")]
-day_time = 14.9422
+day_time = 10.0
 use_day_time_for_shader = true
 
 [node name="FogVolume" type="FogVolume" parent="." unique_id=1664388706]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.6041327, 0)
-size = Vector3(100, 1.06, 30)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.477737, -26.580042)
+size = Vector3(150, 86.61, 30)
 material = SubResource("FogMaterial_der4m")
+
+[node name="popupbook" parent="." unique_id=242688411 instance=ExtResource("13_1wcjg")]
+transform = Transform3D(38, 0, 0, 0, 38, 0, 0, 0, 38, 3.7453938, -1.9042301, -3.6329155)
 
 [connection signal="pressed" from="CanvasLayer/PlacementButton" to="CanvasLayer" method="_on_placement_button_pressed"]
