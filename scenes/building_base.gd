@@ -30,8 +30,19 @@ func _ready() -> void:
 	if tex != null:
 		$Sprite3D.texture = tex
 		$Sprite3D.scale *= REFERENCE_SPRITE_WIDTH / tex.get_width()
+		_fit_collision_to_sprite(tex)
 	add_to_group("buildings")
 	_register_on_grid()
+
+func _fit_collision_to_sprite(tex: Texture2D) -> void:
+	# ponytail: box collider sized/offset to match the billboard sprite's
+	# world bounds per-building (was a fixed 1x1x0.5 box shared across every
+	# building, so most of the visible sprite had no collider at all).
+	var world_size: Vector2 = Vector2(tex.get_width(), tex.get_height()) * $Sprite3D.pixel_size * $Sprite3D.scale.x
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(world_size.x, world_size.y, 1.0)
+	$Area3D/CollisionShape3D.shape = shape
+	$Area3D/CollisionShape3D.position = Vector3(0, $Sprite3D.position.y, 0)
 
 func _register_on_grid() -> void:
 	var cell := grid_system.world_to_grid(global_position)
