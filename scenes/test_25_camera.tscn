@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://bxnc5jj53cmik"]
+
+[ext_resource type="Script" uid="uid://b5y6qn0dnlmtm" path="res://scenes/test_25_camera.gd" id="1_i3b2m"]
+
+[node name="Test25Camera" type="Node3D" unique_id=1104525491]
+script = ExtResource("1_i3b2m")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1462261868]

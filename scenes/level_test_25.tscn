@@ -1,9 +1,33 @@
 [gd_scene format=3 uid="uid://c0n3ne2jw6aqo"]
 
-[node name="LevelTest25" type="Node3D" unique_id=450687341]
+[ext_resource type="PackedScene" uid="uid://bxnc5jj53cmik" path="res://scenes/test_25_camera.tscn" id="1_facwu"]
+[ext_resource type="PackedScene" uid="uid://12ydcllwbgre" path="res://scenes/player_test_25.tscn" id="2_4gywh"]
+[ext_resource type="Texture2D" uid="uid://dk5mxngdbe4mc" path="res://asset/grid/Purple/texture_10.png" id="3_6ww6i"]
 
-[node name="Camera3D" type="Camera3D" parent="." unique_id=764270633]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 5)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bijrl"]
+albedo_texture = ExtResource("3_6ww6i")
+uv1_scale = Vector3(10, 10, 10)
+uv1_triplanar = true
+uv2_scale = Vector3(10, 10, 10)
+uv2_triplanar = true
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_gb8bc"]
+material = SubResource("StandardMaterial3D_bijrl")
+size = Vector2(5, 5)
+
+[node name="LevelTest25" type="Node3D" unique_id=450687341]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=343397820]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 6)
+
+[node name="Test25Camera" parent="." unique_id=1104525491 instance=ExtResource("1_facwu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 8)
+
+[node name="PlayerTest25" parent="." unique_id=237089201 instance=ExtResource("2_4gywh")]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2117165838]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, 0, 0)
+mesh = SubResource("PlaneMesh_gb8bc")
+
+[editable path="Test25Camera"]
+[editable path="PlayerTest25"]
