@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dg3hhah85cqi"]
+
+[ext_resource type="Script" uid="uid://kv2ppkhnd3do" path="res://scenes/test_level_25/camera_facing_container.gd" id="1_ltv7e"]
+
+[node name="CameraFacingContainer" type="Node3D" unique_id=1164852497]
+script = ExtResource("1_ltv7e")

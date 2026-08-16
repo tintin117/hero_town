@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://dedeksgt2kwo"]
+
+[ext_resource type="PackedScene" uid="uid://dg3hhah85cqi" path="res://scenes/test_level_25/camera_facing_container.tscn" id="1_r2krs"]
+[ext_resource type="Texture2D" uid="uid://cpfktdde40ede" path="res://asset/hand_draw/level/castle_1.png" id="2_4cd0e"]
+[ext_resource type="Texture2D" uid="uid://bi7fd7hk6mwye" path="res://asset/hand_draw/level/castle_4.png" id="3_u8ghd"]
+[ext_resource type="Texture2D" uid="uid://b8fca3xpagqp3" path="res://asset/hand_draw/level/castle_2.png" id="3_v31td"]
+[ext_resource type="Texture2D" uid="uid://bux6f1wlhx4m7" path="res://asset/hand_draw/level/castle_3.png" id="4_dwqy1"]
+[ext_resource type="Texture2D" uid="uid://cj5dnb81hhimj" path="res://asset/hand_draw/level/castle_6.png" id="6_rutad"]
+
+[node name="CastleTest25" type="Node3D" unique_id=554960313]
+
+[node name="CameraFacingContainer" parent="." unique_id=1164852497 instance=ExtResource("1_r2krs")]
+
+[node name="Sprite3D" type="Sprite3D" parent="CameraFacingContainer" unique_id=872858772]
+transform = Transform3D(0.15, 0, 0, 0, 0.15, 0, 0, 0, 0.15, 0, 2.593655, 0)
+texture = ExtResource("2_4cd0e")
+
+[node name="Sprite3D4" type="Sprite3D" parent="CameraFacingContainer" unique_id=1254387957]
+transform = Transform3D(0.28, 0, 0, 0, 0.28, 0, 0, 0, 0.28, 0, 5.08976, -1.1352495)
+texture = ExtResource("3_u8ghd")
+
+[node name="Sprite3D2" type="Sprite3D" parent="CameraFacingContainer" unique_id=274848414]
+transform = Transform3D(0.15, 0, 0, 0, 0.15, 0, 0, 0, 0.15, -2.2725773, 2.593655, -0.3996259)
+texture = ExtResource("3_v31td")
+
+[node name="Sprite3D6" type="Sprite3D" parent="CameraFacingContainer" unique_id=1151351277]
+transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 3.0456157, 5.11735, -1.3057342)
+texture = ExtResource("6_rutad")
+
+[node name="Sprite3D7" type="Sprite3D" parent="CameraFacingContainer" unique_id=1076372597]
+transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, -2.9543843, 5.11735, -1.3057342)
+texture = ExtResource("6_rutad")
+
+[node name="Sprite3D3" type="Sprite3D" parent="CameraFacingContainer" unique_id=1684239034]
+transform = Transform3D(0.15, 0, 0, 0, 0.15, 0, 0, 0, 0.15, 2.7073998, 2.593655, -0.28887856)
+texture = ExtResource("4_dwqy1")
