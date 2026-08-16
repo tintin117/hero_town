@@ -8,6 +8,110 @@
 radius = 0.6279297
 height = 3.5610657
 
+[sub_resource type="Animation" id="Animation_w87m4"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CameraFacingContainer/Sprite3D:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.1, 0.1, 0.1)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("CameraFacingContainer/Sprite3D:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("CameraFacingContainer/Sprite3D:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.43457228, 1.8368597, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_t0akm"]
+resource_name = "idle"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CameraFacingContainer/Sprite3D:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0.1, 0.1, 0.1), Vector3(0.12, 0.12, 0.12), Vector3(0.1, 0.1, 0.1), Vector3(0.12, 0.12, 0.12)]
+}
+
+[sub_resource type="Animation" id="Animation_flvp2"]
+resource_name = "move"
+length = 0.6
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CameraFacingContainer/Sprite3D:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.15, 0.3, 0.45),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0.1, 0.1, 0.1), Vector3(0.115, 0.115, 0.115), Vector3(0.1, 0.1, 0.1), Vector3(0.115, 0.115, 0.115)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("CameraFacingContainer/Sprite3D:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.15, 0.3, 0.45),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, -0.2617994), Vector3(0, 0, 0), Vector3(0, 0, 0.2617994), Vector3(0, 0, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("CameraFacingContainer/Sprite3D:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.15, 0.3, 0.45),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0.43457228, 1.8368597, 0), Vector3(0.435, 2.2, 0), Vector3(0.43457228, 1.8368597, 0), Vector3(0.435, 2.2, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_2hlt7"]
+_data = {
+&"RESET": SubResource("Animation_w87m4"),
+&"idle": SubResource("Animation_t0akm"),
+&"move": SubResource("Animation_flvp2")
+}
+
 [node name="PlayerTest25" type="CharacterBody3D" unique_id=237089201]
 script = ExtResource("1_ybcmt")
 
@@ -22,3 +126,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0036706924, 1.8660126, 0)
 shape = SubResource("CapsuleShape3D_iktnk")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1355288032]
+libraries/ = SubResource("AnimationLibrary_2hlt7")
