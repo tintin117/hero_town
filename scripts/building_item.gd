@@ -12,26 +12,44 @@ const DEFAULT_NAME := "Unknown Building"
 const DEFAULT_PRICE := 0
 
 const HOVER_FADE_TIME := 0.15
+const HOVER_SCALE := 0.9
+const NORMAL_SCALE := 1
+const HOVER_PULSE_TIME := 0.4
 
 var _hover_tween: Tween
 
 func _ready() -> void:
 	# Start hidden
 	hover.modulate.a = 0.0
-
-	# If root is a Button, these signals exist natively.
-	# If root is a plain Control/PanelContainer, make sure mouse_filter = Stop,
-	# then these same signals still work.
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	focus_entered.connect(_on_mouse_entered)
 	focus_exited.connect(_on_mouse_exited)
 	
 func _on_mouse_entered() -> void:
-	_animate_hover(1.0)
+	_start_hover_pulse()
 
 func _on_mouse_exited() -> void:
-	_animate_hover(0.0)
+	_stop_hover_pulse()
+	
+func _start_hover_pulse() -> void:
+	if _hover_tween and _hover_tween.is_running():
+		_hover_tween.kill()
+	_hover_tween = create_tween()
+	_hover_tween.set_loops()
+	hover.modulate.a = 1.0
+	_hover_tween.tween_property(hover, "scale", Vector2.ONE * HOVER_SCALE, HOVER_PULSE_TIME)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_hover_tween.tween_property(hover, "scale", Vector2.ONE * NORMAL_SCALE, HOVER_PULSE_TIME)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func _stop_hover_pulse() -> void:
+	if _hover_tween and _hover_tween.is_running():
+		_hover_tween.kill()
+	var exit_tween := create_tween()
+	exit_tween.set_parallel(true)
+	exit_tween.tween_property(hover, "modulate:a", 0.0, HOVER_FADE_TIME)
+	exit_tween.tween_property(hover, "scale", Vector2.ONE * NORMAL_SCALE, HOVER_FADE_TIME)
 
 func _animate_hover(target_alpha: float) -> void:
 	if _hover_tween and _hover_tween.is_running():
