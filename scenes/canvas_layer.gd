@@ -2,7 +2,7 @@ extends CanvasLayer
 
 
 @onready var building_popup = $BuildingPopup
-@onready var build_menu_popup = $BuildMenuPopup
+@onready var build_menu_popup = $BuildPopup
 @onready var placement_controller = $"../PlacementController"
 @onready var currency_label: Label = $"Coin_HUD/CurrencyLabel"
 @onready var shard_label: Label = $"Shard_HUD/ShardLabel"
@@ -28,7 +28,7 @@ func _on_placement_button_pressed() -> void:
 			continue
 		options.append({
 			"type": data.id,
-			"label": data.display_name,
+			"label": str(data.display_name),
 			"cost": data.build_cost,
 			"can_afford": GameState.can_afford(data.build_cost),
 			"thumbnail": data.thumbnail,

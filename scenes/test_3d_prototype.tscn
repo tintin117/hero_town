@@ -1,24 +1,63 @@
 [gd_scene format=3 uid="uid://djmxrnq83rnk6"]
 
 [ext_resource type="Script" uid="uid://bt4mwi3rofoa3" path="res://scenes/placement_controller.gd" id="3_ypfpo"]
+[ext_resource type="Texture2D" uid="uid://diwv75hqeqarn" path="res://asset/GUI_Icons/Icon_01.png" id="4_ue1d3"]
+[ext_resource type="Texture2D" uid="uid://b4ld0qx2jf6tu" path="res://asset/GUI_Icons/fc16.png" id="4_umkjb"]
 [ext_resource type="Script" uid="uid://dvtg33621yai" path="res://scenes/canvas_layer.gd" id="5_7wees"]
-[ext_resource type="PackedScene" path="res://scenes/build_menu_popup.tscn" id="5_ptodj"]
+[ext_resource type="Script" uid="uid://dkvtaffew3mga" path="res://scenes/animation_button.gd" id="5_pqqw6"]
 [ext_resource type="Texture2D" uid="uid://en1qfqpswagh" path="res://asset/GUI_Icons/icon20.png" id="5_sf47j"]
 [ext_resource type="PackedScene" uid="uid://b4da47wu7su3k" path="res://scenes/building_popup.tscn" id="6_ncamg"]
 [ext_resource type="FontFile" uid="uid://b0r1vmd417svj" path="res://fonts/PeaberryBase.ttf" id="6_tp2x5"]
 [ext_resource type="Script" uid="uid://ck6dbrlr66dpe" path="res://scenes/grid_system.gd" id="7_lquev"]
 [ext_resource type="Texture2D" uid="uid://cbpos4reypep1" path="res://asset/GUI_Icons/icon21.png" id="7_tp2x5"]
 [ext_resource type="Material" uid="uid://bkqjr62ivqfhp" path="res://asset/Shaders/grid_overlay_material.tres" id="8_ptodj"]
+[ext_resource type="Script" uid="uid://dmfjis13on0fn" path="res://scenes/expand_button.gd" id="9_pt5xc"]
 [ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="10_sf47j"]
 [ext_resource type="PackedScene" uid="uid://clrsto6xithf0" path="res://scenes/enemy.tscn" id="11_tp2x5"]
 [ext_resource type="PackedScene" uid="uid://bstrqcm5u0qm5" path="res://scenes/sky.tscn" id="12_der4m"]
+[ext_resource type="PackedScene" uid="uid://xom26mo2r4bw" path="res://scenes/big_frame.tscn" id="12_i1g6a"]
 [ext_resource type="PackedScene" uid="uid://cjp2rabqdxsew" path="res://asset/popup_book/popupbook.fbx" id="13_1wcjg"]
+[ext_resource type="Script" uid="uid://jx3vlahkixwf" path="res://scripts/build_menu_popup.gd" id="13_l71j0"]
+[ext_resource type="Texture2D" uid="uid://bbtarxm7nqwdv" path="res://asset/GUI_Icons/Icon_09.png" id="13_qsv4e"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 size = Vector2(60, 30)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
 albedo_color = Color(0.25, 0.45, 0.3, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i1g6a"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0.4392157)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qsv4e"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0.4392157)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l71j0"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0.4392157)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_sf47j"]
 
@@ -53,41 +92,59 @@ script = ExtResource("3_ypfpo")
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2133490590]
 script = ExtResource("5_7wees")
 
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer" unique_id=2075388970]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -87.0
+offset_right = 88.0
+offset_bottom = -23.0
+grow_vertical = 0
+alignment = 1
+
+[node name="PlacementButton" type="TextureButton" parent="CanvasLayer/HBoxContainer" unique_id=168172113]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+tooltip_text = "Place Building"
+texture_normal = ExtResource("4_ue1d3")
+ignore_texture_size = true
+stretch_mode = 0
+script = ExtResource("5_pqqw6")
+
 [node name="BuildingPopup" parent="CanvasLayer" unique_id=1259210009 instance=ExtResource("6_ncamg")]
-
-[node name="PlacementButton" type="Button" parent="CanvasLayer" unique_id=572872575]
-offset_left = 8.0
-offset_top = 16.0
-offset_right = 94.0
-offset_bottom = 40.0
-text = "Place Building"
-
-[node name="BuildMenuPopup" parent="CanvasLayer" unique_id=1252131726 instance=ExtResource("5_ptodj")]
-anchors_preset = 8
+visible = false
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Coin_HUD" type="Control" parent="CanvasLayer" unique_id=6754739]
 light_mask = 2
 layout_mode = 3
 anchors_preset = 0
 offset_left = 26.0
-offset_top = 57.0
+offset_top = 25.0
 offset_right = 26.0
-offset_bottom = 57.0
+offset_bottom = 25.0
 
 [node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/Coin_HUD" unique_id=63529880]
 z_index = 100
+position = Vector2(15, 14)
+scale = Vector2(2, 2)
 texture = ExtResource("5_sf47j")
 
 [node name="CurrencyLabel" type="Label" parent="CanvasLayer/Coin_HUD" unique_id=314159265]
 z_index = 100
 layout_mode = 0
-offset_left = 16.0
-offset_top = -11.0
-offset_right = 50.0
-offset_bottom = 14.0
+offset_left = 44.0
+offset_top = 1.0
+offset_right = 97.0
+offset_bottom = 29.0
 pivot_offset_ratio = Vector2(0, 0.5)
+theme_override_colors/font_shadow_color = Color(0.09803922, 0.09803922, 0.09803922, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/shadow_outline_size = 3
 theme_override_fonts/font = ExtResource("6_tp2x5")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 28
 text = "999"
 vertical_alignment = 1
 
@@ -102,26 +159,268 @@ offset_bottom = 91.0
 
 [node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/Shard_HUD" unique_id=1512304091]
 z_index = 100
+position = Vector2(16, 4)
+scale = Vector2(2, 2)
 texture = ExtResource("7_tp2x5")
 
 [node name="ShardLabel" type="Label" parent="CanvasLayer/Shard_HUD" unique_id=1699001850]
 z_index = 100
 layout_mode = 0
-offset_left = 16.0
+offset_left = 44.0
 offset_top = -11.0
-offset_right = 50.0
+offset_right = 89.0
 offset_bottom = 14.0
 pivot_offset_ratio = Vector2(0, 0.5)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.09803922, 0.09803922, 0.09803922, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/shadow_outline_size = 3
 theme_override_fonts/font = ExtResource("6_tp2x5")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 28
 text = "999"
 vertical_alignment = 1
 
-[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer" unique_id=808753669]
-offset_left = 8.0
-offset_top = 42.0
-offset_right = 95.0
-offset_bottom = 106.0
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer" unique_id=2145739545]
+visible = false
+offset_left = 12.0
+offset_top = 115.0
+offset_right = 52.0
+offset_bottom = 299.0
+
+[node name="ExpandButton" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=1301576291]
+z_index = 3
+custom_minimum_size = Vector2(40, 43.805)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_i1g6a")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_i1g6a")
+theme_override_styles/hover = SubResource("StyleBoxFlat_i1g6a")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_i1g6a")
+theme_override_styles/focus = SubResource("StyleBoxFlat_i1g6a")
+clip_text = true
+script = ExtResource("9_pt5xc")
+icon_texture = ExtResource("4_umkjb")
+label_text = "Place Building"
+icon_size = Vector2(32, 32)
+collapsed_width = 40.0
+expanded_width = 200.0
+button_height = 43.805
+corner_radius = 4
+bg_color = Color(0, 0, 0, 0.4392157)
+bg_color_hover = Color(0, 0, 0, 0.4392157)
+preview_expanded = false
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/VBoxContainer/ExpandButton" unique_id=1139384255]
+clip_contents = true
+layout_mode = 0
+offset_left = 4.0
+offset_top = 2.0
+offset_right = 181.0
+offset_bottom = 42.0
+mouse_filter = 2
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/VBoxContainer/ExpandButton/HBox" unique_id=1524074313]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_umkjb")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="CanvasLayer/VBoxContainer/ExpandButton/HBox" unique_id=1408210494]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_tp2x5")
+theme_override_font_sizes/font_size = 18
+text = "Place Building"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CollapseTimer" type="Timer" parent="CanvasLayer/VBoxContainer/ExpandButton" unique_id=452249152]
+wait_time = 0.08
+one_shot = true
+
+[node name="ExpandButton2" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=663110085]
+z_index = 3
+custom_minimum_size = Vector2(40, 43.805)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_qsv4e")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_qsv4e")
+theme_override_styles/hover = SubResource("StyleBoxFlat_qsv4e")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_qsv4e")
+theme_override_styles/focus = SubResource("StyleBoxFlat_qsv4e")
+clip_text = true
+script = ExtResource("9_pt5xc")
+icon_texture = ExtResource("4_umkjb")
+label_text = "Place Building"
+icon_size = Vector2(32, 32)
+collapsed_width = 40.0
+expanded_width = 200.0
+button_height = 43.805
+corner_radius = 4
+bg_color = Color(0, 0, 0, 0.4392157)
+bg_color_hover = Color(0, 0, 0, 0.4392157)
+preview_expanded = false
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/VBoxContainer/ExpandButton2" unique_id=1822654112]
+clip_contents = true
+layout_mode = 0
+offset_left = 4.0
+offset_top = 2.0
+offset_right = 181.0
+offset_bottom = 42.0
+mouse_filter = 2
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/VBoxContainer/ExpandButton2/HBox" unique_id=1757360308]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_umkjb")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="CanvasLayer/VBoxContainer/ExpandButton2/HBox" unique_id=1677434757]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_tp2x5")
+theme_override_font_sizes/font_size = 18
+text = "Place Building"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CollapseTimer" type="Timer" parent="CanvasLayer/VBoxContainer/ExpandButton2" unique_id=455722540]
+wait_time = 0.08
+one_shot = true
+
+[node name="ExpandButton3" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=328059290]
+z_index = 3
+custom_minimum_size = Vector2(40, 43.805)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_l71j0")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_l71j0")
+theme_override_styles/hover = SubResource("StyleBoxFlat_l71j0")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_l71j0")
+theme_override_styles/focus = SubResource("StyleBoxFlat_l71j0")
+clip_text = true
+script = ExtResource("9_pt5xc")
+icon_texture = ExtResource("4_umkjb")
+label_text = "Place Building"
+icon_size = Vector2(32, 32)
+collapsed_width = 40.0
+expanded_width = 200.0
+button_height = 43.805
+corner_radius = 4
+bg_color = Color(0, 0, 0, 0.4392157)
+bg_color_hover = Color(0, 0, 0, 0.4392157)
+preview_expanded = false
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/VBoxContainer/ExpandButton3" unique_id=897087164]
+clip_contents = true
+layout_mode = 0
+offset_left = 4.0
+offset_top = 2.0
+offset_right = 181.0
+offset_bottom = 42.0
+mouse_filter = 2
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/VBoxContainer/ExpandButton3/HBox" unique_id=306831934]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_umkjb")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="CanvasLayer/VBoxContainer/ExpandButton3/HBox" unique_id=938543029]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_tp2x5")
+theme_override_font_sizes/font_size = 18
+text = "Place Building"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CollapseTimer" type="Timer" parent="CanvasLayer/VBoxContainer/ExpandButton3" unique_id=846389277]
+wait_time = 0.08
+one_shot = true
+
+[node name="BuildPopup" parent="CanvasLayer" unique_id=1853882687 instance=ExtResource("12_i1g6a")]
+mouse_filter = 2
+script = ExtResource("13_l71j0")
+
+[node name="CloseButton" type="Control" parent="CanvasLayer/BuildPopup" unique_id=1435409902]
+z_index = 10
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="Close" type="TextureButton" parent="CanvasLayer/BuildPopup/CloseButton" unique_id=653623025]
+z_index = 100
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 0
+offset_left = 313.0
+offset_top = 17.0
+offset_right = 337.0
+offset_bottom = 41.0
+texture_normal = ExtResource("13_qsv4e")
+ignore_texture_size = true
+stretch_mode = 0
+script = ExtResource("5_pqqw6")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/BuildPopup" unique_id=1465203036]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LabelControl" type="Control" parent="CanvasLayer/BuildPopup/VBoxContainer" unique_id=180567411]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/BuildPopup/VBoxContainer/LabelControl" unique_id=830588807]
+layout_mode = 0
+offset_top = 13.83
+offset_right = 408.0
+offset_bottom = 45.845
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.2936601, 0.29366007, 0.29366007, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 1
+theme_override_fonts/font = ExtResource("6_tp2x5")
+theme_override_font_sizes/font_size = 24
+text = "Frame Label"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="CanvasLayer/BuildPopup/VBoxContainer" unique_id=371384525]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="SelectionGrid" type="Control" parent="CanvasLayer/BuildPopup/VBoxContainer" unique_id=1015137886]
+custom_minimum_size = Vector2(310, 300)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/BuildPopup/VBoxContainer/SelectionGrid" unique_id=203404959]
+custom_minimum_size = Vector2(310, 300)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="GridContainer" type="GridContainer" parent="CanvasLayer/BuildPopup/VBoxContainer/SelectionGrid/ScrollContainer" unique_id=1398646059]
+clip_contents = true
+layout_mode = 2
+mouse_filter = 0
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+columns = 3
 
 [node name="Hero" parent="." unique_id=2132630489 instance=ExtResource("10_sf47j")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.900888, 0, 0)
@@ -149,4 +448,4 @@ material = SubResource("FogMaterial_der4m")
 [node name="popupbook" parent="." unique_id=242688411 instance=ExtResource("13_1wcjg")]
 transform = Transform3D(38, 0, 0, 0, 38, 0, 0, 0, 38, 3.7453938, -1.9042301, -3.6329155)
 
-[connection signal="pressed" from="CanvasLayer/PlacementButton" to="CanvasLayer" method="_on_placement_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/HBoxContainer/PlacementButton" to="CanvasLayer" method="_on_placement_button_pressed"]

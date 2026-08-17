@@ -1,0 +1,160 @@
+[gd_scene format=3 uid="uid://buyiyhvirggf6"]
+
+[ext_resource type="Texture2D" uid="uid://d0dpjpg2dfwld" path="res://asset/hero_town/wind_milk.png" id="1_84goe"]
+[ext_resource type="Script" uid="uid://cps5ia6mt28l7" path="res://scripts/building_item.gd" id="1_hi8r7"]
+[ext_resource type="FontFile" uid="uid://b0r1vmd417svj" path="res://fonts/PeaberryBase.ttf" id="2_hi8r7"]
+[ext_resource type="Texture2D" uid="uid://brkwhmbm5okq5" path="res://asset/GUI_Icons/Icon_03.png" id="3_u0h3s"]
+[ext_resource type="Texture2D" uid="uid://c5fvk2gwrc776" path="res://asset/Pointers/03.png" id="5_mwocb"]
+[ext_resource type="Texture2D" uid="uid://pl6omn4kgb61" path="res://asset/Pointers/04.png" id="6_mjyn1"]
+[ext_resource type="Texture2D" uid="uid://civmyknc1o6v5" path="res://asset/Pointers/05.png" id="7_v8w88"]
+[ext_resource type="Texture2D" uid="uid://b4rckxexdi56u" path="res://asset/Pointers/06.png" id="8_0qogn"]
+
+[node name="BuildingItem" type="Button" unique_id=650072663]
+clip_contents = true
+custom_minimum_size = Vector2(90, 90)
+offset_right = 8.0
+offset_bottom = 8.0
+flat = true
+script = ExtResource("1_hi8r7")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=110242286]
+custom_minimum_size = Vector2(90, 90)
+layout_mode = 0
+offset_right = 90.0
+offset_bottom = 90.0
+mouse_filter = 2
+
+[node name="BuildingImage" type="TextureRect" parent="VBoxContainer" unique_id=177799331]
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("1_84goe")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BuildingName" type="Label" parent="VBoxContainer" unique_id=1944599596]
+clip_contents = true
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0.29411766, 0.29411766, 0.29411766, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 1
+theme_override_fonts/font = ExtResource("2_hi8r7")
+theme_override_font_sizes/font_size = 12
+text = "Building Name"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=2007624626]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/HBoxContainer" unique_id=526717124]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+texture = ExtResource("3_u0h3s")
+expand_mode = 1
+
+[node name="Price" type="Label" parent="VBoxContainer/HBoxContainer" unique_id=1713048693]
+layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0.29411766, 0.29411766, 0.29411766, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 1
+theme_override_fonts/font = ExtResource("2_hi8r7")
+theme_override_font_sizes/font_size = 14
+text = "999"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hover" type="Control" parent="." unique_id=1899364422]
+custom_minimum_size = Vector2(90, 90)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -45.0
+offset_top = -45.0
+offset_right = 45.0
+offset_bottom = 45.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Control" type="Control" parent="Hover" unique_id=415451166]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 0
+offset_right = 20.0
+offset_bottom = 20.0
+
+[node name="TextureRect" type="TextureRect" parent="Hover/Control" unique_id=119313200]
+layout_mode = 0
+offset_left = -10.0
+offset_top = -9.0
+offset_right = 20.0
+offset_bottom = 21.0
+texture = ExtResource("5_mwocb")
+expand_mode = 1
+
+[node name="Control2" type="Control" parent="Hover" unique_id=1309844942]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -20.0
+offset_bottom = 20.0
+grow_horizontal = 0
+
+[node name="TextureRect" type="TextureRect" parent="Hover/Control2" unique_id=379019784]
+layout_mode = 0
+offset_left = -1.0
+offset_top = -9.0
+offset_right = 29.0
+offset_bottom = 21.0
+texture = ExtResource("6_mjyn1")
+expand_mode = 1
+
+[node name="Control3" type="Control" parent="Hover" unique_id=771965010]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -20.0
+offset_right = 20.0
+grow_vertical = 0
+
+[node name="TextureRect" type="TextureRect" parent="Hover/Control3" unique_id=378583685]
+layout_mode = 0
+offset_left = -10.0
+offset_top = -1.0
+offset_right = 20.0
+offset_bottom = 29.0
+texture = ExtResource("7_v8w88")
+expand_mode = 1
+
+[node name="Control4" type="Control" parent="Hover" unique_id=2128770542]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="TextureRect" type="TextureRect" parent="Hover/Control4" unique_id=415666595]
+layout_mode = 0
+offset_left = -1.0
+offset_top = -1.0
+offset_right = 29.0
+offset_bottom = 29.0
+texture = ExtResource("8_0qogn")
+expand_mode = 1
