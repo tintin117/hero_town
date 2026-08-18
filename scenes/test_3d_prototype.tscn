@@ -25,23 +25,14 @@
 [ext_resource type="PackedScene" uid="uid://d065r0oxb35ke" path="res://scenes/test_level_25/tree2_test_25.tscn" id="23_8je1v"]
 [ext_resource type="PackedScene" uid="uid://mx8g0v866fpw" path="res://scenes/test_level_25/tree3_test_25.tscn" id="24_rl0vt"]
 [ext_resource type="PackedScene" uid="uid://cyerhxx0ol7rs" path="res://scenes/test_level_25/tree1_test_25.tscn" id="25_1821j"]
+[ext_resource type="PackedScene" uid="uid://1kjxb5tkkx6t" path="res://scenes/test_level_25/grass_test_25.tscn" id="26_kvgmm"]
+[ext_resource type="PackedScene" uid="uid://ccpde2t2n5m7y" path="res://scenes/test_level_25/grass1_test_25.tscn" id="27_wgud7"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 size = Vector2(60, 30)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
 albedo_color = Color(0.25, 0.45, 0.3, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rl0vt"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
-bg_color = Color(0, 0, 0, 0.4392157)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1821j"]
 content_margin_left = 8.0
@@ -55,6 +46,17 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kvgmm"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0.4392157)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wgud7"]
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
@@ -197,11 +199,11 @@ offset_bottom = 299.0
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_rl0vt")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_rl0vt")
-theme_override_styles/hover = SubResource("StyleBoxFlat_rl0vt")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_rl0vt")
-theme_override_styles/focus = SubResource("StyleBoxFlat_rl0vt")
+theme_override_styles/normal = SubResource("StyleBoxFlat_1821j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1821j")
+theme_override_styles/hover = SubResource("StyleBoxFlat_1821j")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_1821j")
+theme_override_styles/focus = SubResource("StyleBoxFlat_1821j")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -250,11 +252,11 @@ one_shot = true
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_1821j")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_1821j")
-theme_override_styles/hover = SubResource("StyleBoxFlat_1821j")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_1821j")
-theme_override_styles/focus = SubResource("StyleBoxFlat_1821j")
+theme_override_styles/normal = SubResource("StyleBoxFlat_kvgmm")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_kvgmm")
+theme_override_styles/hover = SubResource("StyleBoxFlat_kvgmm")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_kvgmm")
+theme_override_styles/focus = SubResource("StyleBoxFlat_kvgmm")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -303,11 +305,11 @@ one_shot = true
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_kvgmm")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_kvgmm")
-theme_override_styles/hover = SubResource("StyleBoxFlat_kvgmm")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_kvgmm")
-theme_override_styles/focus = SubResource("StyleBoxFlat_kvgmm")
+theme_override_styles/normal = SubResource("StyleBoxFlat_wgud7")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_wgud7")
+theme_override_styles/hover = SubResource("StyleBoxFlat_wgud7")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_wgud7")
+theme_override_styles/focus = SubResource("StyleBoxFlat_wgud7")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -497,7 +499,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.228073, 0, -12.482505)
 transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 17.57158, 0, -9.42085)
 
 [node name="TreeTest33" parent="tree" unique_id=1177368441 instance=ExtResource("23_8je1v")]
-transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -10, 0, -5)
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -10, 0, -7.370039)
 
 [node name="TreeTest44" parent="tree" unique_id=1481197010 instance=ExtResource("23_8je1v")]
 transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -10, 0, 16.53501)
@@ -564,5 +566,55 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.5011, 0, 3.2672205)
 
 [node name="TreeTest54" parent="tree" unique_id=335922108 instance=ExtResource("25_1821j")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.311407, 0, 8.0076065)
+
+[node name="grass" type="Node3D" parent="." unique_id=1802535916]
+
+[node name="GrassTest25" parent="grass" unique_id=402874984 instance=ExtResource("26_kvgmm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6803439, 0, -3.8421955)
+
+[node name="GrassTest26" parent="grass" unique_id=189060626 instance=ExtResource("26_kvgmm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8152812, 0, -7.316805)
+
+[node name="GrassTest27" parent="grass" unique_id=1860751961 instance=ExtResource("26_kvgmm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.126582, 0, -7.316805)
+
+[node name="GrassTest28" parent="grass" unique_id=1241180984 instance=ExtResource("26_kvgmm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.905842, 0, -3.4505742)
+
+[node name="GrassTest29" parent="grass" unique_id=914432181 instance=ExtResource("26_kvgmm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.318245, 0, 7.7244577)
+
+[node name="GrassTest30" parent="grass" unique_id=1141595950 instance=ExtResource("26_kvgmm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.7041874, 0, 9.076381)
+
+[node name="GrassTest31" parent="grass" unique_id=351484215 instance=ExtResource("26_kvgmm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.982243, 0, 10.833127)
+
+[node name="GrassTest32" parent="grass" unique_id=876974718 instance=ExtResource("26_kvgmm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.185692, 0, 8.590993)
+
+[node name="GrassTest33" parent="grass" unique_id=1369554242 instance=ExtResource("26_kvgmm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.928198, 0, -8.224618)
+
+[node name="GrassTest34" parent="grass" unique_id=1604351679 instance=ExtResource("27_wgud7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6.7253304)
+
+[node name="GrassTest35" parent="grass" unique_id=2143363613 instance=ExtResource("27_wgud7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.771433, 0, 6.7253304)
+
+[node name="GrassTest36" parent="grass" unique_id=1002542248 instance=ExtResource("27_wgud7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.41706, 0, 4.1976643)
+
+[node name="GrassTest37" parent="grass" unique_id=787111543 instance=ExtResource("27_wgud7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.88874, 0, -3.5505486)
+
+[node name="GrassTest38" parent="grass" unique_id=2080804504 instance=ExtResource("27_wgud7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.695992, 0, -5.419676)
+
+[node name="GrassTest39" parent="grass" unique_id=1907815633 instance=ExtResource("27_wgud7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.9871483, 0, -6.5379896)
+
+[node name="GrassTest40" parent="grass" unique_id=824821380 instance=ExtResource("27_wgud7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.399273, 0, 5.885934)
 
 [connection signal="pressed" from="CanvasLayer/HBoxContainer/PlacementButton" to="CanvasLayer" method="_on_placement_button_pressed"]
