@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SkillData" format=3 uid="uid://dyoj2lj6axl3h"]
+
+[ext_resource type="Script" uid="uid://7ndt7pb2ll7q" path="res://scripts/resources/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+mana_cost = 100.0
+damage = 5.0
+duration = 2.0
+tick_interval = 0.5

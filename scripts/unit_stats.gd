@@ -7,3 +7,4 @@ class_name UnitStats
 @export var atk_speed: float = 1.5
 @export var move_speed: float = 2.5
 @export var attack_range: float = 1.5
+@export var mana_per_hit: float = 0.0

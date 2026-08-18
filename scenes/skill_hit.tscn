@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://c7xu1ve1ul2f4"]
+
+[ext_resource type="Script" uid="uid://w2qnfusg2qqy" path="res://scripts/skill_hit.gd" id="1_aq5tn"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_woen0"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mnkcp"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.2, 1, 0.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2iruf"]
+
+[node name="SkillHit" type="Area3D" unique_id=1937452923]
+script = ExtResource("1_aq5tn")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=149138116]
+shape = SubResource("BoxShape3D_woen0")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=112448701]
+material_override = SubResource("StandardMaterial3D_mnkcp")
+mesh = SubResource("BoxMesh_2iruf")

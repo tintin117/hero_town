@@ -72,6 +72,7 @@ func _on_hero_acquired(hero_id: String, building: BuildingBase) -> void:
 	stats.max_hp = hero_data.base_hp
 	stats.atk = hero_data.base_power
 	stats.atk_speed = hero_data.atk_speed
+	stats.mana_per_hit = hero_data.mana_per_hit
 	hero_instance.stats = stats
 	hero_instance.global_position = building.global_position
 	get_tree().current_scene.add_child(hero_instance)

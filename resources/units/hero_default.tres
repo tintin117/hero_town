@@ -5,3 +5,4 @@
 [resource]
 script = ExtResource("1_617cr")
 atk_speed = 0.5
+mana_per_hit = 50.0

@@ -6,16 +6,21 @@ signal died
 enum State { MOVE, COMBAT, KNOCKBACK, DEAD }
 
 @export var stats: UnitStats
+@export var skill: SkillData
 
-const KNOCKBACK_FORCE := 6.0
+const KNOCKBACK_FORCE := 3.0
 const KNOCKBACK_DURATION := 0.25
 const PLAYFIELD_MIN_X := -28.0
 const PLAYFIELD_MAX_X := 10.0
+const HITBOX_LAYER := 1 << 2
+
+const SKILL_HIT_SCENE := preload("res://scenes/skill_hit.tscn")
 
 var hp: float
 var state: State = State.MOVE
 var target: Character = null
 var knockback_timer: float = 0.0
+var mana: float = 0.0
 
 var _attack_timer: Timer
 @onready var _health_bar_fill: Sprite3D = $CameraFacingContainer/HealthBarFill
@@ -25,7 +30,7 @@ var _health_bar_full_width: float
 func _ready() -> void:
 	hp = stats.max_hp
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
-	collision_layer = 0
+	collision_layer = HITBOX_LAYER
 	collision_mask = 0
 
 	_attack_timer = Timer.new()
@@ -122,6 +127,7 @@ func _on_attack_timeout() -> void:
 		return
 	if global_position.distance_to(target.global_position) <= stats.attack_range:
 		target.take_damage(stats.atk, self)
+		_charge_mana()
 
 
 func take_damage(amount: float, attacker: Character) -> void:
@@ -136,6 +142,7 @@ func take_damage(amount: float, attacker: Character) -> void:
 		died.emit()
 		queue_free()
 		return
+	_charge_mana()
 	if _should_knockback(attacker):
 		_apply_knockback(attacker.global_position)
 
@@ -157,7 +164,35 @@ func _apply_knockback(from_position: Vector3) -> void:
 	velocity = dir * KNOCKBACK_FORCE
 	knockback_timer = KNOCKBACK_DURATION
 	state = State.KNOCKBACK
-	
+
+
+## Charges mana on dealing or taking a hit; casts and resets once full.
+func _charge_mana() -> void:
+	if skill == null:
+		return
+	mana += stats.mana_per_hit
+	if mana >= skill.mana_cost:
+		mana = 0.0
+		_cast_skill()
+
+
+## Spawns the generic skill-hit box at this character's position, aimed at
+## whichever group opposes it. AOE stays put; a projectile flies at `target`.
+func _cast_skill() -> void:
+	print("%s casts skill (%s)" % [name, skill.resource_path.get_file()])
+	var hit := SKILL_HIT_SCENE.instantiate() as SkillHit
+	hit.damage = skill.damage
+	hit.radius = skill.radius
+	hit.lifetime = skill.duration
+	hit.tick_interval = skill.tick_interval
+	hit.caster = self
+	hit.target_group = "enemies" if is_in_group("heroes") else "heroes"
+	if skill.shape == SkillData.Shape.PROJECTILE:
+		hit.speed = skill.projectile_speed
+		hit.direction = (target.global_position - global_position).normalized() if is_instance_valid(target) else Vector3.FORWARD
+	hit.position = global_position
+	get_tree().current_scene.add_child(hit)
+
 func spawn_fx(value:float):
 	var camera = get_viewport().get_camera_3d()
 	if not camera:
