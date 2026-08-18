@@ -18,7 +18,7 @@ var target: Character = null
 var knockback_timer: float = 0.0
 
 var _attack_timer: Timer
-@onready var _health_bar_fill: Sprite3D = $HealthBarFill
+@onready var _health_bar_fill: Sprite3D = $CameraFacingContainer/HealthBarFill
 var _health_bar_full_width: float
 
 

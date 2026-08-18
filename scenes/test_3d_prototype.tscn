@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://djmxrnq83rnk6"]
 
+[ext_resource type="Texture2D" uid="uid://dmpk5wblldh7r" path="res://asset/hand_draw/level/Map.png" id="1_qsv4e"]
 [ext_resource type="Script" uid="uid://bt4mwi3rofoa3" path="res://scenes/placement_controller.gd" id="3_ypfpo"]
 [ext_resource type="Texture2D" uid="uid://diwv75hqeqarn" path="res://asset/GUI_Icons/Icon_01.png" id="4_ue1d3"]
 [ext_resource type="Texture2D" uid="uid://b4ld0qx2jf6tu" path="res://asset/GUI_Icons/fc16.png" id="4_umkjb"]
@@ -19,6 +20,11 @@
 [ext_resource type="PackedScene" uid="uid://cjp2rabqdxsew" path="res://asset/popup_book/popupbook.fbx" id="13_1wcjg"]
 [ext_resource type="Script" uid="uid://jx3vlahkixwf" path="res://scripts/build_menu_popup.gd" id="13_l71j0"]
 [ext_resource type="Texture2D" uid="uid://bbtarxm7nqwdv" path="res://asset/GUI_Icons/Icon_09.png" id="13_qsv4e"]
+[ext_resource type="PackedScene" uid="uid://lo102n04ypql" path="res://scenes/hero_town_camera.tscn" id="21_l71j0"]
+[ext_resource type="PackedScene" uid="uid://cn0o3o2aktrh6" path="res://scenes/test_level_25/tree_test_25.tscn" id="22_pt2b8"]
+[ext_resource type="PackedScene" uid="uid://d065r0oxb35ke" path="res://scenes/test_level_25/tree2_test_25.tscn" id="23_8je1v"]
+[ext_resource type="PackedScene" uid="uid://mx8g0v866fpw" path="res://scenes/test_level_25/tree3_test_25.tscn" id="24_rl0vt"]
+[ext_resource type="PackedScene" uid="uid://cyerhxx0ol7rs" path="res://scenes/test_level_25/tree1_test_25.tscn" id="25_1821j"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 size = Vector2(60, 30)
@@ -26,7 +32,7 @@ size = Vector2(60, 30)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
 albedo_color = Color(0.25, 0.45, 0.3, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i1g6a"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rl0vt"]
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
@@ -37,7 +43,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qsv4e"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1821j"]
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
@@ -48,7 +54,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l71j0"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kvgmm"]
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
@@ -72,15 +78,14 @@ height_falloff = 1.5587206
 edge_fade = 1.0556039
 density_texture = SubResource("NoiseTexture3D_1wcjg")
 
+[sub_resource type="PlaneMesh" id="PlaneMesh_qsv4e"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l71j0"]
+albedo_texture = ExtResource("1_qsv4e")
+
 [node name="Test3dPrototype" type="Node3D" unique_id=476948428]
 
-[node name="Camera3D" type="Camera3D" parent="." unique_id=930282]
-transform = Transform3D(1, 0, 0, 0, 0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, 0, 55.400097, 34.587807)
-current = true
-fov = 35.0
-size = 33.552
-
-[node name="Ground" type="MeshInstance3D" parent="." unique_id=2023096546]
+[node name="Ground4Grid" type="MeshInstance3D" parent="." unique_id=2023096546]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.5, 0, 0, 0)
 visible = false
 mesh = SubResource("PlaneMesh_ground")
@@ -192,11 +197,11 @@ offset_bottom = 299.0
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_i1g6a")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_i1g6a")
-theme_override_styles/hover = SubResource("StyleBoxFlat_i1g6a")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_i1g6a")
-theme_override_styles/focus = SubResource("StyleBoxFlat_i1g6a")
+theme_override_styles/normal = SubResource("StyleBoxFlat_rl0vt")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_rl0vt")
+theme_override_styles/hover = SubResource("StyleBoxFlat_rl0vt")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_rl0vt")
+theme_override_styles/focus = SubResource("StyleBoxFlat_rl0vt")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -245,11 +250,11 @@ one_shot = true
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_qsv4e")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_qsv4e")
-theme_override_styles/hover = SubResource("StyleBoxFlat_qsv4e")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_qsv4e")
-theme_override_styles/focus = SubResource("StyleBoxFlat_qsv4e")
+theme_override_styles/normal = SubResource("StyleBoxFlat_1821j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1821j")
+theme_override_styles/hover = SubResource("StyleBoxFlat_1821j")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_1821j")
+theme_override_styles/focus = SubResource("StyleBoxFlat_1821j")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -298,11 +303,11 @@ one_shot = true
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_l71j0")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_l71j0")
-theme_override_styles/hover = SubResource("StyleBoxFlat_l71j0")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_l71j0")
-theme_override_styles/focus = SubResource("StyleBoxFlat_l71j0")
+theme_override_styles/normal = SubResource("StyleBoxFlat_kvgmm")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_kvgmm")
+theme_override_styles/hover = SubResource("StyleBoxFlat_kvgmm")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_kvgmm")
+theme_override_styles/focus = SubResource("StyleBoxFlat_kvgmm")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -424,7 +429,7 @@ columns = 3
 
 [node name="GridSystem" type="Node3D" parent="." unique_id=57193445 node_paths=PackedStringArray("ground_mesh")]
 script = ExtResource("7_lquev")
-ground_mesh = NodePath("../Ground")
+ground_mesh = NodePath("../Ground4Grid")
 
 [node name="GridVisual" type="MeshInstance3D" parent="GridSystem" unique_id=2057738311]
 material_override = ExtResource("8_ptodj")
@@ -441,11 +446,123 @@ material = SubResource("FogMaterial_der4m")
 
 [node name="popupbook" parent="." unique_id=242688411 instance=ExtResource("13_1wcjg")]
 transform = Transform3D(38, 0, 0, 0, 38, 0, 0, 0, 38, 3.7453938, -1.9042301, -3.6329155)
+visible = false
 
 [node name="Hero" parent="." unique_id=821036431 instance=ExtResource("10_sf47j")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.900888, 0, 0)
 
 [node name="Enemy" parent="." unique_id=1538274379 instance=ExtResource("11_tp2x5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8282347, 0, 0)
+
+[node name="GrassGround" type="MeshInstance3D" parent="." unique_id=82373698]
+transform = Transform3D(41.751945, 0, 0, 0, 1, 0, 0, 0, 18.714624, 0, 0, 0)
+mesh = SubResource("PlaneMesh_qsv4e")
+surface_material_override/0 = SubResource("StandardMaterial3D_l71j0")
+
+[node name="HeroTownCamera" parent="." unique_id=1104525491 instance=ExtResource("21_l71j0")]
+
+[node name="tree" type="Node3D" parent="." unique_id=2028028847]
+
+[node name="TreeTest25" parent="tree" unique_id=1586410678 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, -31.25791, 0, -10.467626)
+
+[node name="TreeTest26" parent="tree" unique_id=83880790 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -22.81983, 0, -13.396066)
+
+[node name="TreeTest27" parent="tree" unique_id=855681651 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, -22.81983, 0, -8.770488)
+
+[node name="TreeTest42" parent="tree" unique_id=207884502 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, -22.81983, 0, 12.752576)
+
+[node name="TreeTest28" parent="tree" unique_id=1013669205 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -14.828819, 0, -9.6967745)
+
+[node name="TreeTest43" parent="tree" unique_id=1360156535 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -14.828819, 0, 17.790989)
+
+[node name="TreeTest29" parent="tree" unique_id=1623061157 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -7.138799, 0, -9.6967745)
+
+[node name="TreeTest30" parent="tree" unique_id=996624229 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0753636, 0, -8.96658)
+
+[node name="TreeTest46" parent="tree" unique_id=217485524 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.3519435, 0, 16.47762)
+
+[node name="TreeTest31" parent="tree" unique_id=1706794527 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.228073, 0, -12.482505)
+
+[node name="TreeTest32" parent="tree" unique_id=1722573832 instance=ExtResource("22_pt2b8")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 17.57158, 0, -9.42085)
+
+[node name="TreeTest33" parent="tree" unique_id=1177368441 instance=ExtResource("23_8je1v")]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -10, 0, -5)
+
+[node name="TreeTest44" parent="tree" unique_id=1481197010 instance=ExtResource("23_8je1v")]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -10, 0, 16.53501)
+
+[node name="TreeTest34" parent="tree" unique_id=655992361 instance=ExtResource("23_8je1v")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -3, 0, -8)
+
+[node name="TreeTest45" parent="tree" unique_id=1820121474 instance=ExtResource("23_8je1v")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -3, 0, 12.839909)
+
+[node name="TreeTest35" parent="tree" unique_id=1213594638 instance=ExtResource("23_8je1v")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 2, 0, -11)
+
+[node name="TreeTest36" parent="tree" unique_id=1961521992 instance=ExtResource("23_8je1v")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 9, 0, -7)
+
+[node name="TreeTest47" parent="tree" unique_id=516036800 instance=ExtResource("23_8je1v")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 9, 0, 13.932749)
+
+[node name="TreeTest37" parent="tree" unique_id=2033625173 instance=ExtResource("24_rl0vt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.968359, 0, -4.787937)
+
+[node name="TreeTest49" parent="tree" unique_id=539162739 instance=ExtResource("24_rl0vt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.968359, 0, 14.595118)
+
+[node name="TreeTest38" parent="tree" unique_id=452363344 instance=ExtResource("24_rl0vt")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 21.729536, 0, -7.190523)
+
+[node name="TreeTest48" parent="tree" unique_id=738054734 instance=ExtResource("24_rl0vt")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 21.729536, 0, 14.54442)
+
+[node name="TreeTest39" parent="tree" unique_id=1368788251 instance=ExtResource("24_rl0vt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.412363, 0, -10.146727)
+
+[node name="TreeTest40" parent="tree" unique_id=1001911141 instance=ExtResource("24_rl0vt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.138933, 0, -5.4596653)
+
+[node name="TreeTest41" parent="tree" unique_id=2038405488 instance=ExtResource("24_rl0vt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.32305, 0, -8.444744)
+
+[node name="TreeTest50" parent="tree" unique_id=957655262 instance=ExtResource("25_1821j")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, -34.151703, 0, -7.024247)
+
+[node name="TreeTest55" parent="tree" unique_id=876125361 instance=ExtResource("25_1821j")]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 30.694206, 0, -2.077363)
+
+[node name="TreeTest56" parent="tree" unique_id=2138728912 instance=ExtResource("25_1821j")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 34.398434, 0, -7.097962)
+
+[node name="TreeTest57" parent="tree" unique_id=1111111180 instance=ExtResource("25_1821j")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 36.42007, 0, -5.112006)
+
+[node name="TreeTest58" parent="tree" unique_id=1355367006 instance=ExtResource("25_1821j")]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 30.320107, 0, 3.7478774)
+
+[node name="TreeTest51" parent="tree" unique_id=1098283847 instance=ExtResource("25_1821j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.691513, 0, -1.8343725)
+
+[node name="TreeTest52" parent="tree" unique_id=415029765 instance=ExtResource("25_1821j")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -30.003191, 0, 1.4052143)
+
+[node name="TreeTest53" parent="tree" unique_id=1216749989 instance=ExtResource("25_1821j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.5011, 0, 3.2672205)
+
+[node name="TreeTest54" parent="tree" unique_id=335922108 instance=ExtResource("25_1821j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.311407, 0, 8.0076065)
 
 [connection signal="pressed" from="CanvasLayer/HBoxContainer/PlacementButton" to="CanvasLayer" method="_on_placement_button_pressed"]

@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://5bgnt1ojhhl5" path="res://scripts/hero.gd" id="1_yvbpl"]
 [ext_resource type="Texture2D" uid="uid://c700l84bkbd7m" path="res://asset/hand_draw/chracter/knight.png" id="2_06baw"]
 [ext_resource type="Resource" uid="uid://bhr8ccij4j4wv" path="res://resources/units/hero_default.tres" id="2_mv13s"]
+[ext_resource type="PackedScene" uid="uid://dg3hhah85cqi" path="res://scenes/test_level_25/camera_facing_container.tscn" id="3_w7pyx"]
 [ext_resource type="Texture2D" uid="uid://bdh4gf17y2jyg" path="res://resources/textures/white.tres" id="4_mv13s"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_mv13s"]
@@ -13,7 +14,7 @@ length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Sprite3D:scale")
+tracks/0/path = NodePath("CameraFacingContainer/Sprite3D:scale")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -25,7 +26,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("Sprite3D:rotation")
+tracks/1/path = NodePath("CameraFacingContainer/Sprite3D:rotation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -37,7 +38,7 @@ tracks/1/keys = {
 tracks/2/type = "value"
 tracks/2/imported = false
 tracks/2/enabled = true
-tracks/2/path = NodePath("Sprite3D:position")
+tracks/2/path = NodePath("CameraFacingContainer/Sprite3D:position")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
@@ -57,7 +58,7 @@ loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Sprite3D:scale")
+tracks/0/path = NodePath("CameraFacingContainer/Sprite3D:scale")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -74,7 +75,7 @@ loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Sprite3D:scale")
+tracks/0/path = NodePath("CameraFacingContainer/Sprite3D:scale")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -86,7 +87,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("Sprite3D:rotation")
+tracks/1/path = NodePath("CameraFacingContainer/Sprite3D:rotation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -98,7 +99,7 @@ tracks/1/keys = {
 tracks/2/type = "value"
 tracks/2/imported = false
 tracks/2/enabled = true
-tracks/2/path = NodePath("Sprite3D:position")
+tracks/2/path = NodePath("CameraFacingContainer/Sprite3D:position")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
@@ -124,25 +125,24 @@ stats = ExtResource("2_mv13s")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_mv13s")
 
-[node name="Sprite3D" type="Sprite3D" parent="." unique_id=637173425]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1702288037]
+libraries/ = SubResource("AnimationLibrary_y2sko")
+
+[node name="CameraFacingContainer" parent="." unique_id=1164852497 instance=ExtResource("3_w7pyx")]
+
+[node name="Sprite3D" type="Sprite3D" parent="CameraFacingContainer" unique_id=637173425]
 transform = Transform3D(0.1083, 0, 0, 0, 0.1083, 0, 0, 0, 0.1083, 0, 2.05, 0)
-billboard = 1
 alpha_cut = 2
 texture_filter = 0
 texture = ExtResource("2_06baw")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1702288037]
-libraries/ = SubResource("AnimationLibrary_y2sko")
-
-[node name="HealthBarBg" type="Sprite3D" parent="." unique_id=1047717928]
+[node name="HealthBarBg" type="Sprite3D" parent="CameraFacingContainer" unique_id=1047717928]
 transform = Transform3D(2.9, 0, 0, 0, 0.28, 0, 0, 0, 1, 0, 4.3, -0.001)
 modulate = Color(0.1, 0.1, 0.1, 0.8)
-billboard = 1
 texture = ExtResource("4_mv13s")
 
-[node name="HealthBarFill" type="Sprite3D" parent="." unique_id=1443917243]
+[node name="HealthBarFill" type="Sprite3D" parent="CameraFacingContainer" unique_id=1443917243]
 transform = Transform3D(2.8, 0, 0, 0, 0.2, 0, 0, 0, 1, -1.4, 4.3, 0)
 centered = false
 modulate = Color(0, 1, 0, 1)
-billboard = 1
 texture = ExtResource("4_mv13s")
