@@ -41,9 +41,22 @@ func _on_build_requested(building_type: String) -> void:
 func _on_move_requested(building: BuildingBase) -> void:
 	placement_controller.start_move(building)
 
+const HERO_BASE_SCENE := preload("res://scenes/hero.tscn")
+const ENEMY_BASE_SCENE := preload("res://scenes/enemy.tscn")
+
+## Per-id override scene, e.g. res://scenes/heroes/h001.tscn, falls back to the shared base scene.
+func _hero_scene(hero_id: String) -> PackedScene:
+	var path := "res://scenes/heroes/%s.tscn" % hero_id.to_lower()
+	return load(path) if ResourceLoader.exists(path) else HERO_BASE_SCENE
+
+## Same convention as _hero_scene, under res://scenes/enemies/.
+func _enemy_scene(enemy_id: String) -> PackedScene:
+	var path := "res://scenes/enemies/%s.tscn" % enemy_id.to_lower()
+	return load(path) if ResourceLoader.exists(path) else ENEMY_BASE_SCENE
+
 func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
 	var enemy_data: EnemyData = GameData.ENEMIES[enemy_id]
-	var enemy_instance: Enemy = preload("res://scenes/enemy.tscn").instantiate()
+	var enemy_instance: Enemy = _enemy_scene(enemy_id).instantiate()
 	var stats := UnitStats.new()
 	stats.max_hp = enemy_data.hp
 	stats.atk = enemy_data.atk
@@ -54,7 +67,7 @@ func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
 
 func _on_hero_acquired(hero_id: String, building: BuildingBase) -> void:
 	var hero_data: HeroData = GameData.HEROES[hero_id]
-	var hero_instance: Hero = preload("res://scenes/hero.tscn").instantiate()
+	var hero_instance: Hero = _hero_scene(hero_id).instantiate()
 	var stats := UnitStats.new()
 	stats.max_hp = hero_data.base_hp
 	stats.atk = hero_data.base_power

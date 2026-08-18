@@ -12,8 +12,8 @@
 [ext_resource type="Texture2D" uid="uid://cbpos4reypep1" path="res://asset/GUI_Icons/icon21.png" id="7_tp2x5"]
 [ext_resource type="Material" uid="uid://bkqjr62ivqfhp" path="res://asset/Shaders/grid_overlay_material.tres" id="8_ptodj"]
 [ext_resource type="Script" uid="uid://dmfjis13on0fn" path="res://scenes/expand_button.gd" id="9_pt5xc"]
-[ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="10_sf47j"]
-[ext_resource type="PackedScene" uid="uid://clrsto6xithf0" path="res://scenes/enemy.tscn" id="11_tp2x5"]
+[ext_resource type="PackedScene" path="res://scenes/heroes/h001.tscn" id="10_sf47j"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/e001.tscn" id="11_tp2x5"]
 [ext_resource type="PackedScene" uid="uid://bstrqcm5u0qm5" path="res://scenes/sky.tscn" id="12_der4m"]
 [ext_resource type="PackedScene" uid="uid://xom26mo2r4bw" path="res://scenes/big_frame.tscn" id="12_i1g6a"]
 [ext_resource type="PackedScene" uid="uid://cjp2rabqdxsew" path="res://asset/popup_book/popupbook.fbx" id="13_1wcjg"]
@@ -422,12 +422,6 @@ theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
 columns = 3
 
-[node name="Hero" parent="." unique_id=2132630489 instance=ExtResource("10_sf47j")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.900888, 0, 0)
-
-[node name="Enemy" parent="." unique_id=1441882041 instance=ExtResource("11_tp2x5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8282347, 0, 0)
-
 [node name="GridSystem" type="Node3D" parent="." unique_id=57193445 node_paths=PackedStringArray("ground_mesh")]
 script = ExtResource("7_lquev")
 ground_mesh = NodePath("../Ground")
@@ -447,5 +441,11 @@ material = SubResource("FogMaterial_der4m")
 
 [node name="popupbook" parent="." unique_id=242688411 instance=ExtResource("13_1wcjg")]
 transform = Transform3D(38, 0, 0, 0, 38, 0, 0, 0, 38, 3.7453938, -1.9042301, -3.6329155)
+
+[node name="Hero" parent="." unique_id=821036431 instance=ExtResource("10_sf47j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.900888, 0, 0)
+
+[node name="Enemy" parent="." unique_id=1538274379 instance=ExtResource("11_tp2x5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8282347, 0, 0)
 
 [connection signal="pressed" from="CanvasLayer/HBoxContainer/PlacementButton" to="CanvasLayer" method="_on_placement_button_pressed"]
