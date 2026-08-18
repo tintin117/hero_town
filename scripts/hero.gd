@@ -3,6 +3,7 @@ extends Character
 
 @export var patrol_start_x: float = 0.0
 @export var patrol_end_x: float = 0.0
+@onready var anim_player: AnimationPlayer = $AnimationPlayer
 
 var _patrol_dir: int = 1
 
@@ -13,6 +14,7 @@ func _ready() -> void:
 
 
 func _update_move(_delta: float) -> void:
+	anim_player.play("move")
 	_chase_and_engage("enemies")
 
 
