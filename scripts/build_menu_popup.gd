@@ -3,7 +3,7 @@ extends Control
 signal build_requested(building_type: String)
 signal popup_hidden
 
-const BuildingItemScene := preload("res://scenes/building_item.tscn")
+const BuildingItemScene := preload("res://scenes/UI_building_item.tscn")
 
 
 @onready var title_label: Label = $VBoxContainer/LabelControl/Label

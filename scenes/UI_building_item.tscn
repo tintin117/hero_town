@@ -1,13 +1,13 @@
 [gd_scene format=3 uid="uid://buyiyhvirggf6"]
 
-[ext_resource type="Texture2D" uid="uid://d0dpjpg2dfwld" path="res://asset/hero_town/wind_milk.png" id="1_84goe"]
-[ext_resource type="Script" uid="uid://cps5ia6mt28l7" path="res://scripts/building_item.gd" id="1_hi8r7"]
-[ext_resource type="FontFile" uid="uid://b0r1vmd417svj" path="res://fonts/PeaberryBase.ttf" id="2_hi8r7"]
-[ext_resource type="Texture2D" uid="uid://brkwhmbm5okq5" path="res://asset/GUI_Icons/Icon_03.png" id="3_u0h3s"]
-[ext_resource type="Texture2D" uid="uid://c5fvk2gwrc776" path="res://asset/Pointers/03.png" id="5_mwocb"]
-[ext_resource type="Texture2D" uid="uid://pl6omn4kgb61" path="res://asset/Pointers/04.png" id="6_mjyn1"]
-[ext_resource type="Texture2D" uid="uid://civmyknc1o6v5" path="res://asset/Pointers/05.png" id="7_v8w88"]
-[ext_resource type="Texture2D" uid="uid://b4rckxexdi56u" path="res://asset/Pointers/06.png" id="8_0qogn"]
+[ext_resource type="Script" uid="uid://cps5ia6mt28l7" path="res://scripts/UI_building_item.gd" id="1_orn14"]
+[ext_resource type="Texture2D" uid="uid://d0dpjpg2dfwld" path="res://asset/hero_town/wind_milk.png" id="2_80nxd"]
+[ext_resource type="FontFile" uid="uid://b0r1vmd417svj" path="res://fonts/PeaberryBase.ttf" id="3_m52u7"]
+[ext_resource type="Texture2D" uid="uid://brkwhmbm5okq5" path="res://asset/GUI_Icons/Icon_03.png" id="4_l2bwu"]
+[ext_resource type="Texture2D" uid="uid://c5fvk2gwrc776" path="res://asset/Pointers/03.png" id="5_gdurl"]
+[ext_resource type="Texture2D" uid="uid://pl6omn4kgb61" path="res://asset/Pointers/04.png" id="6_331fd"]
+[ext_resource type="Texture2D" uid="uid://civmyknc1o6v5" path="res://asset/Pointers/05.png" id="7_mskbb"]
+[ext_resource type="Texture2D" uid="uid://b4rckxexdi56u" path="res://asset/Pointers/06.png" id="8_xhs70"]
 
 [node name="BuildingItem" type="Button" unique_id=650072663]
 clip_contents = true
@@ -15,7 +15,7 @@ custom_minimum_size = Vector2(90, 90)
 offset_right = 8.0
 offset_bottom = 8.0
 flat = true
-script = ExtResource("1_hi8r7")
+script = ExtResource("1_orn14")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=110242286]
 custom_minimum_size = Vector2(90, 90)
@@ -28,7 +28,7 @@ mouse_filter = 2
 custom_minimum_size = Vector2(52, 52)
 layout_mode = 2
 size_flags_horizontal = 4
-texture = ExtResource("1_84goe")
+texture = ExtResource("2_80nxd")
 expand_mode = 1
 stretch_mode = 5
 
@@ -39,7 +39,7 @@ layout_mode = 2
 theme_override_colors/font_shadow_color = Color(0.29411766, 0.29411766, 0.29411766, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 1
-theme_override_fonts/font = ExtResource("2_hi8r7")
+theme_override_fonts/font = ExtResource("3_m52u7")
 theme_override_font_sizes/font_size = 12
 text = "Building Name"
 horizontal_alignment = 1
@@ -53,7 +53,7 @@ size_flags_horizontal = 4
 [node name="TextureRect" type="TextureRect" parent="VBoxContainer/HBoxContainer" unique_id=526717124]
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
-texture = ExtResource("3_u0h3s")
+texture = ExtResource("4_l2bwu")
 expand_mode = 1
 
 [node name="Price" type="Label" parent="VBoxContainer/HBoxContainer" unique_id=1713048693]
@@ -61,7 +61,7 @@ layout_mode = 2
 theme_override_colors/font_shadow_color = Color(0.29411766, 0.29411766, 0.29411766, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 1
-theme_override_fonts/font = ExtResource("2_hi8r7")
+theme_override_fonts/font = ExtResource("3_m52u7")
 theme_override_font_sizes/font_size = 14
 text = "999"
 horizontal_alignment = 1
@@ -97,7 +97,7 @@ offset_left = -10.0
 offset_top = -9.0
 offset_right = 20.0
 offset_bottom = 21.0
-texture = ExtResource("5_mwocb")
+texture = ExtResource("5_gdurl")
 expand_mode = 1
 
 [node name="Control2" type="Control" parent="Hover" unique_id=1309844942]
@@ -116,7 +116,7 @@ offset_left = -1.0
 offset_top = -9.0
 offset_right = 29.0
 offset_bottom = 21.0
-texture = ExtResource("6_mjyn1")
+texture = ExtResource("6_331fd")
 expand_mode = 1
 
 [node name="Control3" type="Control" parent="Hover" unique_id=771965010]
@@ -135,7 +135,7 @@ offset_left = -10.0
 offset_top = -1.0
 offset_right = 20.0
 offset_bottom = 29.0
-texture = ExtResource("7_v8w88")
+texture = ExtResource("7_mskbb")
 expand_mode = 1
 
 [node name="Control4" type="Control" parent="Hover" unique_id=2128770542]
@@ -157,5 +157,5 @@ offset_left = -1.0
 offset_top = -1.0
 offset_right = 29.0
 offset_bottom = 29.0
-texture = ExtResource("8_0qogn")
+texture = ExtResource("8_xhs70")
 expand_mode = 1

@@ -1,4 +1,4 @@
-extends PanelContainer
+extends Control
 
 signal move_requested(building: BuildingBase)
 signal spawn_requested(enemy_id: String, building: BuildingBase)
@@ -7,10 +7,10 @@ signal hero_released(hero_id: String)
 
 const SHOP_SLOTS := 4
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var level_label: Label = $VBox/LevelLabel
-@onready var upgrade_btn: Button = $VBox/UpgradeButton
-@onready var content_list: VBoxContainer = $VBox/ContentList
+@onready var title_label: Label = $"../BuildingPopup/VBoxContainer/LabelControl/Label"
+@onready var level_label: Label = $"../BuildingPopup/VBoxContainer/LevelControl/Level"
+@onready var upgrade_btn: TextureButton = $"../BuildingPopup/VBoxContainer/ActionButton/HBoxContainer/Upgrade"
+@onready var content_list: VBoxContainer = $"../BuildingPopup/VBoxContainer/SelectionGrid/ScrollContainer/GridContainer"
 
 var building: BuildingBase = null
 var _shrine_result_text: String = ""
@@ -34,14 +34,14 @@ func close() -> void:
 
 func _refresh() -> void:
 	var data := building.get_data()
-	title_label.text = data.display_name
+	title_label.text = str(data.display_name)
 	level_label.text = "Lv%d" % building.current_level
 	if building.current_level >= data.levels.size():
 		upgrade_btn.text = "MAX"
 		upgrade_btn.disabled = true
 	else:
 		var cost: int = data.levels[building.current_level]["cost"]
-		upgrade_btn.text = "Upgrade  %dg" % cost
+		#upgrade_btn.text = "Upgrade  %dg" % cost
 		upgrade_btn.disabled = not GameState.can_afford(cost)
 
 	if building.building_id == "portal":

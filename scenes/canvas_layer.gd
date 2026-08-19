@@ -29,6 +29,26 @@ func connect_building(building: BuildingBase) -> void:
 	building.clicked.connect(_on_building_clicked.bind(building))
 
 func _on_building_clicked(building: BuildingBase) -> void:
+	var camera = get_viewport().get_camera_3d()
+	if not camera:
+		return
+	var world_pos: Vector3 = building.global_transform.origin
+	var screen_pos: Vector2 = camera.unproject_position(world_pos)
+	var pixel_offset_y = 200
+	screen_pos.y -= pixel_offset_y
+	if camera.is_position_behind(world_pos):
+		visible = false
+		return
+	else:
+		visible = true
+	building_popup.size
+	var ui_size: Vector2 = building_popup.size
+	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	var top_left: Vector2 = screen_pos - ui_size / 2.0
+	var screen_margin = 20
+	top_left.x = clamp(top_left.x, screen_margin, viewport_size.x - ui_size.x - screen_margin)
+	top_left.y = clamp(top_left.y, screen_margin, viewport_size.y - ui_size.y - screen_margin)
+	building_popup.global_position = top_left
 	building_popup.open(building)
 
 func _on_placement_button_pressed() -> void:
