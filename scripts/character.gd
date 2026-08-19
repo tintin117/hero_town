@@ -21,6 +21,7 @@ var state: State = State.MOVE
 var target: Character = null
 var knockback_timer: float = 0.0
 var mana: float = 0.0
+var _skill_cooldown: float = 0.0
 
 var _attack_timer: Timer
 @onready var _health_bar_fill: Sprite3D = $CameraFacingContainer/HealthBarFill
@@ -51,6 +52,9 @@ func _update_health_bar() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _skill_cooldown > 0.0:
+		_skill_cooldown -= delta
+
 	match state:
 		State.DEAD:
 			return
@@ -171,8 +175,9 @@ func _charge_mana() -> void:
 	if skill == null:
 		return
 	mana += stats.mana_per_hit
-	if mana >= skill.mana_cost:
+	if mana >= skill.mana_cost and _skill_cooldown <= 0.0:
 		mana = 0.0
+		_skill_cooldown = skill.cooldown
 		_cast_skill()
 
 

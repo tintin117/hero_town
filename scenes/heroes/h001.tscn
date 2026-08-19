@@ -1,9 +1,5 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://c11iqo86mrljp"]
 
 [ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="1_base"]
-[ext_resource type="Texture2D" path="res://asset/hand_draw/chracter/crusader.png" id="2_tex"]
 
-[node name="H001" instance=ExtResource("1_base")]
-
-[node name="Sprite3D" parent="." index="1"]
-texture = ExtResource("2_tex")
+[node name="H001" unique_id=869447 instance=ExtResource("1_base")]

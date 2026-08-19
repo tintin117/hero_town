@@ -11,3 +11,4 @@ enum Shape { AOE, PROJECTILE }
 @export var projectile_speed: float = 8.0
 @export var duration: float = 0.4
 @export var tick_interval: float = 0.0 ## 0 = single hit on contact; >0 = re-damage every interval while overlapping.
+@export var cooldown: float = 0.0 ## Seconds after casting before this skill can trigger again. 0 = no cooldown gate.
