@@ -34,29 +34,29 @@ size = Vector2(60, 30)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
 albedo_color = Color(0.25, 0.45, 0.3, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1821j"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
-bg_color = Color(0, 0, 0, 0.4392157)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kvgmm"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
-bg_color = Color(0, 0, 0, 0.4392157)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wgud7"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0.4392157)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y6guy"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0.4392157)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4xyri"]
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
@@ -199,11 +199,11 @@ offset_bottom = 299.0
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_1821j")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_1821j")
-theme_override_styles/hover = SubResource("StyleBoxFlat_1821j")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_1821j")
-theme_override_styles/focus = SubResource("StyleBoxFlat_1821j")
+theme_override_styles/normal = SubResource("StyleBoxFlat_wgud7")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_wgud7")
+theme_override_styles/hover = SubResource("StyleBoxFlat_wgud7")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_wgud7")
+theme_override_styles/focus = SubResource("StyleBoxFlat_wgud7")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -252,11 +252,11 @@ one_shot = true
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_kvgmm")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_kvgmm")
-theme_override_styles/hover = SubResource("StyleBoxFlat_kvgmm")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_kvgmm")
-theme_override_styles/focus = SubResource("StyleBoxFlat_kvgmm")
+theme_override_styles/normal = SubResource("StyleBoxFlat_y6guy")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_y6guy")
+theme_override_styles/hover = SubResource("StyleBoxFlat_y6guy")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_y6guy")
+theme_override_styles/focus = SubResource("StyleBoxFlat_y6guy")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -305,11 +305,11 @@ one_shot = true
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_wgud7")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_wgud7")
-theme_override_styles/hover = SubResource("StyleBoxFlat_wgud7")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_wgud7")
-theme_override_styles/focus = SubResource("StyleBoxFlat_wgud7")
+theme_override_styles/normal = SubResource("StyleBoxFlat_4xyri")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4xyri")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4xyri")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_4xyri")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4xyri")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
