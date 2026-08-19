@@ -127,13 +127,13 @@ func _on_attack_timeout() -> void:
 		return
 	if global_position.distance_to(target.global_position) <= stats.attack_range:
 		target.take_damage(stats.atk, self)
+		spawn_fx(stats.atk, false, false)
 		_charge_mana()
 
 
 func take_damage(amount: float, attacker: Character) -> void:
 	if state == State.DEAD:
 		return
-	spawn_fx(amount)
 	hp -= amount
 	_update_health_bar()
 	if hp <= 0.0:
@@ -193,20 +193,21 @@ func _cast_skill() -> void:
 	hit.position = global_position
 	get_tree().current_scene.add_child(hit)
 
-func spawn_fx(value:float):
+func spawn_fx(value:float, crit:bool, screen_shake:bool):
 	var camera = get_viewport().get_camera_3d()
 	if not camera:
 		return
 	# Convert 3D top position to 2D screen position
-	var text_pos = global_position + Vector3(0, get_character_height()*2.5, 0)
+	var text_pos = global_position + Vector3(0, get_character_height()*3, 0)
 	var impact_pos = global_position + Vector3(0, get_character_height()*2, 0)
 	var screen_text_pos = camera.unproject_position(text_pos)
 	var screen_impact_pos = camera.unproject_position(impact_pos)
 	fx.spawn("impact_spark", screen_impact_pos, {"size": 0.3})
-	fx.shake(0.25)
+	if screen_shake:
+		fx.shake(0.2, 0.1)
 	fx.hitstop(0.06)
 	#fx.flash(Color.WHITE, 0.1)
-	fx.popup(str(value), screen_text_pos, {"crit": true})
+	fx.popup(str(value), screen_text_pos, {"crit": crit})
 
 func get_character_height() -> float:
 	# change "CollisionShape3D" to your actual node name
