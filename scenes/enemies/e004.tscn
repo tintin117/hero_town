@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://clrsto6xithf0" path="res://scenes/enemy.tscn" id="1_6ludp"]
 [ext_resource type="Texture2D" uid="uid://cnt0p63tovr38" path="res://asset/hand_draw/chracter/dragon.png" id="2_6ludp"]
 
-[node name="E003" unique_id=505917884 instance=ExtResource("1_6ludp")]
+[node name="E004" unique_id=505917884 instance=ExtResource("1_6ludp")]
 stats = null
 
 [node name="Sprite3D" parent="CameraFacingContainer" parent_id_path=PackedInt32Array(1164852497) index="0" unique_id=1688491239]
