@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://d4druei8aw7sj"]
+
+[ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="1_8xekw"]
+[ext_resource type="Texture2D" uid="uid://devdy3mmbs280" path="res://asset/hand_draw/chracter/mummy.png" id="2_8xekw"]
+
+[node name="H005" unique_id=869447 instance=ExtResource("1_8xekw")]
+
+[node name="Sprite3D" parent="CameraFacingContainer" parent_id_path=PackedInt32Array(1164852497) index="0" unique_id=637173425]
+texture = ExtResource("2_8xekw")

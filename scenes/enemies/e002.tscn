@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://brq66xi0lo4qq"]
+
+[ext_resource type="PackedScene" uid="uid://clrsto6xithf0" path="res://scenes/enemy.tscn" id="1_base"]
+[ext_resource type="Texture2D" uid="uid://dvn0ps5mu6qge" path="res://asset/hand_draw/chracter/christmas_elf.png" id="2_7pa7c"]
+
+[node name="E002" unique_id=505917884 instance=ExtResource("1_base")]
+stats = null
+
+[node name="Sprite3D" parent="CameraFacingContainer" parent_id_path=PackedInt32Array(1164852497) index="0" unique_id=1688491239]
+texture = ExtResource("2_7pa7c")
