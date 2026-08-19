@@ -90,10 +90,10 @@ func popup(text: String, global_pos: Vector2, opts: Dictionary = {}) -> void:
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.z_index = 999
-	var fsize: int = opts.get("font_size", 16)
+	var fsize: int = opts.get("font_size", 24)
 	var col: Color = opts.get("color", Color("#fff8e7"))
 	if opts.get("crit", false):
-		fsize = int(fsize * 1.5)
+		#fsize = int(fsize * 1.2)
 		col = opts.get("color", Color("#ffd23f"))
 	lbl.add_theme_font_override("font", _popup_font)
 	lbl.add_theme_font_size_override("font_size", fsize)
@@ -111,7 +111,7 @@ func popup(text: String, global_pos: Vector2, opts: Dictionary = {}) -> void:
 	t.tween_property(lbl, "scale", Vector2.ONE, 0.22)\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	t.tween_property(lbl, "global_position",
-		global_pos + Vector2(randf_range(-14, 14), -46), 0.55)\
+		global_pos + Vector2(randf_range(-14, 14), -60), 0.55)\
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.chain().tween_property(lbl, "modulate:a", 0.0, 0.18)
 	t.chain().tween_callback(lbl.queue_free)

@@ -50,6 +50,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 	_hit.append(character)
 	character.take_damage(damage, caster)
+	character.spawn_fx(damage, true, true)
 
 
 func _on_tick() -> void:
@@ -57,6 +58,7 @@ func _on_tick() -> void:
 		var character := _valid_target(body)
 		if character != null:
 			character.take_damage(damage, caster)
+			character.spawn_fx(damage, true, true)
 
 
 func _valid_target(body: Node) -> Character:
