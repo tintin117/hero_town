@@ -32,6 +32,7 @@ window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="viewport"
 mouse_cursor/custom_image="uid://ctn20ajhfvcni"
+mouse_cursor/custom_image_hotspot=Vector2(22, 17)
 
 [editor_plugins]
 
