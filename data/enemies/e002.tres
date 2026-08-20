@@ -9,7 +9,6 @@ display_name = "Tunnel Goblin"
 tier = 1
 hp = 70.0
 atk = 6.0
-def = 1.0
 spawn_time = 7.0
 gold_min = 12
 gold_max = 18

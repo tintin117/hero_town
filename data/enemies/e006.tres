@@ -9,7 +9,6 @@ display_name = "Cultist"
 tier = 3
 hp = 420.0
 atk = 28.0
-def = 8.0
 spawn_time = 18.0
 gold_min = 100
 gold_max = 145

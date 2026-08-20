@@ -19,15 +19,13 @@ func _update_move(_delta: float) -> void:
 
 
 func _idle_move() -> void:
-	velocity = move_direction.normalized() * stats.move_speed
+	velocity = move_direction.normalized() * move_speed
 
 
 func _on_death() -> void:
-	if enemy_data == null:
-		spawn_coin()
-		return
 	GameState.add(randi_range(enemy_data.gold_min, enemy_data.gold_max),
 			randi_range(enemy_data.shard_min, enemy_data.shard_max))
+	spawn_coin()
 
 func spawn_coin() -> void:
 	if not is_inside_tree():
@@ -37,9 +35,7 @@ func spawn_coin() -> void:
 	if not camera:
 		return
 
-	# Convert 3D position to 2D screen position
-	var world_pos = global_position + Vector3(0, 0, 0)
-	var screen_pos = camera.unproject_position(world_pos)
+	var screen_pos = camera.unproject_position(global_position)
 
 	var coin = COIN.instantiate() as Node2D
 	if not coin:

@@ -45,6 +45,11 @@ func has_class_buff(cls: String) -> bool:
 func is_roster_full() -> bool:
 	return owned_heroes.size() >= HERO_CAP
 
+## Grants hero_id for free (e.g. the starting hero) without spending currency.
+func grant_hero(hero_id: String) -> void:
+	owned_heroes[hero_id] = true
+	roster_changed.emit()
+
 ## Buys hero_id for the shop offer/reroll cost. Grants a new hero if not owned,
 ## otherwise converts to dupe shards. Returns false if unaffordable or roster is full.
 func buy_hero(hero_id: String, cost_gold: int, cost_shard: int) -> bool:

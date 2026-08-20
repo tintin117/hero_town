@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://5bgnt1ojhhl5" path="res://scripts/hero.gd" id="1_yvbpl"]
 [ext_resource type="Texture2D" uid="uid://c700l84bkbd7m" path="res://asset/hand_draw/chracter/knight.png" id="2_06baw"]
-[ext_resource type="Resource" uid="uid://bhr8ccij4j4wv" path="res://resources/units/hero_default.tres" id="2_mv13s"]
 [ext_resource type="PackedScene" uid="uid://dg3hhah85cqi" path="res://scenes/test_level_25/camera_facing_container.tscn" id="3_w7pyx"]
 [ext_resource type="Resource" uid="uid://dyoj2lj6axl3h" path="res://data/skills/debug_nova.tres" id="3_y2sko"]
 [ext_resource type="Texture2D" uid="uid://bdh4gf17y2jyg" path="res://resources/textures/white.tres" id="4_mv13s"]
@@ -120,7 +119,8 @@ _data = {
 
 [node name="Hero" type="CharacterBody3D" unique_id=2132630489]
 script = ExtResource("1_yvbpl")
-stats = ExtResource("2_mv13s")
+atk_speed = 0.5
+mana_per_hit = 50.0
 skill = ExtResource("3_y2sko")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1400265664]

@@ -12,7 +12,6 @@ base_power = 12.0
 power_per_level = 2.0
 base_hp = 100.0
 atk_speed = 1.6
-crit_chance = 0.02
 mana_per_hit = 25.0
 upgrade_gold_base = 20
 upgrade_shard_base = 2

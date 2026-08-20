@@ -9,7 +9,6 @@ display_name = "Cave Slime"
 tier = 1
 hp = 45.0
 atk = 4.0
-def = 0.0
 spawn_time = 5.0
 gold_min = 8
 gold_max = 12

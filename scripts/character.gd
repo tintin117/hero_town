@@ -5,7 +5,12 @@ signal died
 
 enum State { MOVE, COMBAT, KNOCKBACK, DEAD }
 
-@export var stats: UnitStats
+@export var max_hp: float = 100.0
+@export var atk: float = 10.0
+@export var atk_speed: float = 1.5
+@export var move_speed: float = 2.5
+@export var attack_range: float = 1.5
+@export var mana_per_hit: float = 0.0
 @export var skill: SkillData
 
 const KNOCKBACK_FORCE := 3.0
@@ -29,13 +34,13 @@ var _health_bar_full_width: float
 
 
 func _ready() -> void:
-	hp = stats.max_hp
+	hp = max_hp
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	collision_layer = HITBOX_LAYER
 	collision_mask = 0
 
 	_attack_timer = Timer.new()
-	_attack_timer.wait_time = stats.atk_speed
+	_attack_timer.wait_time = atk_speed
 	_attack_timer.one_shot = false
 	_attack_timer.autostart = false
 	_attack_timer.timeout.connect(_on_attack_timeout)
@@ -46,7 +51,7 @@ func _ready() -> void:
 
 
 func _update_health_bar() -> void:
-	var ratio := clampf(hp / stats.max_hp, 0.0, 1.0)
+	var ratio := clampf(hp / max_hp, 0.0, 1.0)
 	_health_bar_fill.scale.x = _health_bar_full_width * ratio
 	_health_bar_fill.modulate = Color.RED.lerp(Color.GREEN, ratio)
 
@@ -68,7 +73,7 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector3.ZERO
 			if not is_instance_valid(target) or target.state == State.DEAD:
 				_exit_combat()
-			elif global_position.distance_to(target.global_position) > stats.attack_range:
+			elif global_position.distance_to(target.global_position) > attack_range:
 				_exit_combat()
 			move_and_slide()
 		State.MOVE:
@@ -85,12 +90,12 @@ func _update_move(_delta: float) -> void:
 ## Steer toward the nearest Character in `opponent_group`, or engage combat if in range.
 func _chase_and_engage(opponent_group: String) -> void:
 	var opponent := _find_nearest_in_group(opponent_group)
-	if opponent != null and global_position.distance_to(opponent.global_position) <= stats.attack_range:
+	if opponent != null and global_position.distance_to(opponent.global_position) <= attack_range:
 		_enter_combat(opponent)
 		return
 	if opponent != null:
 		var dir := signf(opponent.global_position.x - global_position.x)
-		velocity = Vector3(dir * stats.move_speed, 0.0, 0.0)
+		velocity = Vector3(dir * move_speed, 0.0, 0.0)
 	else:
 		_idle_move()
 
@@ -129,9 +134,9 @@ func _exit_combat() -> void:
 func _on_attack_timeout() -> void:
 	if state != State.COMBAT or not is_instance_valid(target) or target.state == State.DEAD:
 		return
-	if global_position.distance_to(target.global_position) <= stats.attack_range:
-		target.take_damage(stats.atk, self)
-		spawn_fx(stats.atk, false, false)
+	if global_position.distance_to(target.global_position) <= attack_range:
+		target.take_damage(atk, self)
+		spawn_fx(atk, false, false)
 		_charge_mana()
 
 
@@ -174,7 +179,7 @@ func _apply_knockback(from_position: Vector3) -> void:
 func _charge_mana() -> void:
 	if skill == null:
 		return
-	mana += stats.mana_per_hit
+	mana += mana_per_hit
 	if mana >= skill.mana_cost and _skill_cooldown <= 0.0:
 		mana = 0.0
 		_skill_cooldown = skill.cooldown

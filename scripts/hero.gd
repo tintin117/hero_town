@@ -30,7 +30,7 @@ func _patrol() -> void:
 		_patrol_dir = -1
 	elif global_position.x <= patrol_start_x:
 		_patrol_dir = 1
-	velocity = Vector3(_patrol_dir * stats.move_speed, 0.0, 0.0)
+	velocity = Vector3(_patrol_dir * move_speed, 0.0, 0.0)
 
 
 func _should_knockback(attacker: Character) -> bool:

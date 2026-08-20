@@ -6,7 +6,6 @@ extends Resource
 @export var tier: int
 @export var hp: float
 @export var atk: float
-@export var def: float
 @export var spawn_time: float
 @export var gold_min: int
 @export var gold_max: int

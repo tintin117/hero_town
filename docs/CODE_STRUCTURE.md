@@ -73,8 +73,6 @@ Test3dPrototype (Node3D)
 │   ├─ BuildMenuPopup            — instance of build_menu_popup.tscn
 │   ├─ Coin_HUD / Shard_HUD      — currency counters
 │   └─ PanelContainer            — (empty placeholder)
-├─ Hero                          — instance of hero.tscn, starts pre-placed
-├─ Enemy                         — instance of enemy.tscn, starts pre-placed
 ├─ GridSystem                    — script: scenes/grid_system.gd
 │   └─ GridVisual                — shader-drawn grid/hover-highlight overlay
 ├─ Sky                           — instance of sky.tscn (day/night cycle)
@@ -93,6 +91,10 @@ Test3dPrototype (Node3D)
    and a **portal** at the rightmost column, via `_spawn_building()`. Each
    spawned `BuildingBase` is registered on the grid and hooked into
    `CanvasLayer` so clicking it opens the building popup.
+2b. `CanvasLayer._ready()` also grants and spawns a free **starting hero**
+   (`starting_hero_id`, default `"H001"`, editor-exposed — no hero-select UI
+   yet) at a fixed `starting_hero_position`, if the player owns no heroes yet.
+   No enemy is ever pre-placed; enemies only appear via portal summon.
 3. Every frame, `GridSystem._process()` raycasts the mouse against the ground
    plane to compute `hovered_cell` and feeds it to the grid shader as a
    highlight.
@@ -113,7 +115,7 @@ Test3dPrototype (Node3D)
    lists every `EnemyData` whose `tier` is unlocked by the portal's current
    level and shows a "Summon" button per enemy. Pressing it emits
    `spawn_requested` → `CanvasLayer._on_spawn_requested`, which instantiates
-   `enemy.tscn`, builds a `UnitStats` from the `EnemyData` row, and drops it
+   `enemy.tscn`, sets its combat stats from the `EnemyData` row, and drops it
    at the portal's position.
 7. **Shrine / gacha:** `BuildingPopup`, when opened on the shrine, shows a
    "Roll" button costing gold+shards (per shrine level). Rolling does a
@@ -125,8 +127,8 @@ Test3dPrototype (Node3D)
    independently chases the nearest member of the opposing group
    (`heroes`/`enemies` node groups) and auto-attacks on contact — there is no
    manual combat input, per the GDD's hard cuts. On death, `Enemy._on_death()`
-   grants gold/shards to `GameState` (or spawns a decorative coin if it has no
-   `EnemyData`, e.g. the scene's pre-placed debug Enemy).
+   grants gold/shards to `GameState` and spawns a `coin.tscn` collect
+   animation at its screen position (see §4).
 9. **Currency HUD:** `CanvasLayer` listens to `GameState.currency_changed` and
    keeps the gold/shard labels in sync.
 
@@ -212,21 +214,30 @@ logic (no class_name, root of the `CanvasLayer` node in the game scene).
   `GameState.currency_changed`.
 - `connect_building(building)` — called once per spawned `BuildingBase` so its
   `clicked` signal opens `BuildingPopup`.
-- `_on_spawn_requested` / `_on_hero_acquired` — the only two places that
-  instantiate `enemy.tscn` / `hero.tscn` at runtime, building a `UnitStats`
-  from the relevant data row before adding the unit to the scene.
+- `starting_hero_id` / `starting_hero_position` (`@export`) — the free hero
+  granted and spawned in `_ready()` if the player owns no heroes yet. Stands in
+  for hero-select UI, which doesn't exist yet.
+- `_apply_hero_stats(hero_instance, hero_data)` — copies `HeroData`'s base
+  stats onto a live `Hero`'s own combat fields and applies that hero's class
+  buff if active. Re-run from scratch each time (spawn, roster change) since
+  it always reads the unmutated `HeroData` row — no intermediate stat object.
+- `_spawn_hero` / `_on_spawn_requested` — the only two places that instantiate
+  `hero.tscn` / `enemy.tscn` at runtime, setting combat stats directly from
+  the relevant `HeroData`/`EnemyData` row.
 
 ### `scripts/character.gd` — class `Character` (`extends CharacterBody3D`)
 Shared base class for both `Hero` and `Enemy`. All combat logic lives here;
 subclasses only decide *who to chase* and a couple of small behavior hooks.
 - State machine: `MOVE → COMBAT → KNOCKBACK → DEAD` (enum `State`).
-- `@export stats: UnitStats` — hp/atk/speed/range, assigned at spawn time.
+- `@export max_hp/atk/atk_speed/move_speed/attack_range/mana_per_hit` — combat
+  stats live directly on the node, set at spawn time by `canvas_layer.gd`
+  (or, for a hand-placed debug unit, editable straight in the Inspector).
 - `_chase_and_engage(opponent_group)` — steers toward the nearest `Character`
   in the given node group, or calls `_enter_combat` once in range. This is
   the one method subclasses call from their `_update_move` override.
 - `_enter_combat` / `_exit_combat` — starts/stops a per-instance attack
-  `Timer` (interval = `stats.atk_speed`).
-- `_on_attack_timeout` — fires on the timer; deals `stats.atk` damage to
+  `Timer` (interval = `atk_speed`).
+- `_on_attack_timeout` — fires on the timer; deals `atk` damage to
   `target` if still in range.
 - `take_damage(amount, attacker)` — applies damage, updates the health-bar
   sprite, triggers `spawn_fx`, and on death sets `state = DEAD`, calls the
@@ -247,20 +258,19 @@ subclasses only decide *who to chase* and a couple of small behavior hooks.
 
 ### `scripts/enemy.gd` — class `Enemy extends Character`
 - Joins the `"enemies"` group.
-- `@export is_boss`, `@export enemy_data: EnemyData` (may be null for
-  hand-placed debug enemies).
+- `@export is_boss`, `@export enemy_data: EnemyData` — every `Enemy` is
+  portal-spawned (see `canvas_layer.gd`) so this is always set; there's no
+  hand-placed/data-less enemy anymore.
 - `_update_move` → `_chase_and_engage("heroes")`.
 - `_idle_move` → walks in a fixed `move_direction` when no hero is nearby.
 - `_on_death` → grants a random gold/shard amount (from `enemy_data`'s
-  min/max range) to `GameState`; if `enemy_data` is null, spawns a cosmetic
-  `coin.tscn` instead (used by the scene's pre-placed debug Enemy, which has
-  no data assigned).
+  min/max range) to `GameState`, then `spawn_coin()` drops a `coin.tscn`
+  collect animation at the enemy's projected screen position.
 
 ### `scenes/coin.gd`
 Cosmetic-only: a `Node2D` that waits 1s, then tweens itself to the currency
-HUD icon and fades out. No gameplay effect — purely visual feedback for the
-data-less debug enemy's death (see above). Screen-space UI, not connected to
-`GameState`.
+HUD icon and fades out. Spawned by every `Enemy._on_death()` (via
+`Enemy.spawn_coin()`), not tied to `GameState` itself — purely visual.
 
 ### `scenes/sky.gd` (`@tool`)
 Procedural day/night cycle driver for `sky.tscn`. Computes sun/moon rotation
@@ -307,19 +317,23 @@ button and handled by `CanvasLayer`.
 ## 6. Data model (`scripts/resources/`, `data/`)
 
 Three plain `Resource` subclasses define the schema for the `.tres` content
-files `GameData` loads; `UnitStats` is the runtime stat block assigned to
-spawned `Character`s.
+files `GameData` loads. There is no separate runtime stats class — a spawned
+`Character`'s combat fields (`max_hp`, `atk`, `atk_speed`, `move_speed`,
+`attack_range`, `mana_per_hit`) live directly on the node itself and are set
+from the matching `HeroData`/`EnemyData` row at spawn time (see
+`canvas_layer.gd`'s `_apply_hero_stats` / `_on_spawn_requested`). This used to
+go through an intermediate `UnitStats` resource that was always rebuilt in
+code anyway — removed as dead indirection.
 
 | Script | class_name | Fields | Backing files |
 |---|---|---|---|
-| `scripts/resources/hero_data.gd` | `HeroData` | id, display_name, rarity, hero_class, base_power, power_per_level, base_hp, atk_speed, crit_chance, upgrade_gold_base, upgrade_shard_base, dupe_shard, th_unlock | `data/heroes/h001–h015.tres` |
-| `scripts/resources/enemy_data.gd` | `EnemyData` | id, display_name, tier, hp, atk, def, spawn_time, gold_min/max, shard_min/max | `data/enemies/e001–e006.tres` |
+| `scripts/resources/hero_data.gd` | `HeroData` | id, display_name, rarity, hero_class, base_power, power_per_level, base_hp, atk_speed, mana_per_hit, upgrade_gold_base, upgrade_shard_base, dupe_shard, th_unlock | `data/heroes/h001–h015.tres` |
+| `scripts/resources/enemy_data.gd` | `EnemyData` | id, display_name, tier, hp, atk, spawn_time, gold_min/max, shard_min/max | `data/enemies/e001–e006.tres` |
 | `scripts/resources/building_data.gd` | `BuildingData` | id, display_name, build_cost, unlock_th_level, thumbnail, sprite_texture, levels (Array[Dictionary] — per-level cost/tier/roll data) | `data/buildings/{town_hall,shrine,portal,tavern,blacksmith}.tres` |
-| `scripts/unit_stats.gd` (`@tool`) | `UnitStats` | max_hp, atk, atk_speed, move_speed, attack_range | n/a — constructed at spawn time from a `HeroData`/`EnemyData` row (see `canvas_layer.gd`) |
 
-`HeroData`/`EnemyData`/`BuildingData` are static design content (read-only at
-runtime); `UnitStats` is the live, per-instance combat stat block `Character`
-actually uses each frame.
+`HeroData`/`EnemyData`/`BuildingData` are static design content, read-only at
+runtime — nothing ever mutates the loaded `.tres` resources, only the live
+`Character` fields copied from them.
 
 ---
 
@@ -408,16 +422,16 @@ tree needed):
 | `grid_system.gd` | Grid math, occupancy, hover highlight |
 | `building_base.gd` | Per-building instance: sprite, collider, click, level |
 | `placement_controller.gd` | Ghost-drag placement & move UX |
-| `canvas_layer.gd` | HUD wiring: popups ↔ game logic, currency labels |
+| `canvas_layer.gd` | HUD wiring: popups ↔ game logic, currency labels, starting-hero grant |
 | `build_menu_popup.gd` | "Choose a building to build" popup |
 | `building_popup.gd` | Per-building detail popup: upgrade, summon, gacha roll |
-| `character.gd` | Shared combat state machine for heroes & enemies |
+| `character.gd` | Shared combat state machine + stats for heroes & enemies |
 | `hero.gd` | Hero-specific chase/patrol behavior |
 | `enemy.gd` | Enemy-specific chase/wander behavior, death rewards |
-| `coin.gd` | Cosmetic coin-collect animation |
+| `coin.gd` | Cosmetic coin-collect animation on enemy death |
 | `sky.gd` | Day/night lighting cycle |
 | `animation_button.gd` | Hover/focus button polish |
-| `unit_stats.gd`, `hero_data.gd`, `enemy_data.gd`, `building_data.gd` | Data schemas |
+| `hero_data.gd`, `enemy_data.gd`, `building_data.gd` | Data schemas |
 | `fx.gd`, `fx_effect.gd`, `vfx/effects/**` | Screen shake, hit-stop, damage popups, particles |
 | `layer.gd` | Unused legacy placement system |
 | `player_test_25.gd`, `test_25_camera.gd` | Unrelated movement scratch test |

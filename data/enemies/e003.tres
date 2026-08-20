@@ -9,7 +9,6 @@ display_name = "Bone Bat"
 tier = 2
 hp = 120.0
 atk = 10.0
-def = 2.0
 spawn_time = 10.0
 gold_min = 24
 gold_max = 36

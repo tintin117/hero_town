@@ -9,7 +9,6 @@ extends Resource
 @export var power_per_level: float
 @export var base_hp: float
 @export var atk_speed: float
-@export var crit_chance: float
 @export var mana_per_hit: float = 20.0
 @export var upgrade_gold_base: int
 @export var upgrade_shard_base: int
