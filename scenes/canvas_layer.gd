@@ -33,6 +33,7 @@ func _ready() -> void:
 
 func connect_building(building: BuildingBase) -> void:
 	building.clicked.connect(_on_building_clicked.bind(building))
+	building.auto_spawn_requested.connect(_on_spawn_requested)
 
 func _on_building_clicked(building: BuildingBase) -> void:
 	var camera = get_viewport().get_camera_3d()
@@ -97,6 +98,7 @@ func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
 	enemy_instance.atk = enemy_data.atk
 	enemy_instance.enemy_data = enemy_data
 	enemy_instance.position = building.global_position
+	enemy_instance.died.connect(building.on_enemy_defeated)
 	get_tree().current_scene.add_child.call_deferred(enemy_instance)
 
 ## Applies hero_data's base stats to hero_instance, then that hero's class buff if active.
@@ -132,10 +134,11 @@ func _on_hero_released(hero_id: String) -> void:
 ## Re-derives stats for every spawned hero (class buff thresholds may have changed).
 ## Leaves current hp untouched so a buff never heals/resets a hero mid-fight.
 func _recompute_all_hero_stats() -> void:
-	for hero_id in hero_instances:
-		var hero_instance: Hero = hero_instances[hero_id]
-		if not is_instance_valid(hero_instance):
+	for hero_id in hero_instances.keys():
+		if not is_instance_valid(hero_instances[hero_id]):
+			hero_instances.erase(hero_id)
 			continue
+		var hero_instance: Hero = hero_instances[hero_id]
 		_apply_hero_stats(hero_instance, GameData.HEROES[hero_id])
 	_update_class_hud()
 

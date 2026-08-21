@@ -3,6 +3,7 @@ extends Character
 
 @export var patrol_start_x: float = 0.0
 @export var patrol_end_x: float = 0.0
+@export var revive_delay: float = 5.0  ## seconds a downed hero rests before reviving at full hp
 @onready var anim_player: AnimationPlayer = $AnimationPlayer
 
 var _patrol_dir: int = 1
@@ -35,3 +36,17 @@ func _patrol() -> void:
 
 func _should_knockback(attacker: Character) -> bool:
 	return attacker is Enemy and attacker.is_boss
+
+
+func _die() -> void:
+	anim_player.play("die")
+	collision_layer = 0
+	get_tree().create_timer(revive_delay).timeout.connect(_revive)
+
+
+func _revive() -> void:
+	hp = max_hp
+	_update_health_bar()
+	anim_player.play("idle")
+	collision_layer = HITBOX_LAYER
+	state = State.MOVE

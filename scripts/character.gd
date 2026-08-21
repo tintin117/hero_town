@@ -149,7 +149,7 @@ func take_damage(amount: float, attacker: Character) -> void:
 		state = State.DEAD
 		_on_death()
 		died.emit()
-		queue_free()
+		_die()
 		return
 	_charge_mana()
 	if _should_knockback(attacker):
@@ -164,6 +164,12 @@ func _should_knockback(_attacker: Character) -> bool:
 ## Virtual: called once when hp reaches 0, before this character is freed.
 func _on_death() -> void:
 	pass
+
+
+## Virtual: called once when hp reaches 0, after _on_death(). Default permanently
+## removes this character. Override to change what "death" means (e.g. a revive).
+func _die() -> void:
+	queue_free()
 
 
 func _apply_knockback(from_position: Vector3) -> void:

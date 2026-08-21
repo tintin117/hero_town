@@ -79,6 +79,13 @@ func _refresh_enemy_list(data: BuildingData) -> void:
 		summon_btn.pressed.connect(func(): spawn_requested.emit(enemy_id, building))
 		row.add_child(summon_btn)
 
+		var auto_btn := Button.new()
+		auto_btn.text = "Auto ✓" if building.auto_spawn_enemy_ids.has(enemy_id) else "Auto"
+		auto_btn.pressed.connect(func():
+			building.toggle_auto_spawn(enemy_id)
+			_refresh())
+		row.add_child(auto_btn)
+
 		content_list.add_child(row)
 
 

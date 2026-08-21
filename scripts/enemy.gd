@@ -1,7 +1,6 @@
 class_name Enemy
 extends Character
 
-@export var move_direction: Vector3 = Vector3.LEFT
 @export var is_boss: bool = false
 @export var enemy_data: EnemyData
 @onready var anim_player: AnimationPlayer = $AnimationPlayer
@@ -16,10 +15,6 @@ func _ready() -> void:
 func _update_move(_delta: float) -> void:
 	anim_player.play("move")
 	_chase_and_engage("heroes")
-
-
-func _idle_move() -> void:
-	velocity = move_direction.normalized() * move_speed
 
 
 func _on_death() -> void:
