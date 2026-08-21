@@ -5,12 +5,14 @@ signal died
 
 enum State { MOVE, COMBAT, KNOCKBACK, DEAD }
 
-@export var max_hp: float = 100.0
-@export var atk: float = 10.0
-@export var atk_speed: float = 1.5
+## Base stats -- not exported, always set from HeroData/EnemyData (see Hero/Enemy._ready()).
+var max_hp: float = 100.0
+var atk: float = 10.0
+var atk_speed: float = 1.5
+var mana_per_hit: float = 0.0
+
 @export var move_speed: float = 2.5
 @export var attack_range: float = 1.5
-@export var mana_per_hit: float = 0.0
 @export var skill: SkillData
 
 const KNOCKBACK_FORCE := 3.0

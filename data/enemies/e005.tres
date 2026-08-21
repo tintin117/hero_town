@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = "E005"
 display_name = "Grave Hound"
 tier = 3
+unit_type = 0
 hp = 300.0
 atk = 21.0
 spawn_time = 15.0

@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H004"
 display_name = "Temple Novice"
-rarity = "common"
-hero_class = "cleric"
+rarity = 0
+hero_class = 3
+unit_type = 1
 base_power = 9.0
 power_per_level = 1.8
 base_hp = 90.0

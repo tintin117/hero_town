@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H003"
 display_name = "Street Cutpurse"
-rarity = "common"
-hero_class = "rogue"
+rarity = 0
+hero_class = 1
+unit_type = 0
 base_power = 11.0
 power_per_level = 2.1
 base_hp = 80.0

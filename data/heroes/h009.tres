@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H009"
 display_name = "Grave Knight"
-rarity = "rare"
-hero_class = "warrior"
+rarity = 2
+hero_class = 0
+unit_type = 0
 base_power = 40.0
 power_per_level = 4.8
 base_hp = 260.0

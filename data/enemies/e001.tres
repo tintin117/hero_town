@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = "E001"
 display_name = "Cave Slime"
 tier = 1
+unit_type = 0
 hp = 45.0
 atk = 4.0
 spawn_time = 5.0

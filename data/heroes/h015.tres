@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H015"
 display_name = "Crowned Lichling"
-rarity = "legendary"
-hero_class = "mage"
+rarity = 4
+hero_class = 2
+unit_type = 1
 base_power = 100.0
 power_per_level = 10.0
 base_hp = 500.0

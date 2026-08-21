@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H006"
 display_name = "Ember Scholar"
-rarity = "uncommon"
-hero_class = "mage"
+rarity = 1
+hero_class = 2
+unit_type = 1
 base_power = 20.0
 power_per_level = 3.6
 base_hp = 110.0

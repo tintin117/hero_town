@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H008"
 display_name = "Field Priest"
-rarity = "uncommon"
-hero_class = "cleric"
+rarity = 1
+hero_class = 3
+unit_type = 1
 base_power = 18.0
 power_per_level = 2.8
 base_hp = 140.0

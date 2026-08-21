@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H014"
 display_name = "Void Alchemist"
-rarity = "epic"
-hero_class = "mage"
+rarity = 3
+hero_class = 2
+unit_type = 1
 base_power = 62.0
 power_per_level = 7.8
 base_hp = 280.0

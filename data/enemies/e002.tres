@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = "E002"
 display_name = "Tunnel Goblin"
 tier = 1
+unit_type = 0
 hp = 70.0
 atk = 6.0
 spawn_time = 7.0

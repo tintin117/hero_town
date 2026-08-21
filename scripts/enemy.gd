@@ -8,6 +8,9 @@ extends Character
 const COIN = preload("res://scenes/coin.tscn")
 
 func _ready() -> void:
+	if enemy_data != null:
+		max_hp = enemy_data.hp
+		atk = enemy_data.atk
 	super._ready()
 	add_to_group("enemies")
 

@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H011"
 display_name = "Crypt Ranger"
-rarity = "rare"
-hero_class = "rogue"
+rarity = 2
+hero_class = 1
+unit_type = 0
 base_power = 38.0
 power_per_level = 4.9
 base_hp = 190.0

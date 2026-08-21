@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H005"
 display_name = "Iron Guard"
-rarity = "uncommon"
-hero_class = "warrior"
+rarity = 1
+hero_class = 0
+unit_type = 0
 base_power = 22.0
 power_per_level = 3.1
 base_hp = 160.0

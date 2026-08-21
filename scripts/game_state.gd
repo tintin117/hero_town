@@ -6,10 +6,10 @@ signal roster_changed
 const HERO_CAP := 8            # tunable roster cap
 const CLASS_BUFF_THRESHOLD := 3
 const CLASS_BUFFS := {         # stat multiplier applied to that class's heroes once threshold is met
-	"warrior": {"stat": "max_hp", "mult": 1.25},
-	"rogue": {"stat": "atk", "mult": 1.25},
-	"mage": {"stat": "mana_per_hit", "mult": 1.25},
-	# "cleric": deferred -- will reduce skill cooldown once wired up in character.gd
+	HeroData.HeroClass.WARRIOR: {"stat": "max_hp", "mult": 1.25},
+	HeroData.HeroClass.ROGUE: {"stat": "atk", "mult": 1.25},
+	HeroData.HeroClass.MAGE: {"stat": "mana_per_hit", "mult": 1.25},
+	# HeroData.HeroClass.CLERIC: deferred -- will reduce skill cooldown once wired up in character.gd
 }
 
 var gold: int = 5000
@@ -35,11 +35,11 @@ func add(gold_amount: int, shard_amount: int = 0) -> void:
 func get_class_counts() -> Dictionary:
 	var counts := {}
 	for hero_id in owned_heroes:
-		var cls: String = GameData.HEROES[hero_id].hero_class
+		var cls: HeroData.HeroClass = GameData.HEROES[hero_id].hero_class
 		counts[cls] = counts.get(cls, 0) + 1
 	return counts
 
-func has_class_buff(cls: String) -> bool:
+func has_class_buff(cls: HeroData.HeroClass) -> bool:
 	return get_class_counts().get(cls, 0) >= CLASS_BUFF_THRESHOLD
 
 func is_roster_full() -> bool:

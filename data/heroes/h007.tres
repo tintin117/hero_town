@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H007"
 display_name = "Dagger Twin"
-rarity = "uncommon"
-hero_class = "rogue"
+rarity = 1
+hero_class = 1
+unit_type = 0
 base_power = 21.0
 power_per_level = 3.2
 base_hp = 120.0

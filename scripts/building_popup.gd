@@ -111,7 +111,7 @@ func _refresh_shrine_content(data: BuildingData) -> void:
 		var row := HBoxContainer.new()
 
 		var info := Label.new()
-		info.text = "%s (%s, %s)" % [hero.display_name, hero.rarity.capitalize(), hero.hero_class.capitalize()]
+		info.text = "%s (%s, %s)" % [hero.display_name, HeroData.Rarity.keys()[hero.rarity].capitalize(), HeroData.HeroClass.keys()[hero.hero_class].capitalize()]
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
 
@@ -139,7 +139,7 @@ func _refresh_shrine_content(data: BuildingData) -> void:
 		var row := HBoxContainer.new()
 
 		var info := Label.new()
-		info.text = "%s (%s)" % [hero.display_name, hero.hero_class.capitalize()]
+		info.text = "%s (%s)" % [hero.display_name, HeroData.HeroClass.keys()[hero.hero_class].capitalize()]
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
 
@@ -164,9 +164,9 @@ func _generate_shop_offers(level_data: Dictionary) -> Array[String]:
 
 func _pick_weighted_hero(level_data: Dictionary) -> HeroData:
 	var rarity := _weighted_pick(level_data["weights"])
-	var pool: Array = GameData.HEROES.values().filter(func(h): return h.rarity == rarity)
+	var pool: Array = GameData.HEROES.values().filter(func(h): return HeroData.Rarity.keys()[h.rarity].to_lower() == rarity)
 	if pool.is_empty():
-		pool = GameData.HEROES.values().filter(func(h): return h.rarity == "common")
+		pool = GameData.HEROES.values().filter(func(h): return h.rarity == HeroData.Rarity.COMMON)
 	if pool.is_empty():
 		return null
 	return pool[randi() % pool.size()]
@@ -213,7 +213,7 @@ func _on_buy_offer_pressed(hero_id: String, cost_gold: int, cost_shard: int) -> 
 		return
 
 	if was_new:
-		_shrine_result_text = "New hero: %s (%s)!" % [hero.display_name, hero.rarity.capitalize()]
+		_shrine_result_text = "New hero: %s (%s)!" % [hero.display_name, HeroData.Rarity.keys()[hero.rarity].capitalize()]
 		hero_acquired.emit(hero_id, building)
 	else:
 		_shrine_result_text = "%s already owned! +%d shards" % [hero.display_name, hero.dupe_shard]

@@ -2,8 +2,10 @@
 
 [ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="1_vdju4"]
 [ext_resource type="Texture2D" uid="uid://dp4jfgvq1hpod" path="res://asset/hand_draw/chracter/captain.png" id="2_1dawv"]
+[ext_resource type="Resource" path="res://data/heroes/h002.tres" id="3_data"]
 
 [node name="H002" unique_id=869447 instance=ExtResource("1_vdju4")]
+hero_data = ExtResource("3_data")
 
 [node name="Sprite3D" parent="CameraFacingContainer" parent_id_path=PackedInt32Array(1164852497) index="0" unique_id=637173425]
 texture = ExtResource("2_1dawv")

@@ -92,32 +92,14 @@ func _enemy_scene(enemy_id: String) -> PackedScene:
 	return load(path) if ResourceLoader.exists(path) else ENEMY_BASE_SCENE
 
 func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
-	var enemy_data: EnemyData = GameData.ENEMIES[enemy_id]
 	var enemy_instance: Enemy = _enemy_scene(enemy_id).instantiate()
-	enemy_instance.max_hp = enemy_data.hp
-	enemy_instance.atk = enemy_data.atk
-	enemy_instance.enemy_data = enemy_data
+	enemy_instance.enemy_data = GameData.ENEMIES[enemy_id]
 	enemy_instance.position = building.global_position
 	enemy_instance.died.connect(building.on_enemy_defeated)
 	get_tree().current_scene.add_child.call_deferred(enemy_instance)
 
-## Applies hero_data's base stats to hero_instance, then that hero's class buff if active.
-## Reads straight from the read-only HeroData row, so it's always safe to re-run
-## (e.g. on roster changes) without drifting from a stale intermediate copy.
-func _apply_hero_stats(hero_instance: Hero, hero_data: HeroData) -> void:
-	hero_instance.max_hp = hero_data.base_hp
-	hero_instance.atk = hero_data.base_power
-	hero_instance.atk_speed = hero_data.atk_speed
-	hero_instance.mana_per_hit = hero_data.mana_per_hit
-	if GameState.has_class_buff(hero_data.hero_class):
-		var buff: Dictionary = GameState.CLASS_BUFFS.get(hero_data.hero_class, {})
-		if buff.has("stat"):
-			hero_instance.set(buff["stat"], hero_instance.get(buff["stat"]) * buff["mult"])
-
 func _spawn_hero(hero_id: String, at_position: Vector3) -> Hero:
-	var hero_data: HeroData = GameData.HEROES[hero_id]
 	var hero_instance: Hero = _hero_scene(hero_id).instantiate()
-	_apply_hero_stats(hero_instance, hero_data)
 	hero_instance.position = at_position
 	get_tree().current_scene.add_child.call_deferred(hero_instance)
 	hero_instances[hero_id] = hero_instance
@@ -138,19 +120,18 @@ func _recompute_all_hero_stats() -> void:
 		if not is_instance_valid(hero_instances[hero_id]):
 			hero_instances.erase(hero_id)
 			continue
-		var hero_instance: Hero = hero_instances[hero_id]
-		_apply_hero_stats(hero_instance, GameData.HEROES[hero_id])
+		hero_instances[hero_id].apply_hero_data()
 	_update_class_hud()
 
 func _update_class_hud() -> void:
 	var counts := GameState.get_class_counts()
 	for entry in [
-		["warrior", warrior_label, "Warrior"],
-		["rogue", rogue_label, "Rogue"],
-		["mage", mage_label, "Mage"],
-		["cleric", cleric_label, "Cleric"],
+		[HeroData.HeroClass.WARRIOR, warrior_label, "Warrior"],
+		[HeroData.HeroClass.ROGUE, rogue_label, "Rogue"],
+		[HeroData.HeroClass.MAGE, mage_label, "Mage"],
+		[HeroData.HeroClass.CLERIC, cleric_label, "Cleric"],
 	]:
-		var cls: String = entry[0]
+		var cls: HeroData.HeroClass = entry[0]
 		var label: Label = entry[1]
 		var display: String = entry[2]
 		var count: int = counts.get(cls, 0)

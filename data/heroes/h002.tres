@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H002"
 display_name = "Candle Apprentice"
-rarity = "common"
-hero_class = "mage"
+rarity = 0
+hero_class = 2
+unit_type = 1
 base_power = 10.0
 power_per_level = 2.4
 base_hp = 70.0

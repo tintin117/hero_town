@@ -6,8 +6,9 @@
 script = ExtResource("1")
 id = "H012"
 display_name = "Saint of Rust"
-rarity = "rare"
-hero_class = "cleric"
+rarity = 2
+hero_class = 3
+unit_type = 1
 base_power = 34.0
 power_per_level = 4.4
 base_hp = 220.0
