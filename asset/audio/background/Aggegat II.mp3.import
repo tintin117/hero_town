@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://ck7sat6s4505k"
+path="res://.godot/imported/Aggegat II.mp3-f237313ee980503b24c5edf282f304e8.mp3str"
+
+[deps]
+
+source_file="res://asset/audio/background/Aggegat II.mp3"
+dest_files=["res://.godot/imported/Aggegat II.mp3-f237313ee980503b24c5edf282f304e8.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

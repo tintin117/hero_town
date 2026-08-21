@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cn2d8j8lb1r5c"
+path="res://.godot/imported/Cursed dagger.mp3-4275f6ee97653e3a40a7e23588d1fa36.mp3str"
+
+[deps]
+
+source_file="res://asset/audio/background/Cursed dagger.mp3"
+dest_files=["res://.godot/imported/Cursed dagger.mp3-4275f6ee97653e3a40a7e23588d1fa36.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

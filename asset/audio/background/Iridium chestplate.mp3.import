@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c3yog21bdqpyc"
+path="res://.godot/imported/Iridium chestplate.mp3-b15ab2456b1200d1034832bf5b9423e4.mp3str"
+
+[deps]
+
+source_file="res://asset/audio/background/Iridium chestplate.mp3"
+dest_files=["res://.godot/imported/Iridium chestplate.mp3-b15ab2456b1200d1034832bf5b9423e4.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

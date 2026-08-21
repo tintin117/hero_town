@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://ikxlbnnkdqbd" path="res://asset/hand_draw/ui/crusader_button.png" id="4_8ln24"]
 [ext_resource type="Script" uid="uid://dkvtaffew3mga" path="res://scenes/animation_button.gd" id="4_rtw2f"]
 [ext_resource type="Texture2D" uid="uid://ifo0hj01hwgg" path="res://asset/hand_draw/ui/right_grass_button.png" id="5_rtw2f"]
+[ext_resource type="AudioStream" uid="uid://cn2d8j8lb1r5c" path="res://asset/audio/background/Cursed dagger.mp3" id="7_oa1go"]
 
 [node name="MainMenu" type="Control" unique_id=1262482873]
 layout_mode = 3
@@ -154,6 +155,11 @@ theme_override_font_sizes/font_size = 48
 text = "An Idle Town Builder"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1519177256]
+stream = ExtResource("7_oa1go")
+volume_db = 11.0
+autoplay = true
 
 [connection signal="pressed" from="front_ui/Layout/PlayButton" to="." method="_on_play_button_pressed"]
 [connection signal="pressed" from="front_ui/Layout/CompactButton" to="." method="_on_compact_button_pressed"]

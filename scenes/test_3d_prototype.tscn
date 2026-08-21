@@ -27,23 +27,13 @@
 [ext_resource type="PackedScene" uid="uid://cyerhxx0ol7rs" path="res://scenes/test_level_25/tree1_test_25.tscn" id="25_1821j"]
 [ext_resource type="PackedScene" uid="uid://1kjxb5tkkx6t" path="res://scenes/test_level_25/grass_test_25.tscn" id="26_kvgmm"]
 [ext_resource type="PackedScene" uid="uid://ccpde2t2n5m7y" path="res://scenes/test_level_25/grass1_test_25.tscn" id="27_wgud7"]
+[ext_resource type="AudioStream" uid="uid://c0nxm6xkjxkwy" path="res://asset/audio/background/Moonlight market.mp3" id="30_hqqvo"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 size = Vector2(60, 30)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
 albedo_color = Color(0.25, 0.45, 0.3, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wgud7"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
-bg_color = Color(0, 0, 0, 0.4392157)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y6guy"]
 content_margin_left = 8.0
@@ -57,6 +47,17 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4xyri"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0.4392157)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hqqvo"]
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
@@ -190,11 +191,11 @@ offset_bottom = 299.0
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_wgud7")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_wgud7")
-theme_override_styles/hover = SubResource("StyleBoxFlat_wgud7")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_wgud7")
-theme_override_styles/focus = SubResource("StyleBoxFlat_wgud7")
+theme_override_styles/normal = SubResource("StyleBoxFlat_y6guy")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_y6guy")
+theme_override_styles/hover = SubResource("StyleBoxFlat_y6guy")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_y6guy")
+theme_override_styles/focus = SubResource("StyleBoxFlat_y6guy")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -243,11 +244,11 @@ one_shot = true
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_y6guy")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_y6guy")
-theme_override_styles/hover = SubResource("StyleBoxFlat_y6guy")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_y6guy")
-theme_override_styles/focus = SubResource("StyleBoxFlat_y6guy")
+theme_override_styles/normal = SubResource("StyleBoxFlat_4xyri")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4xyri")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4xyri")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_4xyri")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4xyri")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -296,11 +297,11 @@ one_shot = true
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_4xyri")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_4xyri")
-theme_override_styles/hover = SubResource("StyleBoxFlat_4xyri")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_4xyri")
-theme_override_styles/focus = SubResource("StyleBoxFlat_4xyri")
+theme_override_styles/normal = SubResource("StyleBoxFlat_hqqvo")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hqqvo")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hqqvo")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_hqqvo")
+theme_override_styles/focus = SubResource("StyleBoxFlat_hqqvo")
 clip_text = true
 script = ExtResource("9_pt5xc")
 icon_texture = ExtResource("4_umkjb")
@@ -779,6 +780,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.9871483, 0, -6.5379896)
 
 [node name="GrassTest40" parent="grass" unique_id=824821380 instance=ExtResource("27_wgud7")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.399273, 0, 5.885934)
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="." unique_id=611239374]
+stream = ExtResource("30_hqqvo")
+volume_db = 8.0
+autoplay = true
 
 [connection signal="pressed" from="CanvasLayer/HBoxContainer/PlacementButton" to="CanvasLayer" method="_on_placement_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/BuildingPopup/CloseButton/Close" to="CanvasLayer/BuildingPopup" method="_on_close_button_pressed"]

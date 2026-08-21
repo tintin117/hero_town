@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c1iq2kspujkvp"
+path="res://.godot/imported/Clouds midnight.mp3-e7b859a2fb488bc5c15587450cefa38e.mp3str"
+
+[deps]
+
+source_file="res://asset/audio/background/Clouds midnight.mp3"
+dest_files=["res://.godot/imported/Clouds midnight.mp3-e7b859a2fb488bc5c15587450cefa38e.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bthbq8psp24iw"
+path="res://.godot/imported/Sometimes the leaves tell the truth.mp3-a27df49b3a5ed7de009e6bc993590ec1.mp3str"
+
+[deps]
+
+source_file="res://asset/audio/background/Sometimes the leaves tell the truth.mp3"
+dest_files=["res://.godot/imported/Sometimes the leaves tell the truth.mp3-a27df49b3a5ed7de009e6bc993590ec1.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

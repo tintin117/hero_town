@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c8d22l2xyute1"
+path="res://.godot/imported/Sunshine and rotting wood.mp3-75173c4fc923f6af0143a35dfe8bcf34.mp3str"
+
+[deps]
+
+source_file="res://asset/audio/background/Sunshine and rotting wood.mp3"
+dest_files=["res://.godot/imported/Sunshine and rotting wood.mp3-75173c4fc923f6af0143a35dfe8bcf34.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

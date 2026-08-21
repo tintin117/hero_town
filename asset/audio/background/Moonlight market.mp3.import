@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c0nxm6xkjxkwy"
+path="res://.godot/imported/Moonlight market.mp3-6d2e7d79451c307761f31bec2691667e.mp3str"
+
+[deps]
+
+source_file="res://asset/audio/background/Moonlight market.mp3"
+dest_files=["res://.godot/imported/Moonlight market.mp3-6d2e7d79451c307761f31bec2691667e.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://wfe4uvaarkkf"
+path="res://.godot/imported/Tea cooling on the counter.mp3-c8f8660d0a467f3d87456f12e25116a4.mp3str"
+
+[deps]
+
+source_file="res://asset/audio/background/Tea cooling on the counter.mp3"
+dest_files=["res://.godot/imported/Tea cooling on the counter.mp3-c8f8660d0a467f3d87456f12e25116a4.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
