@@ -26,6 +26,8 @@ func apply_hero_data() -> void:
 	atk = hero_data.base_power
 	atk_speed = hero_data.atk_speed
 	mana_per_hit = hero_data.mana_per_hit
+	is_ranged = hero_data.unit_type == HeroData.UnitType.RANGED
+	attack_range = RANGED_ATTACK_RANGE if is_ranged else MELEE_ATTACK_RANGE
 	if GameState.has_class_buff(hero_data.hero_class):
 		var buff: Dictionary = GameState.CLASS_BUFFS.get(hero_data.hero_class, {})
 		if buff.has("stat"):

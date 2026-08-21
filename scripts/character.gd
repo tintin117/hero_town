@@ -11,15 +11,21 @@ var atk: float = 10.0
 var atk_speed: float = 1.5
 var mana_per_hit: float = 0.0
 
-@export var move_speed: float = 2.5
-@export var attack_range: float = 1.5
-@export var skill: SkillData
-
+const MELEE_ATTACK_RANGE := 1.5
+const RANGED_ATTACK_RANGE := 6.0
+const PROJECTILE_SPEED := 10.0
+const PROJECTILE_HIT_RADIUS := 0.3
 const KNOCKBACK_FORCE := 3.0
 const KNOCKBACK_DURATION := 0.25
 const PLAYFIELD_MIN_X := -28.0
 const PLAYFIELD_MAX_X := 10.0
 const HITBOX_LAYER := 1 << 2
+
+@export var move_speed: float = 2.5
+@export var attack_range: float = MELEE_ATTACK_RANGE
+@export var skill: SkillData
+
+var is_ranged: bool = false
 
 const SKILL_HIT_SCENE := preload("res://scenes/skill_hit.tscn")
 
@@ -137,9 +143,28 @@ func _on_attack_timeout() -> void:
 	if state != State.COMBAT or not is_instance_valid(target) or target.state == State.DEAD:
 		return
 	if global_position.distance_to(target.global_position) <= attack_range:
-		target.take_damage(atk, self)
-		spawn_fx(atk, false, false)
+		if is_ranged:
+			_fire_projectile()
+		else:
+			target.take_damage(atk, self)
+			spawn_fx(atk, false, false)
 		_charge_mana()
+
+
+## Fires a travel-time hitbox at `target` for ranged basic attacks (reuses the skill-cast SkillHit).
+func _fire_projectile() -> void:
+	var hit := SKILL_HIT_SCENE.instantiate() as SkillHit
+	hit.damage = atk
+	hit.radius = PROJECTILE_HIT_RADIUS
+	hit.speed = PROJECTILE_SPEED
+	hit.direction = (target.global_position - global_position).normalized()
+	hit.lifetime = attack_range / PROJECTILE_SPEED + 0.2
+	hit.crit = false
+	hit.screen_shake = false
+	hit.caster = self
+	hit.target_group = "enemies" if is_in_group("heroes") else "heroes"
+	hit.position = global_position
+	get_tree().current_scene.add_child(hit)
 
 
 func take_damage(amount: float, attacker: Character) -> void:

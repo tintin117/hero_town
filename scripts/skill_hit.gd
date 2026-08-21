@@ -11,6 +11,8 @@ extends Area3D
 @export var direction: Vector3 = Vector3.FORWARD
 @export var lifetime: float = 0.4
 @export var tick_interval: float = 0.0 ## 0 = single hit on contact; >0 = re-damage every interval while overlapping.
+@export var crit: bool = true
+@export var screen_shake: bool = true
 
 var caster: Character
 var target_group: String = ""
@@ -50,7 +52,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 	_hit.append(character)
 	character.take_damage(damage, caster)
-	character.spawn_fx(damage, true, true)
+	character.spawn_fx(damage, crit, screen_shake)
 
 
 func _on_tick() -> void:
@@ -58,7 +60,7 @@ func _on_tick() -> void:
 		var character := _valid_target(body)
 		if character != null:
 			character.take_damage(damage, caster)
-			character.spawn_fx(damage, true, true)
+			character.spawn_fx(damage, crit, screen_shake)
 
 
 func _valid_target(body: Node) -> Character:

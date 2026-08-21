@@ -112,7 +112,7 @@ func _fit_to_ground() -> void:
 	# Account for node scale (in case ground is scaled in editor)
 	var mesh_size := Vector2(
 		plane_mesh.size.x * ground_mesh.scale.x,
-		plane_mesh.size.y * ground_mesh.scale.z  # PlaneMesh Y maps to world Z
+		plane_mesh.size.y * ground_mesh.scale.z # PlaneMesh Y maps to world Z
 	)
 
 	var center := ground_mesh.global_position
