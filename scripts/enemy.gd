@@ -20,6 +20,10 @@ func _update_move(_delta: float) -> void:
 	_chase_and_engage("heroes")
 
 
+func get_own_group() -> String:
+	return "enemies"
+
+
 func _on_death() -> void:
 	GameState.add(randi_range(enemy_data.gold_min, enemy_data.gold_max),
 			randi_range(enemy_data.shard_min, enemy_data.shard_max))

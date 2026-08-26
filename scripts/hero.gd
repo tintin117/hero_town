@@ -39,6 +39,10 @@ func _update_move(_delta: float) -> void:
 	_chase_and_engage("enemies")
 
 
+func get_own_group() -> String:
+	return "heroes"
+
+
 func _idle_move() -> void:
 	_patrol()
 

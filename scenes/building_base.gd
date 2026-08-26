@@ -28,7 +28,7 @@ func get_data() -> BuildingData:
 func upgrade() -> void:
 	current_level += 1
 	if not auto_spawn_enemy_ids.is_empty():
-		_spawn_timer.start(get_data().levels[current_level - 1]["spawn_interval"])
+		_start_spawning(get_data().levels[current_level - 1]["spawn_interval"])
 
 ## Toggles whether `enemy_id` is one of the types this building auto-spawns.
 ## The single shared timer round-robins between every toggled-on type.
@@ -40,7 +40,12 @@ func toggle_auto_spawn(enemy_id: String) -> void:
 	if auto_spawn_enemy_ids.is_empty():
 		_spawn_timer.stop()
 	else:
-		_spawn_timer.start(get_data().levels[current_level - 1]["spawn_interval"])
+		_start_spawning(get_data().levels[current_level - 1]["spawn_interval"])
+
+## Timer.start() waits a full interval before its first tick -- spawn one now, timer covers the repeats.
+func _start_spawning(interval: float) -> void:
+	_spawn_timer.start(interval)
+	_on_spawn_timer_timeout()
 
 func _on_spawn_timer_timeout() -> void:
 	var active_slots: int = get_data().levels[current_level - 1].get("active_slots", 1)

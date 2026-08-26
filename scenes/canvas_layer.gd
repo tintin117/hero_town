@@ -91,16 +91,26 @@ func _enemy_scene(enemy_id: String) -> PackedScene:
 	var path := "res://scenes/enemies/%s.tscn" % enemy_id.to_lower()
 	return load(path) if ResourceLoader.exists(path) else ENEMY_BASE_SCENE
 
+## Enemies scatter around the whole portal, not just a pinpoint, so they approach heroes
+## from different angles instead of a single straight line.
+const ENEMY_SPAWN_RADIUS := 15.0
+
+## Random XZ offset within `radius` so units spawned at the same point don't stack.
+static func _spawn_jitter(radius: float) -> Vector3:
+	var angle := randf() * TAU
+	var dist := randf_range(0.0, radius)
+	return Vector3(cos(angle), 0.0, sin(angle)) * dist
+
 func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
 	var enemy_instance: Enemy = _enemy_scene(enemy_id).instantiate()
 	enemy_instance.enemy_data = GameData.ENEMIES[enemy_id]
-	enemy_instance.position = building.global_position
+	enemy_instance.position = building.global_position + _spawn_jitter(ENEMY_SPAWN_RADIUS)
 	enemy_instance.died.connect(building.on_enemy_defeated)
 	get_tree().current_scene.add_child.call_deferred(enemy_instance)
 
 func _spawn_hero(hero_id: String, at_position: Vector3) -> Hero:
 	var hero_instance: Hero = _hero_scene(hero_id).instantiate()
-	hero_instance.position = at_position
+	hero_instance.position = at_position + _spawn_jitter(0.5)
 	get_tree().current_scene.add_child.call_deferred(hero_instance)
 	hero_instances[hero_id] = hero_instance
 	return hero_instance

@@ -10,31 +10,31 @@ display_name = "Portal"
 unlock_th_level = 1
 sprite_texture = ExtResource("2")
 levels = Array[Dictionary]([{
-"active_slots": 1,
+"active_slots": 5,
 "cost": 0,
 "enemy_tier": 1,
 "label": "Lv1",
 "spawn_interval": 5.0
 }, {
-"active_slots": 1,
+"active_slots": 6,
 "cost": 300,
 "enemy_tier": 2,
 "label": "Lv2",
 "spawn_interval": 4.0
 }, {
-"active_slots": 2,
+"active_slots": 7,
 "cost": 1000,
 "enemy_tier": 3,
 "label": "Lv3",
 "spawn_interval": 3.0
 }, {
-"active_slots": 2,
+"active_slots": 8,
 "cost": 3000,
 "enemy_tier": 4,
 "label": "Lv4",
 "spawn_interval": 2.0
 }, {
-"active_slots": 3,
+"active_slots": 10,
 "cost": 8000,
 "enemy_tier": 5,
 "label": "Lv5",

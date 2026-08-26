@@ -23,8 +23,8 @@ config/icon="uid://d21vtdhgwondi"
 
 GameData="*res://scripts/game_data.gd"
 GameState="*res://scripts/game_state.gd"
-_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 fx="*uid://u6sqyh22tpu3"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
 

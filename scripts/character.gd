@@ -17,9 +17,15 @@ const PROJECTILE_SPEED := 10.0
 const PROJECTILE_HIT_RADIUS := 0.3
 const KNOCKBACK_FORCE := 3.0
 const KNOCKBACK_DURATION := 0.25
-const PLAYFIELD_MIN_X := -28.0
-const PLAYFIELD_MAX_X := 10.0
+## ponytail: matches Ground4Grid's PlaneMesh (size 60x30, centered on origin) in
+## test_3d_prototype.tscn with a small inset. If that ground mesh is resized, update these too.
+const PLAYFIELD_MIN_X := -29.0
+const PLAYFIELD_MAX_X := 29.0
+const PLAYFIELD_MIN_Z := -7.0
+const PLAYFIELD_MAX_Z := 7.0
 const HITBOX_LAYER := 1 << 2
+const SEPARATION_RADIUS := 1.0
+const TARGET_LOAD_PENALTY := 2.0
 
 @export var move_speed: float = 2.5
 @export var attack_range: float = MELEE_ATTACK_RANGE
@@ -32,6 +38,7 @@ const SKILL_HIT_SCENE := preload("res://scenes/skill_hit.tscn")
 var hp: float
 var state: State = State.MOVE
 var target: Character = null
+var attackers_count: int = 0
 var knockback_timer: float = 0.0
 var mana: float = 0.0
 var _skill_cooldown: float = 0.0
@@ -77,6 +84,7 @@ func _physics_process(delta: float) -> void:
 				state = State.MOVE
 			move_and_slide()
 			global_position.x = clampf(global_position.x, PLAYFIELD_MIN_X, PLAYFIELD_MAX_X)
+			global_position.z = clampf(global_position.z, PLAYFIELD_MIN_Z, PLAYFIELD_MAX_Z)
 		State.COMBAT:
 			velocity = Vector3.ZERO
 			if not is_instance_valid(target) or target.state == State.DEAD:
@@ -88,6 +96,7 @@ func _physics_process(delta: float) -> void:
 			_update_move(delta)
 			move_and_slide()
 			global_position.x = clampf(global_position.x, PLAYFIELD_MIN_X, PLAYFIELD_MAX_X)
+			global_position.z = clampf(global_position.z, PLAYFIELD_MIN_Z, PLAYFIELD_MAX_Z)
 
 
 ## Virtual: subclasses set `velocity` and call `_enter_combat` when a target is in range.
@@ -102,10 +111,41 @@ func _chase_and_engage(opponent_group: String) -> void:
 		_enter_combat(opponent)
 		return
 	if opponent != null:
-		var dir := signf(opponent.global_position.x - global_position.x)
-		velocity = Vector3(dir * move_speed, 0.0, 0.0)
+		var to_opponent := opponent.global_position - global_position
+		to_opponent.y = 0.0
+		var seek := to_opponent.normalized() if to_opponent.length() > 0.01 else Vector3.ZERO
+		var steer := seek + _separation_force(get_own_group())
+		if steer.length() > 0.01:
+			velocity = steer.normalized() * move_speed
+		else:
+			velocity = Vector3.ZERO
 	else:
 		_idle_move()
+
+
+## Virtual: the group this character belongs to ("heroes"/"enemies"), used for separation.
+func get_own_group() -> String:
+	return ""
+
+
+## Boids-lite separation: pushes away from same-group allies within SEPARATION_RADIUS.
+## ponytail: separation only, no alignment/cohesion -- groups are 1-3 units per side, too
+## small for those rules to read as anything but noise. Revisit if roster/enemy caps grow
+## well past single digits.
+func _separation_force(own_group: String) -> Vector3:
+	var push := Vector3.ZERO
+	if own_group == "":
+		return push
+	for node in get_tree().get_nodes_in_group(own_group):
+		var ally := node as Character
+		if ally == null or ally == self or ally.state == State.DEAD:
+			continue
+		var offset := global_position - ally.global_position
+		offset.y = 0.0
+		var dist := offset.length()
+		if dist > 0.01 and dist < SEPARATION_RADIUS:
+			push += offset.normalized() * (SEPARATION_RADIUS - dist)
+	return push
 
 
 ## Virtual: movement when no opponent exists in the target group.
@@ -113,30 +153,43 @@ func _idle_move() -> void:
 	velocity = Vector3.ZERO
 
 
+## Scores candidates by distance plus a penalty per ally already attacking them, so heroes
+## spread across multiple active enemies instead of dog-piling the single nearest one.
 func _find_nearest_in_group(group_name: String) -> Character:
 	var nearest: Character = null
-	var nearest_dist := INF
+	var nearest_score := INF
 	for node in get_tree().get_nodes_in_group(group_name):
 		var candidate := node as Character
 		if candidate == null or candidate.state == State.DEAD:
 			continue
-		var dist := global_position.distance_to(candidate.global_position)
-		if dist < nearest_dist:
-			nearest_dist = dist
+		var score := global_position.distance_to(candidate.global_position) \
+				+ candidate.attackers_count * TARGET_LOAD_PENALTY
+		if score < nearest_score:
+			nearest_score = score
 			nearest = candidate
 	return nearest
 
 
 func _enter_combat(with: Character) -> void:
 	target = with
+	target.attackers_count += 1
 	state = State.COMBAT
 	_attack_timer.start()
+	_on_attack_timeout()  # Timer.start() waits a full atk_speed before its first tick -- hit now, timer covers the repeats.
 
 
 func _exit_combat() -> void:
+	_release_target()
 	state = State.MOVE
-	target = null
 	_attack_timer.stop()
+
+
+## Detaches from the current target (if any) without touching `state`, so it's safe to call
+## both from a normal combat exit and from this character's own death.
+func _release_target() -> void:
+	if is_instance_valid(target):
+		target.attackers_count = maxi(0, target.attackers_count - 1)
+	target = null
 
 
 func _on_attack_timeout() -> void:
@@ -173,6 +226,7 @@ func take_damage(amount: float, attacker: Character) -> void:
 	hp -= amount
 	_update_health_bar()
 	if hp <= 0.0:
+		_release_target()
 		state = State.DEAD
 		_on_death()
 		died.emit()
