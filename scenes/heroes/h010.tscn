@@ -1,7 +1,17 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bp8a7lei231et"]
 
 [ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="1_base"]
 [ext_resource type="Resource" path="res://data/heroes/h010.tres" id="2_data"]
+[ext_resource type="Texture2D" uid="uid://s5xwkxw4dcr" path="res://asset/hand_draw/chracter/red_crusader.png" id="3_4ilmp"]
 
-[node name="H010" instance=ExtResource("1_base")]
+[node name="H010" unique_id=706797882 instance=ExtResource("1_base")]
 hero_data = ExtResource("2_data")
+
+[node name="Sprite3D" parent="CameraFacingContainer" parent_id_path=PackedInt32Array(1164852497) index="0" unique_id=637173425]
+texture = ExtResource("3_4ilmp")
+
+[node name="HealthBarBg" parent="CameraFacingContainer" parent_id_path=PackedInt32Array(1164852497) index="1" unique_id=1047717928]
+transform = Transform3D(2.9, 0, 0, 0, 0.28, 0, 0, 0, 1, 0, 4.6884236, -0.001)
+
+[node name="HealthBarFill" parent="CameraFacingContainer" parent_id_path=PackedInt32Array(1164852497) index="2" unique_id=1443917243]
+transform = Transform3D(2.8, 0, 0, 0, 0.2, 0, 0, 0, 1, -1.4, 4.5774455, 0)

@@ -1,7 +1,11 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://b02gpgtfooske"]
 
 [ext_resource type="PackedScene" uid="uid://77fssx2u0ies" path="res://scenes/hero.tscn" id="1_base"]
 [ext_resource type="Resource" path="res://data/heroes/h013.tres" id="2_data"]
+[ext_resource type="Texture2D" uid="uid://ckm6l5uw0n3oq" path="res://asset/hand_draw/chracter/black_clown.png" id="3_ednln"]
 
-[node name="H013" instance=ExtResource("1_base")]
+[node name="H013" unique_id=488940695 instance=ExtResource("1_base")]
 hero_data = ExtResource("2_data")
+
+[node name="Sprite3D" parent="CameraFacingContainer" parent_id_path=PackedInt32Array(1164852497) index="0" unique_id=637173425]
+texture = ExtResource("3_ednln")
