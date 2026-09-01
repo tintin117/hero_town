@@ -15,10 +15,32 @@ const SHOP_SLOTS := 4
 var building: BuildingBase = null
 var _shrine_result_text: String = ""
 var _shop_offers: Array[String] = []
+var _upgrade_label: Label
+
+const TEXT_DARK := Color(0.24, 0.17, 0.1)
 
 
 func _ready() -> void:
 	visible = false
+	# TextureButton has no text property; the cost/MAX readout lives on a child label.
+	_upgrade_label = Label.new()
+	_upgrade_label.add_theme_font_size_override("font_size", 12)
+	_upgrade_label.add_theme_color_override("font_color", TEXT_DARK)
+	_upgrade_label.position = Vector2(-4, 32)
+	upgrade_btn.add_child(_upgrade_label)
+
+
+## min_width > 0 is needed for standalone autowrap labels, which otherwise
+## collapse to zero width inside a ScrollContainer. Row labels must leave it 0
+## or they push their buttons past the scroll clip.
+func _dark_label(text: String, min_width: float = 0.0) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", TEXT_DARK)
+	if min_width > 0.0:
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		label.custom_minimum_size = Vector2(min_width, 0)
+	return label
 
 
 func open(target: BuildingBase) -> void:
@@ -26,6 +48,7 @@ func open(target: BuildingBase) -> void:
 	_shrine_result_text = ""
 	_refresh()
 	visible = true
+	sfx.play("click")
 
 
 func close() -> void:
@@ -37,20 +60,44 @@ func _refresh() -> void:
 	title_label.text = str(data.display_name)
 	level_label.text = "Lv%d" % building.current_level
 	if building.current_level >= data.levels.size():
-		upgrade_btn.text = "MAX"
+		_upgrade_label.text = "MAX"
 		upgrade_btn.disabled = true
 	else:
 		var cost: int = data.levels[building.current_level]["cost"]
-		#upgrade_btn.text = "Upgrade  %dg" % cost
+		_upgrade_label.text = "%dg" % cost
 		upgrade_btn.disabled = not GameState.can_afford(cost)
+	upgrade_btn.modulate = Color(1, 1, 1, 0.5) if upgrade_btn.disabled else Color.WHITE
 
 	if building.building_id == "portal":
 		_refresh_enemy_list(data)
 	elif building.building_id == "shrine":
 		_refresh_shrine_content(data)
 	else:
-		for child in content_list.get_children():
-			child.queue_free()
+		_refresh_level_info(data)
+
+
+## Generic buildings (town hall, blacksmith, tavern): show what the current and
+## next level actually give, straight from the levels[] data.
+func _refresh_level_info(data: BuildingData) -> void:
+	for child in content_list.get_children():
+		child.queue_free()
+	var now: Dictionary = data.levels[building.current_level - 1]
+	content_list.add_child(_dark_label("Now:  " + _format_level(now), 250.0))
+	if building.current_level < data.levels.size():
+		var next: Dictionary = data.levels[building.current_level]
+		content_list.add_child(_dark_label("Next:  %s" % _format_level(next), 250.0))
+		content_list.add_child(_dark_label("Upgrade cost: %dg" % next["cost"], 250.0))
+	else:
+		content_list.add_child(_dark_label("Fully upgraded.", 250.0))
+
+
+func _format_level(level_data: Dictionary) -> String:
+	var parts: PackedStringArray = []
+	for key in level_data:
+		if key == "cost" or key == "label":
+			continue
+		parts.append("%s %s" % [str(key).capitalize(), str(level_data[key])])
+	return ", ".join(parts) if parts.size() > 0 else "-"
 
 
 func _refresh_enemy_list(data: BuildingData) -> void:
@@ -64,12 +111,11 @@ func _refresh_enemy_list(data: BuildingData) -> void:
 
 		var row := HBoxContainer.new()
 
-		var info := Label.new()
-		info.text = "%s (T%d)  %d-%dg %d-%ds" % [
+		var info := _dark_label("%s (T%d)  %d-%dg %d-%ds" % [
 			enemy.display_name, enemy.tier,
 			enemy.gold_min, enemy.gold_max,
 			enemy.shard_min, enemy.shard_max,
-		]
+		])
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
 
@@ -110,8 +156,7 @@ func _refresh_shrine_content(data: BuildingData) -> void:
 		var hero: HeroData = GameData.HEROES[hero_id]
 		var row := HBoxContainer.new()
 
-		var info := Label.new()
-		info.text = "%s (%s, %s)" % [hero.display_name, HeroData.Rarity.keys()[hero.rarity].capitalize(), HeroData.HeroClass.keys()[hero.hero_class].capitalize()]
+		var info := _dark_label("%s (%s, %s)" % [hero.display_name, HeroData.Rarity.keys()[hero.rarity].capitalize(), HeroData.HeroClass.keys()[hero.hero_class].capitalize()])
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
 
@@ -125,21 +170,17 @@ func _refresh_shrine_content(data: BuildingData) -> void:
 		content_list.add_child(row)
 
 	if not _shrine_result_text.is_empty():
-		var result_label := Label.new()
-		result_label.text = _shrine_result_text
-		result_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		var result_label := _dark_label(_shrine_result_text, 250.0)
+		result_label.add_theme_color_override("font_color", Color(0.5, 0.28, 0.08))
 		content_list.add_child(result_label)
 
-	var roster_header := Label.new()
-	roster_header.text = "Roster (%d/%d)" % [GameState.owned_heroes.size(), GameState.HERO_CAP]
-	content_list.add_child(roster_header)
+	content_list.add_child(_dark_label("Roster (%d/%d)" % [GameState.owned_heroes.size(), GameState.HERO_CAP]))
 
 	for hero_id in GameState.owned_heroes.keys():
 		var hero: HeroData = GameData.HEROES[hero_id]
 		var row := HBoxContainer.new()
 
-		var info := Label.new()
-		info.text = "%s (%s) ★%d" % [hero.display_name, HeroData.HeroClass.keys()[hero.hero_class].capitalize(), GameState.owned_heroes[hero_id]]
+		var info := _dark_label("%s (%s) ★%d" % [hero.display_name, HeroData.HeroClass.keys()[hero.hero_class].capitalize(), GameState.owned_heroes[hero_id]])
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
 
@@ -181,6 +222,7 @@ func _on_upgrade_button_pressed() -> void:
 		return
 	GameState.spend(cost)
 	building.upgrade()
+	sfx.play("upgrade")
 	_refresh()
 
 
@@ -220,6 +262,10 @@ func _on_buy_offer_pressed(hero_id: String, cost_gold: int, cost_shard: int) -> 
 		_shrine_result_text = "%s merged to ★%d!" % [hero.display_name, new_star]
 	else:
 		_shrine_result_text = "%s already at max ★%d! +%d shards" % [hero.display_name, GameState.MAX_STAR, hero.dupe_shard]
+	fx.spawn("pickup_sparkle", global_position + size * 0.5, {"parent": get_parent()})
+	fx.popup(_shrine_result_text, global_position + Vector2(size.x * 0.5, -20.0),
+			{"parent": get_parent(), "font_size": 20, "color": Color("#ffd23f")})
+	sfx.play("summon")
 
 	var data := building.get_data()
 	var level_data: Dictionary = data.levels[building.current_level - 1]

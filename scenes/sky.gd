@@ -114,7 +114,7 @@ func _update() -> void :
 	_update_shader()
 	_update_grading()
 
-const NIGHT_AMBIENT := Color( 0.16, 0.19, 0.36 )
+const NIGHT_AMBIENT := Color( 0.45, 0.55, 0.85 )
 const DAY_AMBIENT := Color( 0.95, 0.92, 0.85 )
 
 ## Runtime-only color grading: ambient light follows the sun so nights read
@@ -128,7 +128,7 @@ func _update_grading() -> void :
 	var env = environment.environment
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = NIGHT_AMBIENT.lerp( DAY_AMBIENT, daylight )
-	env.ambient_light_energy = lerpf( 0.45, 1.0, daylight )
+	env.ambient_light_energy = lerpf( 0.85, 1.0, daylight )
 
 func _update_sun() -> void :
 	if is_instance_valid( sun ) :

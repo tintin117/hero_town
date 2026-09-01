@@ -446,6 +446,7 @@ script = ExtResource("3_gs")
 script = ExtResource("4_bb")
 
 [node name="Sky" parent="." instance=ExtResource("18_sky")]
+day_time = 10.5
 use_day_time_for_shader = true
 
 [node name="HeroTownCamera" parent="." instance=ExtResource("19_cam")]

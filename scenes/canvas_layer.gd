@@ -48,7 +48,6 @@ func _on_building_clicked(building: BuildingBase) -> void:
 		return
 	else:
 		visible = true
-	building_popup.size
 	var ui_size: Vector2 = building_popup.size
 	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
 	var top_left: Vector2 = screen_pos - ui_size / 2.0
@@ -69,6 +68,7 @@ func _on_placement_button_pressed() -> void:
 			"cost": data.build_cost,
 			"can_afford": GameState.can_afford(data.build_cost),
 			"thumbnail": data.thumbnail,
+			"model_scene": data.model_scene,
 		})
 	build_menu_popup.show_options(options)
 
@@ -151,7 +151,18 @@ func _update_class_hud() -> void:
 		label.modulate = Color.GREEN if buffed else Color.WHITE
 
 
+var _last_gold := -1
+var _last_shard := -1
+
 func _on_currency_changed(gold: int, shard: int) -> void:
-	#currency_label.text = "Gold: %d   Shard: %d" % [gold, shard]
+	# Floating "-N" beside the HUD on spends; gains already read via coin flights.
+	if _last_gold >= 0 and gold < _last_gold:
+		fx.popup("%d" % (gold - _last_gold), currency_label.global_position + Vector2(70, 0),
+				{"parent": self, "font_size": 20, "color": Color(1, 0.5, 0.4)})
+	if _last_shard >= 0 and shard < _last_shard:
+		fx.popup("%d" % (shard - _last_shard), shard_label.global_position + Vector2(70, 0),
+				{"parent": self, "font_size": 20, "color": Color(0.7, 0.9, 1)})
+	_last_gold = gold
+	_last_shard = shard
 	currency_label.text = "%d" % [gold]
 	shard_label.text = "%d" % [shard]

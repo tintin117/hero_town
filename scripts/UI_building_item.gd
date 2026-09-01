@@ -57,7 +57,7 @@ func _animate_hover(target_alpha: float) -> void:
 	_hover_tween = create_tween()
 	_hover_tween.tween_property(hover, "modulate:a", target_alpha, HOVER_FADE_TIME)
 
-func setup(texture: Texture2D = null, building_name_text: String = "", price: Variant = null) -> void:
+func setup(texture: Texture2D = null, building_name_text: String = "", price: Variant = null, can_afford: bool = true) -> void:
 	# Texture fallback
 	if texture == null:
 		texture = load(DEFAULT_TEXTURE_PATH)
@@ -73,3 +73,8 @@ func setup(texture: Texture2D = null, building_name_text: String = "", price: Va
 	if price != null and (price is int or price is float):
 		safe_price = max(int(price), 0)
 	price_label.text = str(safe_price)
+
+	disabled = not can_afford
+	if not can_afford:
+		modulate = Color(1, 1, 1, 0.55)
+		price_label.add_theme_color_override("font_color", Color(0.85, 0.25, 0.2))

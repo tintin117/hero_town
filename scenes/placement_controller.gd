@@ -133,8 +133,10 @@ func _confirm_fx(cell: Vector2i) -> void:
 	if camera != null:
 		fx.spawn("smoke_pop", camera.unproject_position(world_pos))
 	fx.shake(0.08, 0.1)
+	sfx.play("place")
 
 func _reject(message: String) -> void:
+	sfx.play("error")
 	fx.popup(message, get_viewport().get_mouse_position(), {"color": Color(1.0, 0.4, 0.35)})
 	if ghost == null:
 		return

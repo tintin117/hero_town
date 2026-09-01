@@ -415,8 +415,8 @@ func spawn_fx(value:float, crit:bool, screen_shake:bool):
 	if screen_shake:
 		fx.shake(0.2, 0.1)
 	fx.hitstop(0.06)
-	#fx.flash(Color.WHITE, 0.1)
 	fx.popup(str(roundi(value)), screen_text_pos, {"crit": crit})
+	sfx.play("crit" if crit else "hit")
 
 func get_character_height() -> float:
 	# change "CollisionShape3D" to your actual node name

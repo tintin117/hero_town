@@ -25,7 +25,8 @@ func _animate_collect_coin() -> void:
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func():
 		visible = false
-		fx.spawn("pickup_sparkle", targetPos))
+		fx.spawn("pickup_sparkle", targetPos)
+		sfx.play("coin"))
 	tween.tween_property(label, "scale", Vector2(1.15, 1.15), 0.05)
 	tween.tween_property(label, "scale", Vector2(1.0, 1.0), 0.08)
 	tween.tween_callback(queue_free)
