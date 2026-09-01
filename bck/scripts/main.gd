@@ -1,11 +1,11 @@
 extends Node2D
 
 const GD = preload("res://scripts/game_data.gd")
-const HeroScene := preload("res://scenes/hero.tscn")
-const EnemyScene := preload("res://scenes/enemy.tscn")
-const BuildingScene := preload("res://scenes/building.tscn")
-const ShrineScene := preload("res://scenes/shrine.tscn")
-const EmptySlotScene := preload("res://scenes/empty_slot.tscn")
+const HeroScene := preload("res://bck/scenes/hero.tscn")
+const EnemyScene := preload("res://bck/scenes/enemy.tscn")
+const BuildingScene := preload("res://bck/scenes/building.tscn")
+const ShrineScene := preload("res://bck/scenes/shrine.tscn")
+const EmptySlotScene := preload("res://bck/scenes/empty_slot.tscn")
 
 const GROUND_Y := 500.0
 const HERO_X := 450.0
