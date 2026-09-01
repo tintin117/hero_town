@@ -59,13 +59,22 @@ func set_highlight_color(valid: bool) -> void:
 	_highlight_mat.albedo_color = Color(c.r, c.g, c.b, 0.45)
 	_highlight_mat.emission = c
 
+## Tracked from motion events rather than polling the OS cursor, so synthetic
+## input (tests) and real mice behave identically.
+var _mouse_pos := Vector2(-INF, -INF)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		_mouse_pos = event.position
+
 func _process(_delta: float) -> void:
 	if _camera == null:
 		_camera = get_viewport().get_camera_3d()
 		return
-	var mouse_pos := get_viewport().get_mouse_position()
-	var from := _camera.project_ray_origin(mouse_pos)
-	var dir := _camera.project_ray_normal(mouse_pos)
+	if _mouse_pos.x == -INF:
+		return
+	var from := _camera.project_ray_origin(_mouse_pos)
+	var dir := _camera.project_ray_normal(_mouse_pos)
 	var hit = Plane(Vector3.UP, origin.y).intersects_ray(from, dir)
 	hovered_cell = world_to_grid(hit) if hit != null else Vector2i(-1, -1)
 	if _highlight.visible and hovered_cell != Vector2i(-1, -1):
