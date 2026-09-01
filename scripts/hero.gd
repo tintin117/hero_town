@@ -7,6 +7,8 @@ extends Character
 @export var revive_delay: float = 5.0  ## seconds a downed hero rests before reviving at full hp
 @onready var anim_player: AnimationPlayer = $AnimationPlayer
 
+const STAR_STAT_MULT := 0.5  # +50% max_hp/atk per star above 1
+
 var _patrol_dir: int = 1
 
 
@@ -22,8 +24,10 @@ func _ready() -> void:
 func apply_hero_data() -> void:
 	if hero_data == null:
 		return
-	max_hp = hero_data.base_hp
-	atk = hero_data.base_power
+	var star: int = GameState.owned_heroes.get(hero_data.id, 1)
+	var star_mult := 1.0 + (star - 1) * STAR_STAT_MULT
+	max_hp = hero_data.base_hp * star_mult
+	atk = hero_data.base_power * star_mult
 	atk_speed = hero_data.atk_speed
 	mana_per_hit = hero_data.mana_per_hit
 	is_ranged = hero_data.unit_type == HeroData.UnitType.RANGED

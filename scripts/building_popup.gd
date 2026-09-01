@@ -139,7 +139,7 @@ func _refresh_shrine_content(data: BuildingData) -> void:
 		var row := HBoxContainer.new()
 
 		var info := Label.new()
-		info.text = "%s (%s)" % [hero.display_name, HeroData.HeroClass.keys()[hero.hero_class].capitalize()]
+		info.text = "%s (%s) ★%d" % [hero.display_name, HeroData.HeroClass.keys()[hero.hero_class].capitalize(), GameState.owned_heroes[hero_id]]
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
 
@@ -208,15 +208,18 @@ func _on_reroll_pressed() -> void:
 
 func _on_buy_offer_pressed(hero_id: String, cost_gold: int, cost_shard: int) -> void:
 	var hero: HeroData = GameData.HEROES[hero_id]
-	var was_new := not GameState.owned_heroes.has(hero_id)
+	var prev_star: int = GameState.owned_heroes.get(hero_id, 0)
 	if not GameState.buy_hero(hero_id, cost_gold, cost_shard):
 		return
+	var new_star: int = GameState.owned_heroes.get(hero_id, 0)
 
-	if was_new:
+	if prev_star == 0:
 		_shrine_result_text = "New hero: %s (%s)!" % [hero.display_name, HeroData.Rarity.keys()[hero.rarity].capitalize()]
 		hero_acquired.emit(hero_id, building)
+	elif new_star > prev_star:
+		_shrine_result_text = "%s merged to ★%d!" % [hero.display_name, new_star]
 	else:
-		_shrine_result_text = "%s already owned! +%d shards" % [hero.display_name, hero.dupe_shard]
+		_shrine_result_text = "%s already at max ★%d! +%d shards" % [hero.display_name, GameState.MAX_STAR, hero.dupe_shard]
 
 	var data := building.get_data()
 	var level_data: Dictionary = data.levels[building.current_level - 1]
