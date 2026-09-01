@@ -1,136 +1,34 @@
 [gd_scene format=3 uid="uid://77fssx2u0ies"]
 
 [ext_resource type="Script" uid="uid://5bgnt1ojhhl5" path="res://scripts/hero.gd" id="1_yvbpl"]
-[ext_resource type="Texture2D" uid="uid://c700l84bkbd7m" path="res://asset/hand_draw/chracter/knight.png" id="2_06baw"]
-[ext_resource type="PackedScene" uid="uid://dg3hhah85cqi" path="res://scenes/test_level_25/camera_facing_container.tscn" id="3_w7pyx"]
 [ext_resource type="Resource" uid="uid://dyoj2lj6axl3h" path="res://data/skills/debug_nova.tres" id="3_y2sko"]
 [ext_resource type="Texture2D" uid="uid://bdh4gf17y2jyg" path="res://resources/textures/white.tres" id="4_mv13s"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_mv13s"]
-radius = 0.4
+radius = 0.32
+height = 1.3
 
-[sub_resource type="Animation" id="Animation_yvbpl"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("CameraFacingContainer/Sprite3D:scale")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0.1083, 0.1083, 0.1083)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("CameraFacingContainer/Sprite3D:rotation")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, 0, 0)]
-}
-tracks/2/type = "value"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("CameraFacingContainer/Sprite3D:position")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, 2.05, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_06baw"]
-resource_name = "die"
-
-[sub_resource type="Animation" id="Animation_mv13s"]
-resource_name = "idle"
-length = 0.8
-loop_mode = 1
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("CameraFacingContainer/Sprite3D:scale")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.2, 0.4, 0.6),
-"transitions": PackedFloat32Array(1, 1, 1, 1),
-"update": 0,
-"values": [Vector3(0.1083, 0.1083, 0.1083), Vector3(0.138, 0.138, 0.138), Vector3(0.1083, 0.1083, 0.1083), Vector3(0.138, 0.138, 0.138)]
-}
-
-[sub_resource type="Animation" id="Animation_w7pyx"]
-resource_name = "move"
-length = 0.6
-loop_mode = 1
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("CameraFacingContainer/Sprite3D:scale")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.15, 0.3, 0.45),
-"transitions": PackedFloat32Array(1, 1, 1, 1),
-"update": 0,
-"values": [Vector3(0.1083, 0.1083, 0.1083), Vector3(0.12, 0.12, 0.12), Vector3(0.1083, 0.1083, 0.1083), Vector3(0.12, 0.12, 0.12)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("CameraFacingContainer/Sprite3D:position")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.15, 0.3, 0.45),
-"transitions": PackedFloat32Array(1, 1, 1, 1),
-"update": 0,
-"values": [Vector3(0, 2.2, 0), Vector3(0, 2.05, 0), Vector3(0, 2.2, 0), Vector3(0, 2.05, 0)]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_y2sko"]
-_data = {
-&"RESET": SubResource("Animation_yvbpl"),
-&"die": SubResource("Animation_06baw"),
-&"idle": SubResource("Animation_mv13s"),
-&"move": SubResource("Animation_w7pyx")
-}
-
-[node name="Hero" type="CharacterBody3D" unique_id=2132630489]
+[node name="Hero" type="CharacterBody3D"]
 script = ExtResource("1_yvbpl")
 skill = ExtResource("3_y2sko")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1400265664]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
 shape = SubResource("CapsuleShape3D_mv13s")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1702288037]
-libraries/ = SubResource("AnimationLibrary_y2sko")
+[node name="CameraFacingContainer" type="Node3D" parent="."]
 
-[node name="CameraFacingContainer" parent="." unique_id=1164852497 instance=ExtResource("3_w7pyx")]
-
-[node name="Sprite3D" type="Sprite3D" parent="CameraFacingContainer" unique_id=637173425]
-transform = Transform3D(0.1083, 0, 0, 0, 0.1083, 0, 0, 0, 0.1083, 0, 2.05, 0)
-alpha_cut = 2
-texture_filter = 0
-texture = ExtResource("2_06baw")
-
-[node name="HealthBarBg" type="Sprite3D" parent="CameraFacingContainer" unique_id=1047717928]
-transform = Transform3D(2.9, 0, 0, 0, 0.28, 0, 0, 0, 1, 0, 4.3, -0.001)
+[node name="HealthBarBg" type="Sprite3D" parent="CameraFacingContainer"]
+transform = Transform3D(1.1, 0, 0, 0, 0.1, 0, 0, 0, 1, 0, 1.7, -0.001)
+billboard = 1
 modulate = Color(0.1, 0.1, 0.1, 0.8)
+no_depth_test = true
 texture = ExtResource("4_mv13s")
 
-[node name="HealthBarFill" type="Sprite3D" parent="CameraFacingContainer" unique_id=1443917243]
-transform = Transform3D(2.8, 0, 0, 0, 0.2, 0, 0, 0, 1, -1.4, 4.3, 0)
+[node name="HealthBarFill" type="Sprite3D" parent="CameraFacingContainer"]
+transform = Transform3D(1.0, 0, 0, 0, 0.07, 0, 0, 0, 1, -0.5, 1.7, 0)
+billboard = 1
 centered = false
 modulate = Color(0, 1, 0, 1)
+no_depth_test = true
 texture = ExtResource("4_mv13s")

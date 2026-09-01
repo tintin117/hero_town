@@ -3,18 +3,20 @@ class_name GridSystem
 
 signal grid_ready
 
-const GRID_ROWS := 3
+## Hex board, pointy-top hexes (points along ±Z), odd-r offset layout.
+## KayKit hex tiles are 2.0 wide (x) and 2.31 deep (z), so:
+const GRID_ROWS := 5
+const HEX_RADIUS := 1.1547          # corner radius of one tile
+const HEX_X := 2.0                  # x distance between column centers
+const HEX_Z := 1.7320508            # z distance between row centers (1.5 * radius)
 
-@export var grid_cols: int = 10
-@export var cell_size: float = 4.0
-@export var origin: Vector3 = Vector3(-20, 0, -6)
-
-@export var ground_mesh: MeshInstance3D
+@export var grid_cols: int = 12
+@export var origin: Vector3 = Vector3(-11.5, 0, -3.4641016)  # center of cell (0,0)
 
 var _occupancy: Array = []
-var _grid_visual: MeshInstance3D
-var _shader_material: ShaderMaterial
 var _camera: Camera3D
+var _highlight: MeshInstance3D
+var _highlight_mat: StandardMaterial3D
 
 var hovered_cell: Vector2i = Vector2i(-1, -1)
 
@@ -22,41 +24,53 @@ func _init() -> void:
 	_init_occupancy()
 
 func _ready() -> void:
-	# Fit to ground first before anything else
-	if ground_mesh:
-		_fit_to_ground()
-		_init_occupancy()
-		
-	_grid_visual = $GridVisual
-	_shader_material = _grid_visual.material_override as ShaderMaterial
 	_camera = get_viewport().get_camera_3d()
-
-	var visual_size := Vector2(grid_cols * cell_size, GRID_ROWS * cell_size)
-	(_grid_visual.mesh as PlaneMesh).size = visual_size
-	_grid_visual.position = origin + Vector3(visual_size.x * 0.5, 0.02, visual_size.y * 0.5)
-	_shader_material.set_shader_parameter("grid_size", Vector2(grid_cols, GRID_ROWS))
+	_build_highlight()
 	emit_signal("grid_ready")
+
+## Glowing hex outline that snaps to the hovered cell during placement.
+func _build_highlight() -> void:
+	var mesh := CylinderMesh.new()
+	mesh.radial_segments = 6
+	mesh.top_radius = HEX_RADIUS * 0.98
+	mesh.bottom_radius = HEX_RADIUS * 0.98
+	mesh.height = 0.06
+	_highlight_mat = StandardMaterial3D.new()
+	_highlight_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_highlight_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_highlight_mat.albedo_color = Color(0.4, 1.0, 0.5, 0.45)
+	_highlight_mat.emission_enabled = true
+	_highlight_mat.emission = Color(0.4, 1.0, 0.5)
+	_highlight_mat.emission_energy_multiplier = 1.5
+	mesh.material = _highlight_mat
+	_highlight = MeshInstance3D.new()
+	_highlight.mesh = mesh
+	# Cylinder's 6 segments put a flat side toward +z; rotate 30° for pointy-top.
+	_highlight.rotation.y = PI / 6.0
+	_highlight.position.y = 0.05
+	_highlight.visible = false
+	add_child(_highlight)
+
+func set_overlay(on: bool) -> void:
+	_highlight.visible = on
+
+func set_highlight_color(valid: bool) -> void:
+	var c := Color(0.4, 1.0, 0.5) if valid else Color(1.0, 0.35, 0.3)
+	_highlight_mat.albedo_color = Color(c.r, c.g, c.b, 0.45)
+	_highlight_mat.emission = c
 
 func _process(_delta: float) -> void:
 	if _camera == null:
 		_camera = get_viewport().get_camera_3d()
 		return
-
 	var mouse_pos := get_viewport().get_mouse_position()
 	var from := _camera.project_ray_origin(mouse_pos)
 	var dir := _camera.project_ray_normal(mouse_pos)
 	var hit = Plane(Vector3.UP, origin.y).intersects_ray(from, dir)
-
-	var cell := Vector2i(-1, -1)
-	if hit != null:
-		cell = world_to_grid(hit)
-	hovered_cell = cell
-
-	# ponytail: UV axis mapping on PlaneMesh isn't verified visually (no
-	# screenshots per CLAUDE.md) — if the highlight tracks the wrong cell,
-	# swap cell.x/cell.y here or negate one axis in the shader.
-	_shader_material.set_shader_parameter("highlight_cell", Vector2(cell.y, cell.x))
-
+	hovered_cell = world_to_grid(hit) if hit != null else Vector2i(-1, -1)
+	if _highlight.visible and hovered_cell != Vector2i(-1, -1):
+		_highlight.position = grid_to_world(hovered_cell.x, hovered_cell.y) - global_position \
+				+ Vector3(0, 0.05, 0)
 
 func _init_occupancy() -> void:
 	_occupancy.resize(GRID_ROWS)
@@ -65,71 +79,41 @@ func _init_occupancy() -> void:
 		cols.resize(grid_cols)
 		_occupancy[row] = cols
 
-
 func grid_to_world(row: int, col: int) -> Vector3:
-	return origin + Vector3((col + 0.5) * cell_size, 0.0, (row + 0.5) * cell_size)
-
+	return origin + Vector3(col * HEX_X + (row & 1) * HEX_X * 0.5, 0.0, row * HEX_Z)
 
 func world_to_grid(world_pos: Vector3) -> Vector2i:
-	var local := world_pos - origin
-	var row := floori(local.z / cell_size)
-	var col := floori(local.x / cell_size)
-	if not is_within_bounds(row, col):
+	# Nearest hex center among the candidate rows around the z estimate.
+	var best := Vector2i(-1, -1)
+	var best_dist := INF
+	var row_guess := roundi((world_pos.z - origin.z) / HEX_Z)
+	for row in range(row_guess - 1, row_guess + 2):
+		if row < 0 or row >= GRID_ROWS:
+			continue
+		var col := roundi((world_pos.x - origin.x - (row & 1) * HEX_X * 0.5) / HEX_X)
+		if col < 0 or col >= grid_cols:
+			continue
+		var d := world_pos.distance_to(grid_to_world(row, col))
+		if d < best_dist:
+			best_dist = d
+			best = Vector2i(row, col)
+	if best_dist > HEX_RADIUS:
 		return Vector2i(-1, -1)
-	return Vector2i(row, col)
-
+	return best
 
 func is_within_bounds(row: int, col: int) -> bool:
 	return row >= 0 and row < GRID_ROWS and col >= 0 and col < grid_cols
-
 
 func is_free(row: int, col: int) -> bool:
 	if not is_within_bounds(row, col):
 		return false
 	return _occupancy[row][col] == null
 
-
 func occupy(row: int, col: int, occupant) -> void:
 	if not is_within_bounds(row, col):
-		push_error("GridSystem.occupy: out of bounds row=%d col=%d (grid=%dx%d)" % [row, col, GRID_ROWS, grid_cols])
-		return
-	if _occupancy.size() == 0:
-		push_error("GridSystem.occupy: _occupancy not initialized yet!")
+		push_error("GridSystem.occupy: out of bounds row=%d col=%d" % [row, col])
 		return
 	_occupancy[row][col] = occupant
 
-
 func clear(row: int, col: int) -> void:
 	_occupancy[row][col] = null
-	
-	
-func _fit_to_ground() -> void:
-	var plane_mesh = ground_mesh.mesh as PlaneMesh
-	if plane_mesh == null:
-		push_error("GridSystem: ground_mesh is not a PlaneMesh!")
-		return
-
-	# Account for node scale (in case ground is scaled in editor)
-	var mesh_size := Vector2(
-		plane_mesh.size.x * ground_mesh.scale.x,
-		plane_mesh.size.y * ground_mesh.scale.z # PlaneMesh Y maps to world Z
-	)
-
-	var center := ground_mesh.global_position
-
-	# Corner origin (top-left in world space)
-	origin = Vector3(
-		center.x - mesh_size.x * 0.5,
-		center.y,
-		center.z - mesh_size.y * 0.5
-	)
-
-	# Cell size driven by rows (so height fits exactly)
-	cell_size = mesh_size.y / float(GRID_ROWS)
-
-	# Cols fill the width exactly
-	grid_cols = int(round(mesh_size.x / cell_size))
-
-	print("GridSystem fitted → origin: ", origin,
-			" | cell_size: ", cell_size,
-			" | grid_cols: ", grid_cols)

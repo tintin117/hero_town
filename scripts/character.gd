@@ -12,20 +12,24 @@ var atk_speed: float = 1.5
 var mana_per_hit: float = 0.0
 
 const MELEE_ATTACK_RANGE := 1.5
-const RANGED_ATTACK_RANGE := 6.0
+const RANGED_ATTACK_RANGE := 5.0
 const PROJECTILE_SPEED := 10.0
 const PROJECTILE_HIT_RADIUS := 0.3
 const KNOCKBACK_FORCE := 3.0
 const KNOCKBACK_DURATION := 0.25
-## ponytail: matches Ground4Grid's PlaneMesh (size 60x30, centered on origin) in
-## test_3d_prototype.tscn with a small inset. If that ground mesh is resized, update these too.
-const PLAYFIELD_MIN_X := -29.0
-const PLAYFIELD_MAX_X := 29.0
-const PLAYFIELD_MIN_Z := -7.0
-const PLAYFIELD_MAX_Z := 7.0
+## ponytail: matches the hex board in town_board.tscn (12x5 tiles, centered on
+## origin) with a small inset. If GridSystem's board size changes, update these too.
+const PLAYFIELD_MIN_X := -11.5
+const PLAYFIELD_MAX_X := 11.5
+const PLAYFIELD_MIN_Z := -3.6
+const PLAYFIELD_MAX_Z := 3.6
 const HITBOX_LAYER := 1 << 2
 const SEPARATION_RADIUS := 1.0
 const TARGET_LOAD_PENALTY := 2.0
+const MODEL_SCALE := 0.55
+const CRIT_CHANCE := 0.10
+const CRIT_MULT := 2.0
+const FACING_TURN_SPEED := 10.0
 
 @export var move_speed: float = 2.5
 @export var attack_range: float = MELEE_ATTACK_RANGE
@@ -45,7 +49,15 @@ var _skill_cooldown: float = 0.0
 
 var _attack_timer: Timer
 @onready var _health_bar_fill: Sprite3D = $CameraFacingContainer/HealthBarFill
+@onready var _health_bar_bg: Sprite3D = $CameraFacingContainer/HealthBarBg
 var _health_bar_full_width: float
+
+var model: Node3D = null
+var _anim: AnimationPlayer = null
+var _flash_mat: StandardMaterial3D = null
+var _flash_tween: Tween
+var _squash_tween: Tween
+var _action_lock_until_msec: int = 0
 
 
 func _ready() -> void:
@@ -61,14 +73,103 @@ func _ready() -> void:
 	_attack_timer.timeout.connect(_on_attack_timeout)
 	add_child(_attack_timer)
 
+	_setup_model()
 	_health_bar_full_width = _health_bar_fill.scale.x
 	_update_health_bar()
+
+
+## Virtual: subclasses return the animated character scene to instance.
+func _get_model_scene() -> PackedScene:
+	return null
+
+
+func _setup_model() -> void:
+	var scene := _get_model_scene()
+	if scene == null:
+		return
+	model = scene.instantiate()
+	model.scale = Vector3.ONE * MODEL_SCALE
+	add_child(model)
+	_anim = model.get_node_or_null("AnimationPlayer")
+	if _anim != null:
+		# Imported GLB animations don't loop by default.
+		for loop_name in ["Idle", "Walking_A", "Running_A", "Walking_D_Skeletons"]:
+			if _anim.has_animation(loop_name):
+				_anim.get_animation(loop_name).loop_mode = Animation.LOOP_LINEAR
+		_anim.play("Idle")
+	# White overlay used for hit flashes; per-instance so tweens don't cross characters.
+	_flash_mat = StandardMaterial3D.new()
+	_flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_flash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_flash_mat.albedo_color = Color(1, 1, 1, 0)
+	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
+		mesh_instance.material_overlay = _flash_mat
+
+
+## Plays a looping state animation unless a one-shot action is still holding the rig.
+func _play_anim(anim_name: String) -> void:
+	if _anim == null or Time.get_ticks_msec() < _action_lock_until_msec:
+		return
+	if _anim.current_animation != anim_name and _anim.has_animation(anim_name):
+		_anim.play(anim_name, 0.2)
+
+
+## Plays a one-shot action (attack, cast, death) and locks state anims while it runs.
+func _play_action(anim_name: String, max_lock: float = 10.0) -> void:
+	if _anim == null or not _anim.has_animation(anim_name):
+		return
+	_anim.play(anim_name, 0.1)
+	var lock := minf(_anim.get_animation(anim_name).length, max_lock)
+	_action_lock_until_msec = Time.get_ticks_msec() + int(lock * 1000.0)
+
+
+func _update_visuals(delta: float) -> void:
+	if model == null:
+		return
+	var face_dir := Vector3.ZERO
+	if state == State.COMBAT and is_instance_valid(target):
+		face_dir = target.global_position - global_position
+	elif velocity.length_squared() > 0.02:
+		face_dir = velocity
+	face_dir.y = 0.0
+	if face_dir.length_squared() > 0.001:
+		model.rotation.y = lerp_angle(model.rotation.y, atan2(face_dir.x, face_dir.z),
+				FACING_TURN_SPEED * delta)
+	match state:
+		State.MOVE:
+			_play_anim("Walking_A" if velocity.length_squared() > 0.02 else "Idle")
+		State.COMBAT:
+			_play_anim("Idle")
+		_:
+			pass
+
+
+func _play_hit_react() -> void:
+	if _flash_mat != null:
+		if _flash_tween != null:
+			_flash_tween.kill()
+		_flash_mat.albedo_color.a = 0.6
+		_flash_tween = create_tween()
+		_flash_tween.tween_property(_flash_mat, "albedo_color:a", 0.0, 0.18)
+	if model != null:
+		if _squash_tween != null:
+			_squash_tween.kill()
+		model.scale = Vector3.ONE * MODEL_SCALE
+		_squash_tween = create_tween()
+		_squash_tween.tween_property(model, "scale", Vector3(1.15, 0.82, 1.15) * MODEL_SCALE, 0.06)
+		_squash_tween.tween_property(model, "scale", Vector3.ONE * MODEL_SCALE, 0.12)
+
+
+func _set_health_bar_visible(shown: bool) -> void:
+	_health_bar_fill.visible = shown
+	_health_bar_bg.visible = shown
 
 
 func _update_health_bar() -> void:
 	var ratio := clampf(hp / max_hp, 0.0, 1.0)
 	_health_bar_fill.scale.x = _health_bar_full_width * ratio
 	_health_bar_fill.modulate = Color.RED.lerp(Color.GREEN, ratio)
+	_set_health_bar_visible(ratio < 0.999 and state != State.DEAD)
 
 
 func _physics_process(delta: float) -> void:
@@ -97,6 +198,7 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 			global_position.x = clampf(global_position.x, PLAYFIELD_MIN_X, PLAYFIELD_MAX_X)
 			global_position.z = clampf(global_position.z, PLAYFIELD_MIN_Z, PLAYFIELD_MAX_Z)
+	_update_visuals(delta)
 
 
 ## Virtual: subclasses set `velocity` and call `_enter_combat` when a target is in range.
@@ -196,23 +298,27 @@ func _on_attack_timeout() -> void:
 	if state != State.COMBAT or not is_instance_valid(target) or target.state == State.DEAD:
 		return
 	if global_position.distance_to(target.global_position) <= attack_range:
+		var crit := randf() < CRIT_CHANCE
+		var damage := atk * (CRIT_MULT if crit else 1.0)
 		if is_ranged:
-			_fire_projectile()
+			_fire_projectile(damage, crit)
+			_play_action("Spellcast_Shoot", atk_speed)
 		else:
-			target.take_damage(atk, self)
-			spawn_fx(atk, false, false)
+			target.take_damage(damage, self)
+			spawn_fx(damage, crit, crit)
+			_play_action("1H_Melee_Attack_Slice_Diagonal", atk_speed)
 		_charge_mana()
 
 
 ## Fires a travel-time hitbox at `target` for ranged basic attacks (reuses the skill-cast SkillHit).
-func _fire_projectile() -> void:
+func _fire_projectile(damage: float, crit: bool) -> void:
 	var hit := SKILL_HIT_SCENE.instantiate() as SkillHit
-	hit.damage = atk
+	hit.damage = damage
 	hit.radius = PROJECTILE_HIT_RADIUS
 	hit.speed = PROJECTILE_SPEED
 	hit.direction = (target.global_position - global_position).normalized()
 	hit.lifetime = attack_range / PROJECTILE_SPEED + 0.2
-	hit.crit = false
+	hit.crit = crit
 	hit.screen_shake = false
 	hit.caster = self
 	hit.target_group = "enemies" if is_in_group("heroes") else "heroes"
@@ -224,14 +330,19 @@ func take_damage(amount: float, attacker: Character) -> void:
 	if state == State.DEAD:
 		return
 	hp -= amount
-	_update_health_bar()
 	if hp <= 0.0:
 		_release_target()
 		state = State.DEAD
+		_attack_timer.stop()
+		_set_health_bar_visible(false)
+		_action_lock_until_msec = 0
+		_play_action("Death_A")
 		_on_death()
 		died.emit()
 		_die()
 		return
+	_update_health_bar()
+	_play_hit_react()
 	_charge_mana()
 	if _should_knockback(attacker):
 		_apply_knockback(attacker.global_position)
@@ -276,8 +387,9 @@ func _charge_mana() -> void:
 ## Spawns the generic skill-hit box at this character's position, aimed at
 ## whichever group opposes it. AOE stays put; a projectile flies at `target`.
 func _cast_skill() -> void:
-	print("%s casts skill (%s)" % [name, skill.resource_path.get_file()])
+	_play_action("Spellcast_Raise")
 	var hit := SKILL_HIT_SCENE.instantiate() as SkillHit
+	hit.crit = false
 	hit.damage = skill.damage
 	hit.radius = skill.radius
 	hit.lifetime = skill.duration
@@ -304,7 +416,7 @@ func spawn_fx(value:float, crit:bool, screen_shake:bool):
 		fx.shake(0.2, 0.1)
 	fx.hitstop(0.06)
 	#fx.flash(Color.WHITE, 0.1)
-	fx.popup(str(value), screen_text_pos, {"crit": crit})
+	fx.popup(str(roundi(value)), screen_text_pos, {"crit": crit})
 
 func get_character_height() -> float:
 	# change "CollisionShape3D" to your actual node name

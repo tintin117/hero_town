@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-damage = 1.0
+damage = 6.0
 duration = 2.0
-tick_interval = 0.1
+tick_interval = 0.5
 cooldown = 4.0

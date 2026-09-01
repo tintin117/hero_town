@@ -2,7 +2,7 @@ extends CanvasLayer
 
 ## Hero granted for free at game start (no hero-select UI yet -- pick one here).
 @export var starting_hero_id: String = "H001"
-@export var starting_hero_position: Vector3 = Vector3(-11.9, 0, 0)
+@export var starting_hero_position: Vector3 = Vector3(-2.0, 0, 0.8)
 
 @onready var building_popup = $BuildingPopup
 @onready var build_menu_popup = $BuildPopup
@@ -93,7 +93,7 @@ func _enemy_scene(enemy_id: String) -> PackedScene:
 
 ## Enemies scatter around the whole portal, not just a pinpoint, so they approach heroes
 ## from different angles instead of a single straight line.
-const ENEMY_SPAWN_RADIUS := 15.0
+const ENEMY_SPAWN_RADIUS := 2.0
 
 ## Random XZ offset within `radius` so units spawned at the same point don't stack.
 static func _spawn_jitter(radius: float) -> Vector3:
@@ -110,6 +110,7 @@ func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
 
 func _spawn_hero(hero_id: String, at_position: Vector3) -> Hero:
 	var hero_instance: Hero = _hero_scene(hero_id).instantiate()
+	hero_instance.hero_data = GameData.HEROES[hero_id]
 	hero_instance.position = at_position + _spawn_jitter(0.5)
 	get_tree().current_scene.add_child.call_deferred(hero_instance)
 	hero_instances[hero_id] = hero_instance

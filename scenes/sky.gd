@@ -86,7 +86,22 @@ func _ready() -> void :
 		moon.rotation_order = EULER_ORDER_ZXY
 		if moon_base_enegry == 0.0 :
 			moon_base_enegry = moon.light_energy
+	_setup_post_processing()
 	_update()
+
+## Runtime-only render polish (never runs in the editor, so sky.tscn stays clean).
+func _setup_post_processing() -> void :
+	if Engine.is_editor_hint() or not is_instance_valid( environment ) :
+		return
+	var env = environment.environment
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_white = 6.0
+	env.ssao_enabled = true
+	env.ssao_intensity = 1.5
+	env.glow_enabled = true
+	env.glow_intensity = 0.35
+	env.glow_bloom = 0.05
+	env.glow_hdr_threshold = 1.1
 
 func _process( delta: float ) -> void :
 	if not Engine.is_editor_hint() : # We don't want a time lapse in the editor
@@ -97,6 +112,23 @@ func _update() -> void :
 	_update_moon()
 	_update_clouds()
 	_update_shader()
+	_update_grading()
+
+const NIGHT_AMBIENT := Color( 0.16, 0.19, 0.36 )
+const DAY_AMBIENT := Color( 0.95, 0.92, 0.85 )
+
+## Runtime-only color grading: ambient light follows the sun so nights read
+## cool blue instead of pitch black. Guarded from the editor so the saved
+## Environment resource in sky.tscn is never mutated by @tool execution.
+func _update_grading() -> void :
+	if Engine.is_editor_hint() or not is_instance_valid( environment ) or not is_instance_valid( sun ) :
+		return
+	var sun_direction = sun.to_global( Vector3( 0.0, 0.0, 1.0 )).normalized()
+	var daylight = smoothstep( -0.1, 0.2, sun_direction.y )
+	var env = environment.environment
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = NIGHT_AMBIENT.lerp( DAY_AMBIENT, daylight )
+	env.ambient_light_energy = lerpf( 0.45, 1.0, daylight )
 
 func _update_sun() -> void :
 	if is_instance_valid( sun ) :

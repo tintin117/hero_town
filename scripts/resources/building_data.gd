@@ -7,4 +7,5 @@ extends Resource
 @export var unlock_th_level: int
 @export var thumbnail: Texture2D
 @export var sprite_texture: Texture2D
+@export var model_scene: PackedScene
 @export var levels: Array[Dictionary] = []

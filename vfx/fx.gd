@@ -12,6 +12,7 @@ var _flash_layer: CanvasLayer
 var _flash_rect: ColorRect
 var _popup_font: SystemFont
 var _hitstop_busy := false
+var _shake_tween: Tween
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -46,7 +47,14 @@ func shake(strength: float = 0.1, duration: float = 0.25) -> void:
 	if cam == null:
 		return
 
+	# Kill any running shake first or overlapping tweens leave the camera offset.
+	if _shake_tween != null and _shake_tween.is_valid():
+		_shake_tween.kill()
+	cam.h_offset = 0.0
+	cam.v_offset = 0.0
+
 	var t := create_tween()
+	_shake_tween = t
 	var steps := maxi(int(duration * 60.0), 4)
 
 	for i in steps:

@@ -4,10 +4,8 @@ extends Node3D
 signal clicked
 signal auto_spawn_requested(enemy_id: String, building: BuildingBase)
 
-const REFERENCE_SPRITE_WIDTH := 3242.0
-
 @export var building_id: String = ""
-var is_dragging: bool = false
+var is_ghost: bool = false
 var current_level: int = 1
 var current_cell: Vector2i = Vector2i(-1, -1)
 var suppress_next_click: bool = false
@@ -17,10 +15,10 @@ var active_enemy_count: int = 0
 var _spawn_timer: Timer
 var _next_spawn_index: int = 0
 
-@onready var grid_system: GridSystem = get_node("../GridSystem")
+var model: Node3D = null
+var _ghost_materials: Array[StandardMaterial3D] = []
 
-func is_overlapping() -> bool:
-	return $Area3D.get_overlapping_areas().size() > 1
+@onready var grid_system: GridSystem = get_node("../GridSystem")
 
 func get_data() -> BuildingData:
 	return GameData.BUILDINGS[building_id]
@@ -29,6 +27,10 @@ func upgrade() -> void:
 	current_level += 1
 	if not auto_spawn_enemy_ids.is_empty():
 		_start_spawning(get_data().levels[current_level - 1]["spawn_interval"])
+	if model != null:
+		var tween := create_tween()
+		tween.tween_property(model, "scale", model.scale * 1.15, 0.12)
+		tween.tween_property(model, "scale", model.scale, 0.18).set_trans(Tween.TRANS_BACK)
 
 ## Toggles whether `enemy_id` is one of the types this building auto-spawns.
 ## The single shared timer round-robins between every toggled-on type.
@@ -61,29 +63,67 @@ func on_enemy_defeated() -> void:
 	active_enemy_count = maxi(0, active_enemy_count - 1)
 
 func _ready() -> void:
+	if building_id == "":
+		return
+	_build_model()
+	if is_ghost:
+		_make_ghost_materials()
+		return
 	$Area3D.input_event.connect(_on_area_input_event)
 	_spawn_timer = Timer.new()
 	_spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 	add_child(_spawn_timer)
-	if building_id == "":
-		return
-	var tex := get_data().sprite_texture
-	if tex != null:
-		$Sprite3D.texture = tex
-		$Sprite3D.scale *= REFERENCE_SPRITE_WIDTH / tex.get_width()
-		_fit_collision_to_sprite(tex)
 	add_to_group("buildings")
 	_register_on_grid()
+	_play_spawn_pop()
 
-func _fit_collision_to_sprite(tex: Texture2D) -> void:
-	# ponytail: box collider sized/offset to match the billboard sprite's
-	# world bounds per-building (was a fixed 1x1x0.5 box shared across every
-	# building, so most of the visible sprite had no collider at all).
-	var world_size: Vector2 = Vector2(tex.get_width(), tex.get_height()) * $Sprite3D.pixel_size * $Sprite3D.scale.x
+func _build_model() -> void:
+	var scene := get_data().model_scene
+	if scene == null:
+		return
+	model = scene.instantiate()
+	add_child(model)
+	_fit_collision_to_model()
+
+## Merged AABB of the model's meshes drives the click collider.
+func _fit_collision_to_model() -> void:
+	var aabb := AABB()
+	var inv := global_transform.affine_inverse()
+	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
+		var local: Transform3D = inv * mesh_instance.global_transform
+		var mesh_aabb: AABB = local * mesh_instance.mesh.get_aabb()
+		aabb = mesh_aabb if aabb.size == Vector3.ZERO else aabb.merge(mesh_aabb)
+	if aabb.size == Vector3.ZERO:
+		return
 	var shape := BoxShape3D.new()
-	shape.size = Vector3(world_size.x, world_size.y, 1.0)
+	shape.size = aabb.size
 	$Area3D/CollisionShape3D.shape = shape
-	$Area3D/CollisionShape3D.position = Vector3(0, $Sprite3D.position.y, 0)
+	$Area3D/CollisionShape3D.position = aabb.get_center()
+
+## Ghost preview: duplicate every mesh material as semi-transparent so the
+## placement controller can tint them green/red without touching shared assets.
+func _make_ghost_materials() -> void:
+	_ghost_materials.clear()
+	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
+		var mat := StandardMaterial3D.new()
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_color = Color(1, 1, 1, 0.55)
+		mesh_instance.material_override = mat
+		_ghost_materials.append(mat)
+
+func set_ghost_valid(valid: bool) -> void:
+	var tint := Color(0.55, 1.0, 0.6, 0.55) if valid else Color(1.0, 0.4, 0.35, 0.55)
+	for mat in _ghost_materials:
+		mat.albedo_color = tint
+
+func _play_spawn_pop() -> void:
+	if model == null:
+		return
+	var final_scale := model.scale
+	model.scale = final_scale * 0.7
+	var tween := create_tween()
+	tween.tween_property(model, "scale", final_scale, 0.3) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _register_on_grid() -> void:
 	var cell := grid_system.world_to_grid(global_position)
@@ -101,11 +141,3 @@ func _on_area_input_event(_camera, _event, _event_pos, _normal, _shape_idx):
 			suppress_next_click = false
 			return
 		clicked.emit()
-		is_dragging = true
-
-func _process(delta: float) -> void:
-	if is_dragging:
-		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-			is_dragging = false
-		else:
-			print(is_dragging)
