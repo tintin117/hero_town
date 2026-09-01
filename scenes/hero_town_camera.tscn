@@ -2,10 +2,5 @@
 
 [ext_resource type="Script" uid="uid://daebiopk04x24" path="res://scenes/hero_town_camera.gd" id="1_g1ld8"]
 
-[node name="HeroTownCamera" type="Node3D" unique_id=1104525491]
+[node name="HeroTownCamera" type="Camera2D"]
 script = ExtResource("1_g1ld8")
-
-[node name="PerspectiveContainer" type="Node3D" parent="." unique_id=1166229881]
-unique_name_in_owner = true
-
-[node name="Camera3D" type="Camera3D" parent="PerspectiveContainer" unique_id=1462261868]

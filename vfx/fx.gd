@@ -41,17 +41,16 @@ func spawn(effect_name: String, global_pos: Vector2, opts: Dictionary = {}) -> F
 
 # --- Game feel -------------------------------------------------------------
 
-## Shake the active Camera3D. strength in pixels.
-func shake(strength: float = 0.1, duration: float = 0.25) -> void:
-	var cam := get_viewport().get_camera_3d()
+## Shake the active Camera2D. strength in pixels.
+func shake(strength: float = 3.0, duration: float = 0.25) -> void:
+	var cam := get_viewport().get_camera_2d()
 	if cam == null:
 		return
 
 	# Kill any running shake first or overlapping tweens leave the camera offset.
 	if _shake_tween != null and _shake_tween.is_valid():
 		_shake_tween.kill()
-	cam.h_offset = 0.0
-	cam.v_offset = 0.0
+	cam.offset = Vector2.ZERO
 
 	var t := create_tween()
 	_shake_tween = t
@@ -59,13 +58,10 @@ func shake(strength: float = 0.1, duration: float = 0.25) -> void:
 
 	for i in steps:
 		var falloff := 1.0 - float(i) / float(steps)
-		var off_x := randf_range(-1.0, 1.0) * strength * falloff
-		var off_y := randf_range(-1.0, 1.0) * strength * falloff
-		t.tween_property(cam, "h_offset", off_x, duration / steps)
-		t.parallel().tween_property(cam, "v_offset", off_y, duration / steps)
+		var off := Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * strength * falloff
+		t.tween_property(cam, "offset", off, duration / steps)
 
-	t.tween_property(cam, "h_offset", 0.0, duration / steps)
-	t.parallel().tween_property(cam, "v_offset", 0.0, duration / steps)
+	t.tween_property(cam, "offset", Vector2.ZERO, duration / steps)
 
 ## Freeze-frame: dip Engine.time_scale for a moment. Safe to call repeatedly.
 func hitstop(duration: float = 0.06, time_scale: float = 0.05) -> void:

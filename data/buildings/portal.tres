@@ -1,16 +1,15 @@
 [gd_resource type="Resource" script_class="BuildingData" format=3 uid="uid://2b6qhpt8if41"]
 
 [ext_resource type="Script" uid="uid://dcbovd2gbvd83" path="res://scripts/resources/building_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://dyeevlo6nxa0c" path="res://asset/hand_draw/level/castle_1_portal.png" id="2"]
-[ext_resource type="PackedScene" path="res://asset/kaykit/hexagon/buildings_red/building_tower_A_red.gltf" id="3"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Red Buildings/Tower.png" id="2"]
 
 [resource]
 script = ExtResource("1")
 id = "portal"
 display_name = "Portal"
 unlock_th_level = 1
+thumbnail = ExtResource("2")
 sprite_texture = ExtResource("2")
-model_scene = ExtResource("3")
 levels = Array[Dictionary]([{
 "active_slots": 5,
 "cost": 0,

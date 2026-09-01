@@ -7,15 +7,8 @@ extends Character
 @export var revive_delay: float = 5.0  ## seconds a downed hero rests before reviving at full hp
 
 const STAR_STAT_MULT := 0.5  # +50% max_hp/atk per star above 1
-const PATROL_HALF_RANGE := 3.0
+const PATROL_HALF_RANGE := 100.0  # px
 const PATROL_SPEED_MULT := 0.45
-
-const CLASS_MODELS := {
-	HeroData.HeroClass.WARRIOR: preload("res://asset/kaykit/adventurers/Knight.glb"),
-	HeroData.HeroClass.ROGUE: preload("res://asset/kaykit/adventurers/Rogue.glb"),
-	HeroData.HeroClass.MAGE: preload("res://asset/kaykit/adventurers/Mage.glb"),
-	HeroData.HeroClass.CLERIC: preload("res://asset/kaykit/adventurers/Barbarian.glb"),
-}
 
 var _patrol_dir: int = 1
 
@@ -26,16 +19,15 @@ func _ready() -> void:
 	add_to_group("heroes")
 	# Idle heroes stroll around where they spawned instead of standing frozen.
 	if absf(patrol_end_x - patrol_start_x) < 0.01:
-		patrol_start_x = clampf(global_position.x - PATROL_HALF_RANGE + randf_range(-0.8, 0.8),
+		patrol_start_x = clampf(global_position.x - PATROL_HALF_RANGE + randf_range(-25.0, 25.0),
 				PLAYFIELD_MIN_X, PLAYFIELD_MAX_X)
-		patrol_end_x = clampf(global_position.x + PATROL_HALF_RANGE + randf_range(-0.8, 0.8),
+		patrol_end_x = clampf(global_position.x + PATROL_HALF_RANGE + randf_range(-25.0, 25.0),
 				PLAYFIELD_MIN_X, PLAYFIELD_MAX_X)
 
 
-func _get_model_scene() -> PackedScene:
-	if hero_data == null:
-		return CLASS_MODELS[HeroData.HeroClass.WARRIOR]
-	return CLASS_MODELS.get(hero_data.hero_class, CLASS_MODELS[HeroData.HeroClass.WARRIOR])
+func _get_sprite_frames() -> SpriteFrames:
+	var hero_class := hero_data.hero_class if hero_data != null else HeroData.HeroClass.WARRIOR
+	return Art.hero_sprite_frames(hero_class)
 
 
 ## Applies hero_data's base stats, then this hero's class buff if active.
@@ -72,22 +64,25 @@ func _idle_move() -> void:
 
 func _patrol() -> void:
 	if absf(patrol_end_x - patrol_start_x) < 0.01:
-		velocity = Vector3.ZERO
+		velocity = Vector2.ZERO
 		return
 	if global_position.x >= patrol_end_x:
 		_patrol_dir = -1
 	elif global_position.x <= patrol_start_x:
 		_patrol_dir = 1
-	velocity = Vector3(_patrol_dir * move_speed * PATROL_SPEED_MULT, 0.0, 0.0)
+	velocity = Vector2(_patrol_dir * move_speed * PATROL_SPEED_MULT, 0.0)
 
 
 func _should_knockback(attacker: Character) -> bool:
 	return attacker is Enemy and attacker.is_boss
 
 
-## Falls where they stood (Death_A already playing from take_damage), then revives.
+## Falls, plays dead a moment, then revives.
 func _die() -> void:
 	collision_layer = 0
+	if sprite != null:
+		sprite.modulate = Color(0.5, 0.5, 0.5, 0.6)
+		sprite.rotation = deg_to_rad(-90.0)
 	get_tree().create_timer(revive_delay).timeout.connect(_revive)
 
 
@@ -99,13 +94,12 @@ func _revive() -> void:
 	collision_layer = HITBOX_LAYER
 	_update_health_bar()
 	_action_lock_until_msec = 0
-	if _anim != null:
-		_anim.play("Idle")
-	if model != null:
-		model.scale = Vector3.ONE * MODEL_SCALE * 0.3
+	if sprite != null:
+		sprite.rotation = 0.0
+		sprite.modulate = Color.WHITE
+		sprite.play("idle")
+		sprite.scale = Vector2.ONE * SPRITE_SCALE * 0.3
 		var tween := create_tween()
-		tween.tween_property(model, "scale", Vector3.ONE * MODEL_SCALE, 0.35) \
+		tween.tween_property(sprite, "scale", Vector2.ONE * SPRITE_SCALE, 0.35) \
 				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	var camera := get_viewport().get_camera_3d()
-	if camera != null:
-		fx.spawn("pickup_sparkle", camera.unproject_position(global_position + Vector3.UP))
+	fx.spawn("pickup_sparkle", global_position + Vector2(0, -60.0))

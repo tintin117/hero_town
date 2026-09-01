@@ -1,14 +1,13 @@
 class_name SkillHit
-extends Area3D
+extends Area2D
 
 ## Generic skill-cast hitbox: stationary (AOE) when speed == 0, otherwise
-## travels along direction (projectile). Debug-only box visual for now —
-## teammate swaps MeshInstance3D's material/mesh for real VFX later.
+## travels along direction (projectile).
 
 @export var damage: float = 0.0
-@export var radius: float = 2.0
+@export var radius: float = 40.0
 @export var speed: float = 0.0
-@export var direction: Vector3 = Vector3.FORWARD
+@export var direction: Vector2 = Vector2.DOWN
 @export var lifetime: float = 0.4
 @export var tick_interval: float = 0.0 ## 0 = single hit on contact; >0 = re-damage every interval while overlapping.
 @export var crit: bool = true
@@ -17,18 +16,15 @@ extends Area3D
 var caster: Character
 var target_group: String = ""
 
-@onready var _collision: CollisionShape3D = $CollisionShape3D
-@onready var _mesh: MeshInstance3D = $MeshInstance3D
+@onready var _collision: CollisionShape2D = $CollisionShape2D
 
 var _hit: Array[Character] = []
 
 
 func _ready() -> void:
-	var size := Vector3.ONE * radius * 2.0
-	(_collision.shape as BoxShape3D).size = size
-	(_mesh.mesh as BoxMesh).size = size
+	(_collision.shape as CircleShape2D).radius = radius
 	collision_layer = 0
-	collision_mask = 1 << 2
+	collision_mask = 1 << 2  # Character.HITBOX_LAYER
 	get_tree().create_timer(lifetime).timeout.connect(queue_free)
 
 	if tick_interval > 0.0:

@@ -1,21 +1,11 @@
 [gd_scene format=3 uid="uid://c7xu1ve1ul2f4"]
 
 [ext_resource type="Script" uid="uid://w2qnfusg2qqy" path="res://scripts/skill_hit.gd" id="1_aq5tn"]
-[ext_resource type="PackedScene" uid="uid://bhjuo0rcw7itg" path="res://vfx/effects/aoe/ripple_area/ripple_area_vfx_01.tscn" id="2_woen0"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_woen0"]
+[sub_resource type="CircleShape2D" id="CircleShape2D_woen0"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_2iruf"]
-
-[node name="SkillHit" type="Area3D" unique_id=1937452923]
+[node name="SkillHit" type="Area2D"]
 script = ExtResource("1_aq5tn")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=149138116]
-shape = SubResource("BoxShape3D_woen0")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=112448701]
-visible = false
-mesh = SubResource("BoxMesh_2iruf")
-
-[node name="RippleAreaVFX_01" parent="." unique_id=1979372650 instance=ExtResource("2_woen0")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0.39, 0)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_woen0")

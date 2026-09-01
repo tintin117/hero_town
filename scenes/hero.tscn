@@ -2,33 +2,34 @@
 
 [ext_resource type="Script" uid="uid://5bgnt1ojhhl5" path="res://scripts/hero.gd" id="1_yvbpl"]
 [ext_resource type="Resource" uid="uid://dyoj2lj6axl3h" path="res://data/skills/debug_nova.tres" id="3_y2sko"]
-[ext_resource type="Texture2D" uid="uid://bdh4gf17y2jyg" path="res://resources/textures/white.tres" id="4_mv13s"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_mv13s"]
-radius = 0.32
-height = 1.3
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mv13s"]
+radius = 12.0
+height = 40.0
 
-[node name="Hero" type="CharacterBody3D"]
+[node name="Hero" type="CharacterBody2D"]
 script = ExtResource("1_yvbpl")
 skill = ExtResource("3_y2sko")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
-shape = SubResource("CapsuleShape3D_mv13s")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -20)
+shape = SubResource("CapsuleShape2D_mv13s")
 
-[node name="CameraFacingContainer" type="Node3D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 
-[node name="HealthBarBg" type="Sprite3D" parent="CameraFacingContainer"]
-transform = Transform3D(1.1, 0, 0, 0, 0.1, 0, 0, 0, 1, 0, 1.7, -0.001)
-billboard = 1
-modulate = Color(0.1, 0.1, 0.1, 0.8)
-no_depth_test = true
-texture = ExtResource("4_mv13s")
+[node name="HealthBar" type="Node2D" parent="."]
+position = Vector2(0, -72)
 
-[node name="HealthBarFill" type="Sprite3D" parent="CameraFacingContainer"]
-transform = Transform3D(1.0, 0, 0, 0, 0.07, 0, 0, 0, 1, -0.5, 1.7, 0)
-billboard = 1
-centered = false
-modulate = Color(0, 1, 0, 1)
-no_depth_test = true
-texture = ExtResource("4_mv13s")
+[node name="Bg" type="ColorRect" parent="HealthBar"]
+offset_left = -28.0
+offset_top = -3.0
+offset_right = 28.0
+offset_bottom = 3.0
+color = Color(0.1, 0.1, 0.1, 0.8)
+
+[node name="Fill" type="ColorRect" parent="HealthBar"]
+offset_left = -28.0
+offset_top = -3.0
+offset_right = 28.0
+offset_bottom = 3.0
+color = Color(0, 1, 0, 1)

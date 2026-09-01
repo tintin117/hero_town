@@ -2,7 +2,7 @@ extends CanvasLayer
 
 ## Hero granted for free at game start (no hero-select UI yet -- pick one here).
 @export var starting_hero_id: String = "H001"
-@export var starting_hero_position: Vector3 = Vector3(-2.0, 0, 0.8)
+@export var starting_hero_position: Vector2 = Vector2(-64.0, 26.0)
 
 @onready var building_popup = $BuildingPopup
 @onready var build_menu_popup = $BuildPopup
@@ -36,18 +36,10 @@ func connect_building(building: BuildingBase) -> void:
 	building.auto_spawn_requested.connect(_on_spawn_requested)
 
 func _on_building_clicked(building: BuildingBase) -> void:
-	var camera = get_viewport().get_camera_3d()
-	if not camera:
-		return
-	var world_pos: Vector3 = building.global_transform.origin
-	var screen_pos: Vector2 = camera.unproject_position(world_pos)
-	var pixel_offset_y = 200
+	var world_pos: Vector2 = building.global_position
+	var screen_pos: Vector2 = get_viewport().get_canvas_transform() * world_pos
+	var pixel_offset_y = 140
 	screen_pos.y -= pixel_offset_y
-	if camera.is_position_behind(world_pos):
-		visible = false
-		return
-	else:
-		visible = true
 	var ui_size: Vector2 = building_popup.size
 	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
 	var top_left: Vector2 = screen_pos - ui_size / 2.0
@@ -68,7 +60,6 @@ func _on_placement_button_pressed() -> void:
 			"cost": data.build_cost,
 			"can_afford": GameState.can_afford(data.build_cost),
 			"thumbnail": data.thumbnail,
-			"model_scene": data.model_scene,
 		})
 	build_menu_popup.show_options(options)
 
@@ -93,13 +84,13 @@ func _enemy_scene(enemy_id: String) -> PackedScene:
 
 ## Enemies scatter around the whole portal, not just a pinpoint, so they approach heroes
 ## from different angles instead of a single straight line.
-const ENEMY_SPAWN_RADIUS := 2.0
+const ENEMY_SPAWN_RADIUS := 60.0
 
-## Random XZ offset within `radius` so units spawned at the same point don't stack.
-static func _spawn_jitter(radius: float) -> Vector3:
+## Random offset within `radius` so units spawned at the same point don't stack.
+static func _spawn_jitter(radius: float) -> Vector2:
 	var angle := randf() * TAU
 	var dist := randf_range(0.0, radius)
-	return Vector3(cos(angle), 0.0, sin(angle)) * dist
+	return Vector2(cos(angle), sin(angle)) * dist
 
 func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
 	var enemy_instance: Enemy = _enemy_scene(enemy_id).instantiate()
@@ -108,10 +99,10 @@ func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
 	enemy_instance.died.connect(building.on_enemy_defeated)
 	get_tree().current_scene.add_child.call_deferred(enemy_instance)
 
-func _spawn_hero(hero_id: String, at_position: Vector3) -> Hero:
+func _spawn_hero(hero_id: String, at_position: Vector2) -> Hero:
 	var hero_instance: Hero = _hero_scene(hero_id).instantiate()
 	hero_instance.hero_data = GameData.HEROES[hero_id]
-	hero_instance.position = at_position + _spawn_jitter(0.5)
+	hero_instance.position = at_position + _spawn_jitter(16.0)
 	get_tree().current_scene.add_child.call_deferred(hero_instance)
 	hero_instances[hero_id] = hero_instance
 	return hero_instance

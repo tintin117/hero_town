@@ -31,7 +31,7 @@ sfx="*res://scripts/sfx.gd"
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
-window/stretch/mode="viewport"
+window/stretch/mode="canvas_items"
 mouse_cursor/custom_image="uid://ctn20ajhfvcni"
 mouse_cursor/custom_image_hotspot=Vector2(22, 17)
 
@@ -73,3 +73,4 @@ move_down={
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+textures/canvas_textures/default_texture_filter=0

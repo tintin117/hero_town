@@ -5,7 +5,7 @@ func _ready() -> void:
 
 
 func _on_play_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/town_board.tscn")
+	get_tree().change_scene_to_file("res://scenes/town_2d.tscn")
 
 
 func _on_compact_button_pressed() -> void:
@@ -19,7 +19,7 @@ func _on_compact_button_pressed() -> void:
 	DisplayServer.window_set_position(Vector2i(0, sh - OVERLAY_H))
 	get_tree().root.transparent_bg = true
 	get_tree().root.content_scale_size = Vector2i(sw, OVERLAY_H)
-	get_tree().change_scene_to_file("res://scenes/town_board.tscn")
+	get_tree().change_scene_to_file("res://scenes/town_2d.tscn")
 	
 
 

@@ -1,14 +1,15 @@
 [gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/building_data.gd" id="1"]
-[ext_resource type="PackedScene" path="res://asset/kaykit/hexagon/buildings_blue/building_blacksmith_blue.gltf" id="2"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Barracks.png" id="2"]
 
 [resource]
 script = ExtResource("1")
 id = "blacksmith"
 display_name = "Blacksmith"
 build_cost = 600
-model_scene = ExtResource("2")
+thumbnail = ExtResource("2")
+sprite_texture = ExtResource("2")
 unlock_th_level = 3
 levels = Array[Dictionary]([{
 "cost": 0,
