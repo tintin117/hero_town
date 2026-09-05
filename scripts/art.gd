@@ -70,18 +70,6 @@ const BUILDING_TEXTURE := {
 	"tavern": "Blue Buildings/House1.png",
 }
 
-## 64x64 crops picked from Tilemap_color1.png that are interior to the big
-## grass/stone chunks (verified seamless when tiled -- see git history for the
-## swatch check). ponytail: hand-picked repeatable swatches, not a real
-## autotiled TileSet -- the pack's tileset is chunk-based (whole platform
-## pieces), not per-cell edge/corner bits, so true Godot terrain autotiling
-## doesn't apply cleanly here. Upgrade path: hand-author precise edge/corner
-## atlas regions if pixel-perfect shorelines matter later.
-const TILESET_IMAGE := TERRAIN_ROOT + "Tileset/Tilemap_color1.png"
-const GRASS_SWATCH := Rect2(96, 96, 64, 64)
-const STONE_SWATCH := Rect2(416, 256, 64, 64)
-const WATER_TILE := TERRAIN_ROOT + "Tileset/Water Background color.png"
-
 const ROCKS := [
 	DECOR_ROOT + "Rocks/Rock1.png",
 	DECOR_ROOT + "Rocks/Rock2.png",

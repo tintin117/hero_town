@@ -1,10 +1,10 @@
-[gd_scene format=3]
+[gd_scene format=4 uid="uid://c13te58sskhho"]
 
 [ext_resource type="Script" uid="uid://bt4mwi3rofoa3" path="res://scenes/placement_controller.gd" id="1_pc"]
 [ext_resource type="Script" uid="uid://dvtg33621yai" path="res://scenes/canvas_layer.gd" id="2_cl"]
 [ext_resource type="Script" uid="uid://ck6dbrlr66dpe" path="res://scenes/grid_system.gd" id="3_gs"]
-[ext_resource type="Script" path="res://scenes/board_2d.gd" id="4_bb"]
-[ext_resource type="Script" path="res://scenes/day_night.gd" id="5_dn"]
+[ext_resource type="Script" uid="uid://vcufuiqyikb5" path="res://scenes/board_2d.gd" id="4_bb"]
+[ext_resource type="Script" uid="uid://bvdjah3mj5ir8" path="res://scenes/day_night.gd" id="5_dn"]
 [ext_resource type="Script" uid="uid://dkvtaffew3mga" path="res://scenes/animation_button.gd" id="6_ab"]
 [ext_resource type="Script" uid="uid://dmfjis13on0fn" path="res://scenes/expand_button.gd" id="7_eb"]
 [ext_resource type="Script" uid="uid://jx3vlahkixwf" path="res://scripts/build_menu_popup.gd" id="8_bm"]
@@ -20,8 +20,33 @@
 [ext_resource type="PackedScene" uid="uid://cffl6fpbb8hhn" path="res://scenes/small_frame.tscn" id="18_smf"]
 [ext_resource type="PackedScene" uid="uid://lo102n04ypql" path="res://scenes/hero_town_camera.tscn" id="19_cam"]
 [ext_resource type="AudioStream" uid="uid://c0nxm6xkjxkwy" path="res://asset/audio/background/Moonlight market.mp3" id="20_mus"]
+[ext_resource type="Texture2D" uid="uid://tfn34criw4nj" path="res://asset/Tiny Swords (Free Pack)/Terrain/Tileset/Tilemap_color1.png" id="21_tsc1"]
+[ext_resource type="Texture2D" uid="uid://frrd4dbfq78y" path="res://asset/Tiny Swords (Free Pack)/Terrain/Tileset/Water Background color.png" id="22_water"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_eb1"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_grass"]
+texture = ExtResource("21_tsc1")
+texture_region_size = Vector2i(64, 64)
+margins = Vector2i(96, 96)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_stone"]
+texture = ExtResource("21_tsc1")
+texture_region_size = Vector2i(64, 64)
+margins = Vector2i(416, 256)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_water"]
+texture = ExtResource("22_water")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_terrain"]
+tile_size = Vector2i(64, 64)
+sources/0 = SubResource("TileSetAtlasSource_grass")
+sources/1 = SubResource("TileSetAtlasSource_stone")
+sources/2 = SubResource("TileSetAtlasSource_water")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h8wnm"]
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
@@ -32,32 +57,37 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="Town2D" type="Node2D"]
+[node name="Town2D" type="Node2D" unique_id=1194276045]
 
-[node name="TerrainLayer" type="Node2D" parent="."]
+[node name="Terrain" type="TileMapLayer" parent="." unique_id=324235035]
+position = Vector2(-384, -160)
+tile_map_data = PackedByteArray("AAD9//3/AgAAAAAAAAD9//7/AgAAAAAAAAD9////AgAAAAAAAAD9/wAAAgAAAAAAAAD9/wEAAgAAAAAAAAD9/wIAAgAAAAAAAAD9/wMAAgAAAAAAAAD9/wQAAgAAAAAAAAD9/wUAAgAAAAAAAAD9/wYAAgAAAAAAAAD9/wcAAgAAAAAAAAD+//3/AgAAAAAAAAD+//7/AgAAAAAAAAD+////AgAAAAAAAAD+/wAAAgAAAAAAAAD+/wEAAgAAAAAAAAD+/wIAAgAAAAAAAAD+/wMAAgAAAAAAAAD+/wQAAgAAAAAAAAD+/wUAAgAAAAAAAAD+/wYAAgAAAAAAAAD+/wcAAgAAAAAAAAD///3/AgAAAAAAAAD///7/AgAAAAAAAAD/////AQAAAAAAAAD//wAAAQAAAAAAAAD//wEAAQAAAAAAAAD//wIAAQAAAAAAAAD//wMAAQAAAAAAAAD//wQAAQAAAAAAAAD//wUAAQAAAAAAAAD//wYAAgAAAAAAAAD//wcAAgAAAAAAAAAAAP3/AgAAAAAAAAAAAP7/AgAAAAAAAAAAAP//AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAUAAQAAAAAAAAAAAAYAAgAAAAAAAAAAAAcAAgAAAAAAAAABAP3/AgAAAAAAAAABAP7/AgAAAAAAAAABAP//AQAAAAAAAAABAAAAAAAAAAAAAAABAAEAAAAAAAAAAAABAAIAAAAAAAAAAAABAAMAAAAAAAAAAAABAAQAAAAAAAAAAAABAAUAAQAAAAAAAAABAAYAAgAAAAAAAAABAAcAAgAAAAAAAAACAP3/AgAAAAAAAAACAP7/AgAAAAAAAAACAP//AQAAAAAAAAACAAAAAAAAAAAAAAACAAEAAAAAAAAAAAACAAIAAAAAAAAAAAACAAMAAAAAAAAAAAACAAQAAAAAAAAAAAACAAUAAQAAAAAAAAACAAYAAgAAAAAAAAACAAcAAgAAAAAAAAADAP3/AgAAAAAAAAADAP7/AgAAAAAAAAADAP//AQAAAAAAAAADAAAAAAAAAAAAAAADAAEAAAAAAAAAAAADAAIAAAAAAAAAAAADAAMAAAAAAAAAAAADAAQAAAAAAAAAAAADAAUAAQAAAAAAAAADAAYAAgAAAAAAAAADAAcAAgAAAAAAAAAEAP3/AgAAAAAAAAAEAP7/AgAAAAAAAAAEAP//AQAAAAAAAAAEAAAAAAAAAAAAAAAEAAEAAAAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAAAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAQAAAAAAAAAEAAYAAgAAAAAAAAAEAAcAAgAAAAAAAAAFAP3/AgAAAAAAAAAFAP7/AgAAAAAAAAAFAP//AQAAAAAAAAAFAAAAAAAAAAAAAAAFAAEAAAAAAAAAAAAFAAIAAAAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAAAAAAAAAAAFAAUAAQAAAAAAAAAFAAYAAgAAAAAAAAAFAAcAAgAAAAAAAAAGAP3/AgAAAAAAAAAGAP7/AgAAAAAAAAAGAP//AQAAAAAAAAAGAAAAAAAAAAAAAAAGAAEAAAAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAAAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAQAAAAAAAAAGAAYAAgAAAAAAAAAGAAcAAgAAAAAAAAAHAP3/AgAAAAAAAAAHAP7/AgAAAAAAAAAHAP//AQAAAAAAAAAHAAAAAAAAAAAAAAAHAAEAAAAAAAAAAAAHAAIAAAAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAAAAAAAAAAAHAAUAAQAAAAAAAAAHAAYAAgAAAAAAAAAHAAcAAgAAAAAAAAAIAP3/AgAAAAAAAAAIAP7/AgAAAAAAAAAIAP//AQAAAAAAAAAIAAAAAAAAAAAAAAAIAAEAAAAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAAAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAQAAAAAAAAAIAAYAAgAAAAAAAAAIAAcAAgAAAAAAAAAJAP3/AgAAAAAAAAAJAP7/AgAAAAAAAAAJAP//AQAAAAAAAAAJAAAAAAAAAAAAAAAJAAEAAAAAAAAAAAAJAAIAAAAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAAAAAAAAAAAJAAUAAQAAAAAAAAAJAAYAAgAAAAAAAAAJAAcAAgAAAAAAAAAKAP3/AgAAAAAAAAAKAP7/AgAAAAAAAAAKAP//AQAAAAAAAAAKAAAAAAAAAAAAAAAKAAEAAAAAAAAAAAAKAAIAAAAAAAAAAAAKAAMAAAAAAAAAAAAKAAQAAAAAAAAAAAAKAAUAAQAAAAAAAAAKAAYAAgAAAAAAAAAKAAcAAgAAAAAAAAALAP3/AgAAAAAAAAALAP7/AgAAAAAAAAALAP//AQAAAAAAAAALAAAAAAAAAAAAAAALAAEAAAAAAAAAAAALAAIAAAAAAAAAAAALAAMAAAAAAAAAAAALAAQAAAAAAAAAAAALAAUAAQAAAAAAAAALAAYAAgAAAAAAAAALAAcAAgAAAAAAAAAMAP3/AgAAAAAAAAAMAP7/AgAAAAAAAAAMAP//AQAAAAAAAAAMAAAAAQAAAAAAAAAMAAEAAQAAAAAAAAAMAAIAAQAAAAAAAAAMAAMAAQAAAAAAAAAMAAQAAQAAAAAAAAAMAAUAAQAAAAAAAAAMAAYAAgAAAAAAAAAMAAcAAgAAAAAAAAANAP3/AgAAAAAAAAANAP7/AgAAAAAAAAANAP//AgAAAAAAAAANAAAAAgAAAAAAAAANAAEAAgAAAAAAAAANAAIAAgAAAAAAAAANAAMAAgAAAAAAAAANAAQAAgAAAAAAAAANAAUAAgAAAAAAAAANAAYAAgAAAAAAAAANAAcAAgAAAAAAAAAOAP3/AgAAAAAAAAAOAP7/AgAAAAAAAAAOAP//AgAAAAAAAAAOAAAAAgAAAAAAAAAOAAEAAgAAAAAAAAAOAAIAAgAAAAAAAAAOAAMAAgAAAAAAAAAOAAQAAgAAAAAAAAAOAAUAAgAAAAAAAAAOAAYAAgAAAAAAAAAOAAcAAgAAAAAAAAA=")
+tile_set = SubResource("TileSet_terrain")
+
+[node name="TerrainLayer" type="Node2D" parent="." unique_id=568241351]
 script = ExtResource("4_bb")
 
-[node name="GridSystem" type="Node2D" parent="."]
+[node name="GridSystem" type="Node2D" parent="." unique_id=1538400833]
 script = ExtResource("3_gs")
 
-[node name="PlacementController" type="Node2D" parent="."]
+[node name="PlacementController" type="Node2D" parent="." unique_id=1540088220]
 script = ExtResource("1_pc")
 
-[node name="DayNight" type="CanvasModulate" parent="."]
+[node name="DayNight" type="CanvasModulate" parent="." unique_id=1006295703]
 script = ExtResource("5_dn")
 
-[node name="HeroTownCamera" parent="." instance=ExtResource("19_cam")]
+[node name="HeroTownCamera" parent="." unique_id=1752987849 instance=ExtResource("19_cam")]
 
-[node name="Music" type="AudioStreamPlayer" parent="."]
+[node name="Music" type="AudioStreamPlayer" parent="." unique_id=1593813975]
 stream = ExtResource("20_mus")
 volume_db = -10.0
 autoplay = true
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=249665458]
 script = ExtResource("2_cl")
 starting_hero_id = "H002"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer" unique_id=1626455798]
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -68,7 +98,7 @@ offset_bottom = -23.0
 grow_vertical = 0
 alignment = 1
 
-[node name="PlacementButton" type="TextureButton" parent="CanvasLayer/HBoxContainer"]
+[node name="PlacementButton" type="TextureButton" parent="CanvasLayer/HBoxContainer" unique_id=1206464806]
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 tooltip_text = "Place Building"
@@ -77,7 +107,7 @@ ignore_texture_size = true
 stretch_mode = 0
 script = ExtResource("6_ab")
 
-[node name="Coin_HUD" type="Control" parent="CanvasLayer"]
+[node name="Coin_HUD" type="Control" parent="CanvasLayer" unique_id=1248262299]
 light_mask = 2
 layout_mode = 3
 anchors_preset = 0
@@ -86,13 +116,13 @@ offset_top = 25.0
 offset_right = 26.0
 offset_bottom = 25.0
 
-[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/Coin_HUD"]
+[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/Coin_HUD" unique_id=368527405]
 z_index = 100
 position = Vector2(15, 14)
 scale = Vector2(2, 2)
 texture = ExtResource("12_i20")
 
-[node name="CurrencyLabel" type="Label" parent="CanvasLayer/Coin_HUD"]
+[node name="CurrencyLabel" type="Label" parent="CanvasLayer/Coin_HUD" unique_id=56539477]
 z_index = 100
 layout_mode = 0
 offset_left = 44.0
@@ -108,7 +138,7 @@ theme_override_font_sizes/font_size = 28
 text = "999"
 vertical_alignment = 1
 
-[node name="Shard_HUD" type="Control" parent="CanvasLayer"]
+[node name="Shard_HUD" type="Control" parent="CanvasLayer" unique_id=1639134699]
 light_mask = 2
 layout_mode = 3
 anchors_preset = 0
@@ -117,13 +147,13 @@ offset_top = 91.0
 offset_right = 26.0
 offset_bottom = 91.0
 
-[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/Shard_HUD"]
+[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/Shard_HUD" unique_id=1322479132]
 z_index = 100
 position = Vector2(16, 4)
 scale = Vector2(2, 2)
 texture = ExtResource("13_i21")
 
-[node name="ShardLabel" type="Label" parent="CanvasLayer/Shard_HUD"]
+[node name="ShardLabel" type="Label" parent="CanvasLayer/Shard_HUD" unique_id=1843470600]
 z_index = 100
 layout_mode = 0
 offset_left = 44.0
@@ -141,22 +171,22 @@ theme_override_font_sizes/font_size = 28
 text = "999"
 vertical_alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer" unique_id=572988182]
 visible = false
 offset_left = 12.0
 offset_top = 115.0
 offset_right = 52.0
 offset_bottom = 299.0
 
-[node name="ExpandButton" type="Button" parent="CanvasLayer/VBoxContainer"]
+[node name="ExpandButton" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=670366498]
 z_index = 3
 custom_minimum_size = Vector2(40, 43.805)
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_eb1")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_eb1")
-theme_override_styles/hover = SubResource("StyleBoxFlat_eb1")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_eb1")
-theme_override_styles/focus = SubResource("StyleBoxFlat_eb1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_h8wnm")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_h8wnm")
+theme_override_styles/hover = SubResource("StyleBoxFlat_h8wnm")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_h8wnm")
+theme_override_styles/focus = SubResource("StyleBoxFlat_h8wnm")
 clip_text = true
 script = ExtResource("7_eb")
 icon_texture = ExtResource("11_fc")
@@ -170,7 +200,7 @@ bg_color = Color(0, 0, 0, 0.4392157)
 bg_color_hover = Color(0, 0, 0, 0.4392157)
 preview_expanded = false
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/VBoxContainer/ExpandButton"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/VBoxContainer/ExpandButton" unique_id=1552991842]
 clip_contents = true
 layout_mode = 0
 offset_left = 4.0
@@ -180,7 +210,7 @@ offset_bottom = 42.0
 mouse_filter = 2
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/VBoxContainer/ExpandButton/HBox"]
+[node name="Icon" type="TextureRect" parent="CanvasLayer/VBoxContainer/ExpandButton/HBox" unique_id=176067833]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 mouse_filter = 2
@@ -188,7 +218,7 @@ texture = ExtResource("11_fc")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Label" type="Label" parent="CanvasLayer/VBoxContainer/ExpandButton/HBox"]
+[node name="Label" type="Label" parent="CanvasLayer/VBoxContainer/ExpandButton/HBox" unique_id=1569653544]
 modulate = Color(1, 1, 1, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("16_font")
@@ -197,22 +227,22 @@ text = "Place Building"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="CollapseTimer" type="Timer" parent="CanvasLayer/VBoxContainer/ExpandButton"]
+[node name="CollapseTimer" type="Timer" parent="CanvasLayer/VBoxContainer/ExpandButton" unique_id=129605677]
 wait_time = 0.08
 one_shot = true
 
-[node name="BuildPopup" parent="CanvasLayer" instance=ExtResource("17_bigf")]
+[node name="BuildPopup" parent="CanvasLayer" unique_id=18412256 instance=ExtResource("17_bigf")]
 mouse_filter = 2
 script = ExtResource("8_bm")
 
-[node name="CloseButton" type="Control" parent="CanvasLayer/BuildPopup"]
+[node name="CloseButton" type="Control" parent="CanvasLayer/BuildPopup" unique_id=282356664]
 z_index = 10
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_vertical = 0
 mouse_filter = 2
 
-[node name="Close" type="TextureButton" parent="CanvasLayer/BuildPopup/CloseButton"]
+[node name="Close" type="TextureButton" parent="CanvasLayer/BuildPopup/CloseButton" unique_id=1160991552]
 z_index = 100
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 0
@@ -225,17 +255,17 @@ ignore_texture_size = true
 stretch_mode = 0
 script = ExtResource("6_ab")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/BuildPopup"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/BuildPopup" unique_id=1677967993]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="LabelControl" type="Control" parent="CanvasLayer/BuildPopup/VBoxContainer"]
+[node name="LabelControl" type="Control" parent="CanvasLayer/BuildPopup/VBoxContainer" unique_id=1404555115]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 size_flags_vertical = 0
 mouse_filter = 2
 
-[node name="Label" type="Label" parent="CanvasLayer/BuildPopup/VBoxContainer/LabelControl"]
+[node name="Label" type="Label" parent="CanvasLayer/BuildPopup/VBoxContainer/LabelControl" unique_id=333511716]
 layout_mode = 0
 offset_top = 13.83
 offset_right = 408.0
@@ -251,24 +281,24 @@ text = "Frame Label"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Spacer" type="Control" parent="CanvasLayer/BuildPopup/VBoxContainer"]
+[node name="Spacer" type="Control" parent="CanvasLayer/BuildPopup/VBoxContainer" unique_id=1313332766]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="SelectionGrid" type="Control" parent="CanvasLayer/BuildPopup/VBoxContainer"]
+[node name="SelectionGrid" type="Control" parent="CanvasLayer/BuildPopup/VBoxContainer" unique_id=1947624463]
 custom_minimum_size = Vector2(310, 300)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/BuildPopup/VBoxContainer/SelectionGrid"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/BuildPopup/VBoxContainer/SelectionGrid" unique_id=1643955617]
 custom_minimum_size = Vector2(310, 300)
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="GridContainer" type="GridContainer" parent="CanvasLayer/BuildPopup/VBoxContainer/SelectionGrid/ScrollContainer"]
+[node name="GridContainer" type="GridContainer" parent="CanvasLayer/BuildPopup/VBoxContainer/SelectionGrid/ScrollContainer" unique_id=861724296]
 clip_contents = true
 layout_mode = 2
 mouse_filter = 0
@@ -276,17 +306,17 @@ theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
 columns = 3
 
-[node name="BuildingPopup" parent="CanvasLayer" instance=ExtResource("18_smf")]
+[node name="BuildingPopup" parent="CanvasLayer" unique_id=1351122220 instance=ExtResource("18_smf")]
 script = ExtResource("9_bp")
 
-[node name="CloseButton" type="Control" parent="CanvasLayer/BuildingPopup"]
+[node name="CloseButton" type="Control" parent="CanvasLayer/BuildingPopup" unique_id=144837043]
 z_index = 10
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_vertical = 0
 mouse_filter = 2
 
-[node name="Close" type="TextureButton" parent="CanvasLayer/BuildingPopup/CloseButton"]
+[node name="Close" type="TextureButton" parent="CanvasLayer/BuildingPopup/CloseButton" unique_id=1219894714]
 z_index = 100
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 0
@@ -299,17 +329,17 @@ ignore_texture_size = true
 stretch_mode = 0
 script = ExtResource("6_ab")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/BuildingPopup"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/BuildingPopup" unique_id=1326756592]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="LabelControl" type="Control" parent="CanvasLayer/BuildingPopup/VBoxContainer"]
+[node name="LabelControl" type="Control" parent="CanvasLayer/BuildingPopup/VBoxContainer" unique_id=857219424]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 size_flags_vertical = 0
 mouse_filter = 2
 
-[node name="Label" type="Label" parent="CanvasLayer/BuildingPopup/VBoxContainer/LabelControl"]
+[node name="Label" type="Label" parent="CanvasLayer/BuildingPopup/VBoxContainer/LabelControl" unique_id=1847537612]
 layout_mode = 0
 offset_left = 0.5
 offset_top = 16.500013
@@ -326,12 +356,12 @@ text = "Building Name"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LevelControl" type="Control" parent="CanvasLayer/BuildingPopup/VBoxContainer"]
+[node name="LevelControl" type="Control" parent="CanvasLayer/BuildingPopup/VBoxContainer" unique_id=1102303953]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="Level" type="Label" parent="CanvasLayer/BuildingPopup/VBoxContainer/LevelControl"]
+[node name="Level" type="Label" parent="CanvasLayer/BuildingPopup/VBoxContainer/LevelControl" unique_id=1015863908]
 clip_contents = true
 layout_mode = 1
 anchors_preset = 8
@@ -356,13 +386,13 @@ text = "Level"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SelectionGrid" type="Control" parent="CanvasLayer/BuildingPopup/VBoxContainer"]
+[node name="SelectionGrid" type="Control" parent="CanvasLayer/BuildingPopup/VBoxContainer" unique_id=693497870]
 custom_minimum_size = Vector2(300, 175)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/BuildingPopup/VBoxContainer/SelectionGrid"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/BuildingPopup/VBoxContainer/SelectionGrid" unique_id=393727630]
 custom_minimum_size = Vector2(280, 185)
 layout_mode = 0
 offset_left = 12.5
@@ -370,16 +400,16 @@ offset_top = 0.5
 offset_right = 292.5
 offset_bottom = 185.5
 
-[node name="GridContainer" type="VBoxContainer" parent="CanvasLayer/BuildingPopup/VBoxContainer/SelectionGrid/ScrollContainer"]
+[node name="GridContainer" type="VBoxContainer" parent="CanvasLayer/BuildingPopup/VBoxContainer/SelectionGrid/ScrollContainer" unique_id=167601537]
 clip_contents = true
 layout_mode = 2
 mouse_filter = 0
 
-[node name="ActionButton" type="Control" parent="CanvasLayer/BuildingPopup/VBoxContainer"]
+[node name="ActionButton" type="Control" parent="CanvasLayer/BuildingPopup/VBoxContainer" unique_id=110909857]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/BuildingPopup/VBoxContainer/ActionButton"]
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/BuildingPopup/VBoxContainer/ActionButton" unique_id=614417801]
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 0
 offset_left = 18.5
@@ -388,7 +418,7 @@ offset_right = 298.5
 offset_bottom = 40.5
 alignment = 1
 
-[node name="Upgrade" type="TextureButton" parent="CanvasLayer/BuildingPopup/VBoxContainer/ActionButton/HBoxContainer"]
+[node name="Upgrade" type="TextureButton" parent="CanvasLayer/BuildingPopup/VBoxContainer/ActionButton/HBoxContainer" unique_id=1362957303]
 z_index = 100
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -398,7 +428,7 @@ ignore_texture_size = true
 stretch_mode = 5
 script = ExtResource("6_ab")
 
-[node name="Move" type="TextureButton" parent="CanvasLayer/BuildingPopup/VBoxContainer/ActionButton/HBoxContainer"]
+[node name="Move" type="TextureButton" parent="CanvasLayer/BuildingPopup/VBoxContainer/ActionButton/HBoxContainer" unique_id=2132761912]
 z_index = 100
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -408,7 +438,7 @@ ignore_texture_size = true
 stretch_mode = 5
 script = ExtResource("6_ab")
 
-[node name="ClassSynergyHUD" type="Control" parent="CanvasLayer"]
+[node name="ClassSynergyHUD" type="Control" parent="CanvasLayer" unique_id=1601969159]
 layout_mode = 3
 anchors_preset = 0
 offset_left = 1720.0
@@ -416,10 +446,10 @@ offset_top = 25.0
 offset_right = 1720.0
 offset_bottom = 25.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ClassSynergyHUD"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ClassSynergyHUD" unique_id=1291568643]
 layout_mode = 0
 
-[node name="WarriorLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer"]
+[node name="WarriorLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer" unique_id=533884843]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -428,7 +458,7 @@ theme_override_fonts/font = ExtResource("16_font")
 theme_override_font_sizes/font_size = 20
 text = "Warrior 0/3"
 
-[node name="RogueLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer"]
+[node name="RogueLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer" unique_id=228065020]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -437,7 +467,7 @@ theme_override_fonts/font = ExtResource("16_font")
 theme_override_font_sizes/font_size = 20
 text = "Rogue 0/3"
 
-[node name="MageLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer"]
+[node name="MageLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer" unique_id=876236112]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -446,7 +476,7 @@ theme_override_fonts/font = ExtResource("16_font")
 theme_override_font_sizes/font_size = 20
 text = "Mage 0/3"
 
-[node name="ClericLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer"]
+[node name="ClericLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer" unique_id=1489171594]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)

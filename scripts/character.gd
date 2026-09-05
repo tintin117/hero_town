@@ -17,8 +17,8 @@ const PROJECTILE_SPEED := 420.0
 const PROJECTILE_HIT_RADIUS := 12.0
 const KNOCKBACK_FORCE := 160.0
 const KNOCKBACK_DURATION := 0.25
-## ponytail: matches the 12x5 board in town_2d.tscn (GridSystem CELL_SIZE=64,
-## centered on origin) with a small inset. If the board size changes, update these too.
+## ponytail: matches the 12x5 board in town_2d.tscn (Terrain TileMapLayer,
+## 64px tiles, centered on origin) with a small inset. If the board size changes, update these too.
 const PLAYFIELD_MIN_X := -370.0
 const PLAYFIELD_MAX_X := 370.0
 const PLAYFIELD_MIN_Y := -145.0

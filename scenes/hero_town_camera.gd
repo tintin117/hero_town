@@ -11,8 +11,8 @@ const ZOOM_OUT_LIMIT := 1.0
 const ZOOM_IN_LIMIT := 3.0
 const ZOOM_STEP := 0.2
 const ZOOM_DEFAULT := 2.0
-## ponytail: matches the 12x5 board in town_2d.tscn (GridSystem CELL_SIZE=64,
-## centered on origin). If the board size changes, update these too.
+## ponytail: matches the 12x5 board in town_2d.tscn (Terrain TileMapLayer,
+## 64px tiles, centered on origin). If the board size changes, update these too.
 const PAN_MIN := Vector2(-260.0, -100.0)
 const PAN_MAX := Vector2(260.0, 100.0)
 

@@ -3,8 +3,8 @@ extends Node2D
 const BuildingScene = preload("res://scenes/building_base.tscn")
 
 const PREBUILT_BUILDINGS := [
-	{"id": "town_hall", "cell": Vector2i(2, 1)},
-	{"id": "shrine", "cell": Vector2i(2, 3)},
+	{"id": "town_hall", "cell": Vector2i(1, 2)},
+	{"id": "shrine", "cell": Vector2i(3, 2)},
 ]
 
 @onready var grid_system: GridSystem = get_node("../GridSystem")
@@ -23,12 +23,12 @@ func _ready() -> void:
 	for entry in PREBUILT_BUILDINGS:
 		_spawn_building(entry.id, entry.cell)
 	# Portal sits on the rightmost column so spawned enemies walk left toward the city.
-	_spawn_building("portal", Vector2i(2, grid_system.grid_cols - 2))
+	_spawn_building("portal", Vector2i(grid_system.grid_size.x - 2, 2))
 
 func _spawn_building(building_id: String, cell: Vector2i) -> BuildingBase:
 	var building := BuildingScene.instantiate()
 	building.building_id = building_id
-	building.position = grid_system.grid_to_world(cell.x, cell.y)
+	building.position = grid_system.grid_to_world(cell)
 	get_parent().add_child.call_deferred(building)
 	canvas_layer.connect_building(building)
 	return building
@@ -52,7 +52,7 @@ func start_move(building: BuildingBase) -> void:
 		_cancel_placement()
 	move_target = building
 	move_origin_cell = building.current_cell
-	grid_system.clear(move_origin_cell.x, move_origin_cell.y)
+	grid_system.clear(move_origin_cell)
 	placement_mode = true
 	_last_hovered = Vector2i(-100, -100)
 	ghost = building
@@ -65,8 +65,8 @@ func _cancel_placement() -> void:
 	selected_building = null
 	grid_system.set_overlay(false)
 	if move_target != null:
-		move_target.position = grid_system.grid_to_world(move_origin_cell.x, move_origin_cell.y)
-		grid_system.occupy(move_origin_cell.x, move_origin_cell.y, move_target)
+		move_target.position = grid_system.grid_to_world(move_origin_cell)
+		grid_system.occupy(move_origin_cell, move_target)
 		move_target.get_node("Area2D").monitoring = true
 		move_target.get_node("Area2D").monitorable = true
 		move_target = null
@@ -82,7 +82,7 @@ func _process(_delta: float) -> void:
 	if cell == _last_hovered or cell == Vector2i(-1, -1):
 		return
 	_last_hovered = cell
-	var valid := grid_system.is_free(cell.x, cell.y) \
+	var valid := grid_system.is_free(cell) \
 			and (move_target != null or GameState.can_afford(selected_building.build_cost))
 	grid_system.set_highlight_color(valid)
 	if ghost is BuildingBase and ghost.is_ghost:
@@ -90,7 +90,7 @@ func _process(_delta: float) -> void:
 	if _snap_tween != null:
 		_snap_tween.kill()
 	_snap_tween = create_tween()
-	_snap_tween.tween_property(ghost, "position", grid_system.grid_to_world(cell.x, cell.y), 0.08)
+	_snap_tween.tween_property(ghost, "position", grid_system.grid_to_world(cell), 0.08)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not placement_mode:
@@ -101,13 +101,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed):
 		return
 	var cell := grid_system.hovered_cell
-	if cell == Vector2i(-1, -1) or not grid_system.is_free(cell.x, cell.y):
+	if cell == Vector2i(-1, -1) or not grid_system.is_free(cell):
 		_reject("Occupied!")
 		return
 	if move_target != null:
-		move_target.position = grid_system.grid_to_world(cell.x, cell.y)
+		move_target.position = grid_system.grid_to_world(cell)
 		move_target.current_cell = cell
-		grid_system.occupy(cell.x, cell.y, move_target)
+		grid_system.occupy(cell, move_target)
 		move_target.suppress_next_click = true
 		move_target.get_node("Area2D").monitoring = true
 		move_target.get_node("Area2D").monitorable = true
@@ -126,13 +126,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	_cancel_placement()
 
 func _confirm_fx(cell: Vector2i) -> void:
-	fx.spawn("smoke_pop", grid_system.grid_to_world(cell.x, cell.y))
+	fx.spawn("smoke_pop", grid_system.grid_to_world(cell))
 	fx.shake(3.0, 0.1)
 	sfx.play("place")
 
 func _reject(message: String) -> void:
 	sfx.play("error")
-	var reject_pos := grid_system.grid_to_world(grid_system.hovered_cell.x, grid_system.hovered_cell.y) \
+	var reject_pos := grid_system.grid_to_world(grid_system.hovered_cell) \
 			if grid_system.hovered_cell != Vector2i(-1, -1) and ghost == null \
 			else (ghost.position if ghost != null else Vector2.ZERO)
 	fx.popup(message, reject_pos + Vector2(0, -40), {"color": Color(1.0, 0.4, 0.35)})

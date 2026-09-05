@@ -112,7 +112,7 @@ func _register_on_grid() -> void:
 	if cell == Vector2i(-1, -1):
 		return
 	current_cell = cell
-	grid_system.occupy(cell.x, cell.y, self)
+	grid_system.occupy(cell, self)
 
 func _on_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
