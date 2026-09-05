@@ -30,48 +30,43 @@ Key files:
 - GDScript only
 - Godot AI MCP plugin (`addons/godot_ai`) — enables Claude Code to read/write scenes and scripts directly via the editor
 
-## Fresh Start: Full 3D
+## 2D Pixel Art (Tiny Swords)
 
-The project has restarted on a `Node3D`-based world. All prior `Node2D` gameplay (heroes, enemies,
-buildings, main loop) has been moved to `bck/` and is **not in use** — do not read, reference, or
-port logic from `bck/` unless explicitly asked. Treat it as archived material the user will
-cherry-pick from manually.
-
-- Build all world/placement/building features as `Node3D`.
-- UI (buttons, panels, HUD) stays `Control`/2D — that part of the stack is unchanged.
-- `run/main_scene` is `scenes/main_menu.tscn`; its Play/Compact buttons currently load
-  `scenes/test_3d_prototype.tscn` as a placeholder until a real 3D game scene exists.
+The project is built as a `Node2D` world using the Tiny Swords (Free Pack) CC0 asset pack
+(`asset/Tiny Swords (Free Pack)/`). The `run/main_scene` is `scenes/main_menu.tscn`; its Play/Compact
+buttons load `scenes/town_2d.tscn`, the active game scene.
 
 ## File Structure
 
 ```
 scenes/
   main_menu.tscn          — main menu screen (Control, entry point)
-  building_base.tscn      — Node3D building base (Area3D click/overlap detection + Sprite3D)
-  building_base.gd
-  layer.gd                 — slot-based world layer (occupied_slots, place_building)
-  placement_controller.gd  — drag-ghost placement + physics picking setup
-  test_3d_prototype.tscn   — active 3D scratch scene
-  build_menu_popup.tscn    — UI popup (Control)
-  building_popup.tscn      — UI popup (Control)
-  shrine.tscn               — UI popup (Control) [name is legacy, root is PanelContainer]
-  shrine_popup.tscn         — UI popup (Control)
+  town_2d.tscn             — active 2D game scene
+  board_2d.gd              — 2D board setup
+  grid_system.gd            — grid/slot logic
+  layer.gd                  — slot-based world layer (occupied_slots, place_building)
+  placement_controller.gd   — drag-ghost placement
+  building_base.tscn/.gd    — building base (Area2D click/hover + Sprite2D)
+  hero_town_camera.tscn/.gd — camera
+  day_night.gd               — day/night grading
+  hero.tscn / enemy.tscn     — hero/enemy scenes
+  build_menu_popup.tscn      — UI popup (Control)
+  building_popup.tscn        — UI popup (Control)
+  shrine_popup.tscn           — UI popup (Control)
 scripts/
   game_data.gd             — static data: HEROES, ENEMIES, BUILDINGS dicts
+  character.gd / hero.gd / enemy.gd — combat/movement logic
   main_menu.gd              — main menu: start / compact / quit
   build_menu_popup.gd
   building_popup.gd
   shrine_popup.gd
 addons/godot_ai/            — MCP plugin, do not modify
-bck/                         — archived Node2D prototype (main.gd, hero.gd, enemy.gd, building.gd,
-								town_hall.gd, portal.gd, shrine.gd, grid_overlay.gd, health_bar.gd,
-								and their scenes). Reference only if the user asks for it directly.
 ```
 
 ## Development Philosophy
 
-- **Build in phases** — only implement what's asked for right now; the old build-phase table is
-  gone along with the 2D prototype. Re-establish scope with the user as the 3D rebuild progresses.
+- **Build in phases** — only implement what's asked for right now. Re-establish scope with the
+  user as the 2D build progresses.
 - **No premature abstraction** — three similar lines beats a helper no one needs yet
 - **No speculative features** — hard cuts: no manual combat, no decorations, no dialogue trees
 
