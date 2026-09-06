@@ -4,7 +4,7 @@ const BuildingScene = preload("res://scenes/building_base.tscn")
 
 const PREBUILT_BUILDINGS := [
 	{"id": "town_hall", "cell": Vector2i(1, 2)},
-	{"id": "shrine", "cell": Vector2i(3, 2)},
+	{"id": "barracks", "cell": Vector2i(3, 2)},
 ]
 
 @onready var grid_system: GridSystem = get_node("../GridSystem")

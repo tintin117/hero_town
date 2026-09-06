@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/building_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Monastery.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = "barracks"
+display_name = "Barracks"
+build_cost = 0
+unlock_th_level = 2
+thumbnail = ExtResource("2")
+sprite_texture = ExtResource("2")
+hero_class = 0
+reward_pool = Array[Dictionary]([{
+"type": "tier_up",
+"weight": 25
+}, {
+"type": "count_up",
+"weight": 30
+}, {
+"type": "stat_buff",
+"stat": "atk",
+"pct": 15,
+"weight": 20
+}, {
+"type": "stat_buff",
+"stat": "max_hp",
+"pct": 15,
+"weight": 15
+}, {
+"type": "stat_buff",
+"stat": "atk_speed",
+"pct": 10,
+"weight": 10
+}])
+levels = Array[Dictionary]([{
+"cost": 0,
+"label": "Lv1"
+}, {
+"cost": 500,
+"label": "Lv2"
+}, {
+"cost": 1500,
+"label": "Lv3"
+}, {
+"cost": 4500,
+"label": "Lv4"
+}, {
+"cost": 12000,
+"label": "Lv5"
+}])

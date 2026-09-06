@@ -2,10 +2,7 @@ extends Control
 
 signal move_requested(building: BuildingBase)
 signal spawn_requested(enemy_id: String, building: BuildingBase)
-signal hero_acquired(hero_id: String, building: BuildingBase)
-signal hero_released(hero_id: String)
-
-const SHOP_SLOTS := 4
+signal hero_building_changed(building: BuildingBase)
 
 @onready var title_label: Label = $"../BuildingPopup/VBoxContainer/LabelControl/Label"
 @onready var level_label: Label = $"../BuildingPopup/VBoxContainer/LevelControl/Level"
@@ -13,8 +10,7 @@ const SHOP_SLOTS := 4
 @onready var content_list: VBoxContainer = $"../BuildingPopup/VBoxContainer/SelectionGrid/ScrollContainer/GridContainer"
 
 var building: BuildingBase = null
-var _shrine_result_text: String = ""
-var _shop_offers: Array[String] = []
+var _reward_offers: Array[Dictionary] = []
 var _upgrade_label: Label
 
 const TEXT_DARK := Color(0.24, 0.17, 0.1)
@@ -45,7 +41,7 @@ func _dark_label(text: String, min_width: float = 0.0) -> Label:
 
 func open(target: BuildingBase) -> void:
 	building = target
-	_shrine_result_text = ""
+	_reward_offers = []
 	_refresh()
 	visible = true
 	sfx.play("click")
@@ -70,8 +66,8 @@ func _refresh() -> void:
 
 	if building.building_id == "portal":
 		_refresh_enemy_list(data)
-	elif building.building_id == "shrine":
-		_refresh_shrine_content(data)
+	elif building.building_id == "barracks":
+		_refresh_hero_building_content(data)
 	else:
 		_refresh_level_info(data)
 
@@ -135,82 +131,40 @@ func _refresh_enemy_list(data: BuildingData) -> void:
 		content_list.add_child(row)
 
 
-func _refresh_shrine_content(data: BuildingData) -> void:
+## Shows the building's current active hero/tier, squad size, accumulated stat
+## buffs, and (once an upgrade has just been paid for) the 3 reward choices.
+func _refresh_hero_building_content(data: BuildingData) -> void:
 	for child in content_list.get_children():
 		child.queue_free()
 
-	var level_data: Dictionary = data.levels[building.current_level - 1]
-	var roll_gold: int = level_data["roll_gold"]
-	var roll_shard: int = level_data["roll_shard"]
+	var hero: HeroData = GameData.HEROES.get(building.active_hero_id())
+	if hero != null:
+		content_list.add_child(_dark_label(
+				"%s (%s)" % [hero.display_name, HeroData.Rarity.keys()[hero.rarity].capitalize()], 250.0))
+	content_list.add_child(_dark_label("Squad size: %d" % building.squad_count))
+	for stat in building.stat_buffs:
+		var pct := roundi((building.stat_buffs[stat] - 1.0) * 100.0)
+		content_list.add_child(_dark_label("%s +%d%%" % [str(stat).capitalize(), pct]))
 
-	if _shop_offers.is_empty():
-		_shop_offers = _generate_shop_offers(level_data)
-
-	var reroll_btn := Button.new()
-	reroll_btn.text = "Reroll  %dg + %ds" % [roll_gold, roll_shard]
-	reroll_btn.disabled = not GameState.can_afford(roll_gold, roll_shard)
-	reroll_btn.pressed.connect(_on_reroll_pressed)
-	content_list.add_child(reroll_btn)
-
-	for hero_id in _shop_offers:
-		var hero: HeroData = GameData.HEROES[hero_id]
-		var row := HBoxContainer.new()
-
-		var info := _dark_label("%s (%s, %s)" % [hero.display_name, HeroData.Rarity.keys()[hero.rarity].capitalize(), HeroData.HeroClass.keys()[hero.hero_class].capitalize()])
-		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(info)
-
-		var buy_btn := Button.new()
-		buy_btn.text = "Buy  %dg + %ds" % [roll_gold, roll_shard]
-		var is_new := not GameState.owned_heroes.has(hero_id)
-		buy_btn.disabled = not GameState.can_afford(roll_gold, roll_shard) or (is_new and GameState.is_roster_full())
-		buy_btn.pressed.connect(_on_buy_offer_pressed.bind(hero_id, roll_gold, roll_shard))
-		row.add_child(buy_btn)
-
-		content_list.add_child(row)
-
-	if not _shrine_result_text.is_empty():
-		var result_label := _dark_label(_shrine_result_text, 250.0)
-		result_label.add_theme_color_override("font_color", Color(0.5, 0.28, 0.08))
-		content_list.add_child(result_label)
-
-	content_list.add_child(_dark_label("Roster (%d/%d)" % [GameState.owned_heroes.size(), GameState.HERO_CAP]))
-
-	for hero_id in GameState.owned_heroes.keys():
-		var hero: HeroData = GameData.HEROES[hero_id]
-		var row := HBoxContainer.new()
-
-		var info := _dark_label("%s (%s) ★%d" % [hero.display_name, HeroData.HeroClass.keys()[hero.hero_class].capitalize(), GameState.owned_heroes[hero_id]])
-		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(info)
-
-		var release_btn := Button.new()
-		release_btn.text = "Release"
-		release_btn.pressed.connect(_on_release_pressed.bind(hero_id))
-		row.add_child(release_btn)
-
-		content_list.add_child(row)
+	if not _reward_offers.is_empty():
+		content_list.add_child(_dark_label("Choose a reward:", 250.0))
+		for reward in _reward_offers:
+			var btn := Button.new()
+			btn.text = _describe_reward(reward)
+			btn.pressed.connect(_on_reward_picked.bind(reward))
+			content_list.add_child(btn)
 
 
-## Picks SHOP_SLOTS random heroes weighted by the shrine level's rarity table.
-## Duplicate offers across slots are allowed, same as TFT-style shops.
-func _generate_shop_offers(level_data: Dictionary) -> Array[String]:
-	var offers: Array[String] = []
-	for i in SHOP_SLOTS:
-		var hero := _pick_weighted_hero(level_data)
-		if hero != null:
-			offers.append(hero.id)
-	return offers
-
-
-func _pick_weighted_hero(level_data: Dictionary) -> HeroData:
-	var rarity := _weighted_pick(level_data["weights"])
-	var pool: Array = GameData.HEROES.values().filter(func(h): return HeroData.Rarity.keys()[h.rarity].to_lower() == rarity)
-	if pool.is_empty():
-		pool = GameData.HEROES.values().filter(func(h): return h.rarity == HeroData.Rarity.COMMON)
-	if pool.is_empty():
-		return null
-	return pool[randi() % pool.size()]
+func _describe_reward(reward: Dictionary) -> String:
+	match reward["type"]:
+		"tier_up":
+			return "Unlock next tier"
+		"count_up":
+			return "+1 squad size"
+		"stat_buff":
+			return "+%d%% %s" % [reward["pct"], str(reward["stat"]).capitalize()]
+		_:
+			return "?"
 
 
 func _on_upgrade_button_pressed() -> void:
@@ -223,6 +177,8 @@ func _on_upgrade_button_pressed() -> void:
 	GameState.spend(cost)
 	building.upgrade()
 	sfx.play("upgrade")
+	if building.building_id == "barracks":
+		_reward_offers = building.roll_reward_offers()
 	_refresh()
 
 
@@ -235,64 +191,10 @@ func _on_close_button_pressed() -> void:
 	visible = false
 
 
-func _on_reroll_pressed() -> void:
-	var data := building.get_data()
-	var level_data: Dictionary = data.levels[building.current_level - 1]
-	var roll_gold: int = level_data["roll_gold"]
-	var roll_shard: int = level_data["roll_shard"]
-	if not GameState.can_afford(roll_gold, roll_shard):
-		return
-	GameState.spend(roll_gold, roll_shard)
-	_shop_offers = _generate_shop_offers(level_data)
-	_shrine_result_text = ""
-	_refresh()
-
-
-func _on_buy_offer_pressed(hero_id: String, cost_gold: int, cost_shard: int) -> void:
-	var hero: HeroData = GameData.HEROES[hero_id]
-	var prev_star: int = GameState.owned_heroes.get(hero_id, 0)
-	if not GameState.buy_hero(hero_id, cost_gold, cost_shard):
-		return
-	var new_star: int = GameState.owned_heroes.get(hero_id, 0)
-
-	if prev_star == 0:
-		_shrine_result_text = "New hero: %s (%s)!" % [hero.display_name, HeroData.Rarity.keys()[hero.rarity].capitalize()]
-		hero_acquired.emit(hero_id, building)
-	elif new_star > prev_star:
-		_shrine_result_text = "%s merged to ★%d!" % [hero.display_name, new_star]
-	else:
-		_shrine_result_text = "%s already at max ★%d! +%d shards" % [hero.display_name, GameState.MAX_STAR, hero.dupe_shard]
+func _on_reward_picked(reward: Dictionary) -> void:
+	building.apply_reward(reward)
+	_reward_offers = []
+	hero_building_changed.emit(building)
 	fx.spawn("pickup_sparkle", global_position + size * 0.5, {"parent": get_parent()})
-	fx.popup(_shrine_result_text, global_position + Vector2(size.x * 0.5, -20.0),
-			{"parent": get_parent(), "font_size": 20, "color": Color("#ffd23f")})
 	sfx.play("summon")
-
-	var data := building.get_data()
-	var level_data: Dictionary = data.levels[building.current_level - 1]
-	var slot := _shop_offers.find(hero_id)
-	if slot != -1:
-		var replacement := _pick_weighted_hero(level_data)
-		if replacement != null:
-			_shop_offers[slot] = replacement.id
 	_refresh()
-
-
-func _on_release_pressed(hero_id: String) -> void:
-	GameState.release_hero(hero_id)
-	hero_released.emit(hero_id)
-	_refresh()
-
-
-func _weighted_pick(weights: Dictionary) -> String:
-	var total := 0
-	for w in weights.values():
-		total += w as int
-	if total == 0:
-		return "common"
-	var roll := randi() % total
-	var acc := 0
-	for rarity in weights:
-		acc += weights[rarity] as int
-		if roll < acc:
-			return rarity
-	return "common"

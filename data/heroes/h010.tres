@@ -13,7 +13,3 @@ base_power = 36.0
 power_per_level = 5.3
 base_hp = 170.0
 atk_speed = 2.1
-upgrade_gold_base = 160
-upgrade_shard_base = 16
-dupe_shard = 45
-th_unlock = 3

@@ -2,11 +2,12 @@ class_name Hero
 extends Character
 
 @export var hero_data: HeroData
+## The building this hero's tier/count/stat buffs come from (see BuildingBase.stat_buffs).
+@export var source_building: BuildingBase
 @export var patrol_start_x: float = 0.0
 @export var patrol_end_x: float = 0.0
 @export var revive_delay: float = 5.0  ## seconds a downed hero rests before reviving at full hp
 
-const STAR_STAT_MULT := 0.5  # +50% max_hp/atk per star above 1
 const PATROL_HALF_RANGE := 100.0  # px
 const PATROL_SPEED_MULT := 0.45
 
@@ -30,24 +31,24 @@ func _get_sprite_frames() -> SpriteFrames:
 	return Art.hero_sprite_frames(hero_class)
 
 
-## Applies hero_data's base stats, then this hero's class buff if active.
+## Applies hero_data's base stats, then this hero's source building's stat buffs.
 ## Resets to hero_data's raw values first, so re-running never stacks a buff twice.
-## Safe to call anytime after spawn (e.g. on roster changes) without touching current hp.
+## Safe to call anytime after spawn (e.g. after an upgrade reward) without touching current hp.
 func apply_hero_data() -> void:
 	if hero_data == null:
 		return
-	var star: int = GameState.owned_heroes.get(hero_data.id, 1)
-	var star_mult := 1.0 + (star - 1) * STAR_STAT_MULT
-	max_hp = hero_data.base_hp * star_mult
-	atk = hero_data.base_power * star_mult
-	atk_speed = hero_data.atk_speed
+	max_hp = hero_data.base_hp * _building_mult("max_hp")
+	atk = hero_data.base_power * _building_mult("atk")
+	atk_speed = hero_data.atk_speed * _building_mult("atk_speed")
 	mana_per_hit = hero_data.mana_per_hit
 	is_ranged = hero_data.unit_type == HeroData.UnitType.RANGED
 	attack_range = RANGED_ATTACK_RANGE if is_ranged else MELEE_ATTACK_RANGE
-	if GameState.has_class_buff(hero_data.hero_class):
-		var buff: Dictionary = GameState.CLASS_BUFFS.get(hero_data.hero_class, {})
-		if buff.has("stat"):
-			set(buff["stat"], get(buff["stat"]) * buff["mult"])
+
+
+func _building_mult(stat: String) -> float:
+	if source_building == null:
+		return 1.0
+	return source_building.stat_buffs.get(stat, 1.0)
 
 
 func _update_move(_delta: float) -> void:

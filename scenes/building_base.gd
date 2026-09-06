@@ -12,6 +12,13 @@ var current_level: int = 1
 var current_cell: Vector2i = Vector2i(-1, -1)
 var suppress_next_click: bool = false
 
+## Hero-producing buildings only (see BuildingData.hero_class): which rarity tier
+## is currently active, how many copies fight at once, and accumulated stat buffs
+## (stat name -> cumulative multiplier) picked from past upgrade rewards.
+var tier: int = 0
+var squad_count: int = 1
+var stat_buffs: Dictionary = {}
+
 var auto_spawn_enemy_ids: Array[String] = []
 var active_enemy_count: int = 0
 var _spawn_timer: Timer
@@ -61,6 +68,57 @@ func _on_spawn_timer_timeout() -> void:
 
 func on_enemy_defeated() -> void:
 	active_enemy_count = maxi(0, active_enemy_count - 1)
+
+## The hero_id whose class matches this building and whose rarity matches `tier`.
+## Empty string if no such hero is authored (shouldn't happen for tier 0).
+func active_hero_id() -> String:
+	var hero_class: HeroData.HeroClass = get_data().hero_class
+	for hero: HeroData in GameData.HEROES.values():
+		if hero.hero_class == hero_class and hero.rarity == tier:
+			return hero.id
+	return ""
+
+func _has_next_tier() -> bool:
+	var hero_class: HeroData.HeroClass = get_data().hero_class
+	for hero: HeroData in GameData.HEROES.values():
+		if hero.hero_class == hero_class and hero.rarity == tier + 1:
+			return true
+	return false
+
+## Weighted-picks up to 3 distinct rewards from this building's reward_pool,
+## dropping "tier_up" once there's no next rarity authored for this class.
+func roll_reward_offers() -> Array[Dictionary]:
+	var remaining: Array = get_data().reward_pool.filter(
+			func(r): return r["type"] != "tier_up" or _has_next_tier())
+	var offers: Array[Dictionary] = []
+	for i in mini(3, remaining.size()):
+		var pick: Dictionary = _weighted_pick(remaining)
+		offers.append(pick)
+		remaining.erase(pick)
+	return offers
+
+func _weighted_pick(pool: Array) -> Dictionary:
+	var total := 0
+	for entry in pool:
+		total += entry.get("weight", 1) as int
+	var roll := randi() % maxi(total, 1)
+	var acc := 0
+	for entry in pool:
+		acc += entry.get("weight", 1) as int
+		if roll < acc:
+			return entry
+	return pool.back()
+
+func apply_reward(reward: Dictionary) -> void:
+	match reward["type"]:
+		"tier_up":
+			tier += 1
+		"count_up":
+			squad_count += 1
+		"stat_buff":
+			var stat: String = reward["stat"]
+			var pct: float = reward["pct"]
+			stat_buffs[stat] = stat_buffs.get(stat, 1.0) * (1.0 + pct / 100.0)
 
 func _ready() -> void:
 	if building_id == "":

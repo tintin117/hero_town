@@ -15,7 +15,3 @@ enum UnitType { MELEE, RANGED }
 @export var base_hp: float
 @export var atk_speed: float
 @export var mana_per_hit: float = 20.0
-@export var upgrade_gold_base: int
-@export var upgrade_shard_base: int
-@export var dupe_shard: int
-@export var th_unlock: int

@@ -65,7 +65,7 @@ const TIER_UNIT := {
 const BUILDING_TEXTURE := {
 	"town_hall": "Blue Buildings/Castle.png",
 	"portal": "Red Buildings/Tower.png",
-	"shrine": "Blue Buildings/Monastery.png",
+	"barracks": "Blue Buildings/Monastery.png",
 	"blacksmith": "Blue Buildings/Barracks.png",
 	"tavern": "Blue Buildings/House1.png",
 }

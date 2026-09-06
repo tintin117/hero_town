@@ -85,7 +85,6 @@ autoplay = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=249665458]
 script = ExtResource("2_cl")
-starting_hero_id = "H002"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer" unique_id=1626455798]
 anchors_preset = 2
@@ -437,53 +436,6 @@ texture_normal = ExtResource("15_i08")
 ignore_texture_size = true
 stretch_mode = 5
 script = ExtResource("6_ab")
-
-[node name="ClassSynergyHUD" type="Control" parent="CanvasLayer" unique_id=1601969159]
-layout_mode = 3
-anchors_preset = 0
-offset_left = 1720.0
-offset_top = 25.0
-offset_right = 1720.0
-offset_bottom = 25.0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ClassSynergyHUD" unique_id=1291568643]
-layout_mode = 0
-
-[node name="WarriorLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer" unique_id=533884843]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("16_font")
-theme_override_font_sizes/font_size = 20
-text = "Warrior 0/3"
-
-[node name="RogueLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer" unique_id=228065020]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("16_font")
-theme_override_font_sizes/font_size = 20
-text = "Rogue 0/3"
-
-[node name="MageLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer" unique_id=876236112]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("16_font")
-theme_override_font_sizes/font_size = 20
-text = "Mage 0/3"
-
-[node name="ClericLabel" type="Label" parent="CanvasLayer/ClassSynergyHUD/VBoxContainer" unique_id=1489171594]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("16_font")
-theme_override_font_sizes/font_size = 20
-text = "Cleric 0/3"
 
 [connection signal="pressed" from="CanvasLayer/HBoxContainer/PlacementButton" to="CanvasLayer" method="_on_placement_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/BuildingPopup/CloseButton/Close" to="CanvasLayer/BuildingPopup" method="_on_close_button_pressed"]

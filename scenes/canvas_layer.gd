@@ -1,39 +1,26 @@
 extends CanvasLayer
 
-## Hero granted for free at game start (no hero-select UI yet -- pick one here).
-@export var starting_hero_id: String = "H001"
-@export var starting_hero_position: Vector2 = Vector2(-64.0, 26.0)
-
 @onready var building_popup = $BuildingPopup
 @onready var build_menu_popup = $BuildPopup
 @onready var placement_controller = $"../PlacementController"
 @onready var currency_label: Label = $"Coin_HUD/CurrencyLabel"
 @onready var shard_label: Label = $"Shard_HUD/ShardLabel"
 
-@onready var warrior_label: Label = $ClassSynergyHUD/VBoxContainer/WarriorLabel
-@onready var rogue_label: Label = $ClassSynergyHUD/VBoxContainer/RogueLabel
-@onready var mage_label: Label = $ClassSynergyHUD/VBoxContainer/MageLabel
-@onready var cleric_label: Label = $ClassSynergyHUD/VBoxContainer/ClericLabel
-
-var hero_instances: Dictionary = {}  # hero_id -> Hero
+var hero_instances: Dictionary = {}  # BuildingBase -> Array[Hero]
 
 func _ready() -> void:
 	build_menu_popup.build_requested.connect(_on_build_requested)
 	building_popup.move_requested.connect(_on_move_requested)
 	building_popup.spawn_requested.connect(_on_spawn_requested)
-	building_popup.hero_acquired.connect(_on_hero_acquired)
-	building_popup.hero_released.connect(_on_hero_released)
+	building_popup.hero_building_changed.connect(_sync_hero_building)
 	GameState.currency_changed.connect(_on_currency_changed)
-	GameState.roster_changed.connect(_recompute_all_hero_stats)
 	_on_currency_changed(GameState.gold, GameState.shard)
-	_update_class_hud()
-	if GameState.owned_heroes.is_empty():
-		GameState.grant_hero(starting_hero_id)
-		_spawn_hero(starting_hero_id, starting_hero_position)
 
 func connect_building(building: BuildingBase) -> void:
 	building.clicked.connect(_on_building_clicked.bind(building))
 	building.auto_spawn_requested.connect(_on_spawn_requested)
+	if building.building_id == "barracks":
+		_sync_hero_building(building)
 
 func _on_building_clicked(building: BuildingBase) -> void:
 	var world_pos: Vector2 = building.global_position
@@ -99,47 +86,28 @@ func _on_spawn_requested(enemy_id: String, building: BuildingBase) -> void:
 	enemy_instance.died.connect(building.on_enemy_defeated)
 	get_tree().current_scene.add_child.call_deferred(enemy_instance)
 
-func _spawn_hero(hero_id: String, at_position: Vector2) -> Hero:
+func _spawn_hero(hero_id: String, at_position: Vector2, source_building: BuildingBase) -> Hero:
 	var hero_instance: Hero = _hero_scene(hero_id).instantiate()
 	hero_instance.hero_data = GameData.HEROES[hero_id]
+	hero_instance.source_building = source_building
 	hero_instance.position = at_position + _spawn_jitter(16.0)
 	get_tree().current_scene.add_child.call_deferred(hero_instance)
-	hero_instances[hero_id] = hero_instance
 	return hero_instance
 
-func _on_hero_acquired(hero_id: String, building: BuildingBase) -> void:
-	_spawn_hero(hero_id, building.global_position)
-
-func _on_hero_released(hero_id: String) -> void:
-	if hero_instances.has(hero_id):
-		hero_instances[hero_id].queue_free()
-		hero_instances.erase(hero_id)
-
-## Re-derives stats for every spawned hero (class buff thresholds may have changed).
-## Leaves current hp untouched so a buff never heals/resets a hero mid-fight.
-func _recompute_all_hero_stats() -> void:
-	for hero_id in hero_instances.keys():
-		if not is_instance_valid(hero_instances[hero_id]):
-			hero_instances.erase(hero_id)
-			continue
-		hero_instances[hero_id].apply_hero_data()
-	_update_class_hud()
-
-func _update_class_hud() -> void:
-	var counts := GameState.get_class_counts()
-	for entry in [
-		[HeroData.HeroClass.WARRIOR, warrior_label, "Warrior"],
-		[HeroData.HeroClass.ROGUE, rogue_label, "Rogue"],
-		[HeroData.HeroClass.MAGE, mage_label, "Mage"],
-		[HeroData.HeroClass.CLERIC, cleric_label, "Cleric"],
-	]:
-		var cls: HeroData.HeroClass = entry[0]
-		var label: Label = entry[1]
-		var display: String = entry[2]
-		var count: int = counts.get(cls, 0)
-		var buffed := GameState.has_class_buff(cls)
-		label.text = "%s %d/%d%s" % [display, count, GameState.CLASS_BUFF_THRESHOLD, " ✓" if buffed else ""]
-		label.modulate = Color.GREEN if buffed else Color.WHITE
+## Grows/shrinks `building`'s squad to match its current squad_count, and
+## re-derives stats/hero_data on already-alive members (e.g. after a tier_up or
+## stat_buff reward). Leaves current hp untouched so a buff never heals mid-fight.
+func _sync_hero_building(building: BuildingBase) -> void:
+	var squad: Array = hero_instances.get(building, []).filter(func(h): return is_instance_valid(h))
+	var hero_id := building.active_hero_id()
+	for hero: Hero in squad:
+		hero.hero_data = GameData.HEROES[hero_id]
+		hero.apply_hero_data()
+	while squad.size() < building.squad_count:
+		squad.append(_spawn_hero(hero_id, building.global_position, building))
+	while squad.size() > building.squad_count:
+		squad.pop_back().queue_free()
+	hero_instances[building] = squad
 
 
 var _last_gold := -1
