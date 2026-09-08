@@ -1,0 +1,36 @@
+{
+  "frontier": "OWNED  Sunlit Meadow\n+5 gold/min   •   1 plot\n\nOWNED  Amber Quarry\n+5 gold/min   •   1 plot\n\n03  River Watch\n+10 gold/min   •   2 plots\nFour armored guards. A deeper frontline and healing can outlast them.\n\nNext reward is permanent.\nNo troops or land lost on defeat.",
+  "notice": "Saved. Your preparation is underway.",
+  "now": 1788888641.379,
+  "state": {
+    "academy": true,
+    "battle": {
+
+    },
+    "development": 0.0,
+    "gold": 83.7280000249406,
+    "healing": false,
+    "last": 1788888641.362,
+    "mages": 1,
+    "owned": 2.0,
+    "plots": 1.0,
+    "projects": {
+      "academy": {
+        "cost": 60,
+        "duration": 300.0,
+        "key": "healing",
+        "remaining": 288.065999984741
+      },
+      "barracks": {
+        "cost": 40,
+        "duration": 180.0,
+        "key": "warriors",
+        "remaining": 137.21799993515
+      }
+    },
+    "recovery": 44.5539999008179,
+    "result": "VICTORY  •  Amber Quarry\nEnemy formation defeated. Your entire army returns safely.\nFireball damage: 120   •   Health restored: 0\nArmy and land preserved. Training resumes during recovery.",
+    "spell": "fireball",
+    "warriors": 5.0
+  }
+}

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c43mlsgtljbyj"]
+
+[ext_resource type="Script" uid="uid://bcf4yir651yyo" path="res://conquest/companion.gd" id="1"]
+
+[node name="GrowingBannerCompanion" type="Node2D" unique_id=613875653]
+script = ExtResource("1")

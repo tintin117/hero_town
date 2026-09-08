@@ -1,0 +1,14 @@
+# Local review captures and temporary playtest state; source and fixtures stay tracked.
+*.png
+*.png.import
+*.jpg
+*.jpg.import
+*.log
+playtest-*.json
+playtest-closed-utc.txt
+playtest.tscn
+user-save-before-playtest.json
+test_save.json
+return-check-save.json
+companion-check-save.json
+companion-qa.json
