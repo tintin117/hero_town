@@ -32,10 +32,11 @@ func click_world(point: Vector2, button: MouseButton = MOUSE_BUTTON_LEFT) -> voi
 	await frames()
 
 func _ready() -> void:
-	if not OS.get_cmdline_user_args().has("--test"):
+	if not GameState.is_test_session():
 		get_tree().quit(1)
 		return
 	GameState.persistence_enabled = false
+	GameState.set_reorganizing(true)
 	GameState.gold = 100000
 	GameState.cleared_stage = 20
 	GameState.farm_stage = 19
@@ -46,6 +47,21 @@ func _ready() -> void:
 	await frames()
 	get_tree().current_scene = town
 	town.director.set_physics_process(false)
+	var records_before := GameState.buildings.duplicate(true)
+	var gold_before_layout := GameState.gold
+	for landscape in 3:
+		GameState.update_setting("landscape", landscape)
+		await frames()
+		var scenery: Node2D = town.get_node("Scenery")
+		var grounded := true
+		for x in range(-570, 561, 16):
+			var column := floori((x + 640) / 32.0)
+			grounded = grounded and scenery.ground_top[column] * 32 <= -80 and scenery.ground_bottom[column] * 32 >= 112
+		check(grounded, "Landscape %d covers the full battle and formation corridor" % landscape)
+		check(scenery.landscape == landscape, "Landscape switches immediately")
+	check(GameState.buildings == records_before and GameState.gold == gold_before_layout, "Landscape changes preserve armies, placement, research and gold")
+	GameState.update_setting("landscape", 0)
+	get_tree().root.min_size = Vector2i.ZERO # Exercise each requested native test size.
 	var hud: Control = town.hud
 	for size_now in [Vector2i(1280, 720), Vector2i(1920, 1080), Vector2i(960, 540), Vector2i(1280, 260), Vector2i(800, 260)]:
 		get_tree().root.size = size_now
@@ -56,7 +72,7 @@ func _ready() -> void:
 				print(child.get_class(), " ", child.get("text"), " ", child.size, " min ", child.get_combined_minimum_size())
 		check(hud.top.get_rect().end.x <= size_now.x + 1, "Top bar fits %s" % size_now)
 		check(hud.bottom.get_rect().end.y <= size_now.y + 1, "Bottom bar fits %s" % size_now)
-		check(hud.top.get_rect().end.y < hud.bottom.position.y, "HUD leaves battlefield visible")
+		check(hud.bottom.get_rect().end.y < hud.top.position.y, "HUD leaves battlefield visible")
 		if size_now.y < 500: continue # Native expansion is checked separately on Windows.
 		for kind in ["build", "research", "options", "report"]:
 			match kind:
@@ -100,6 +116,7 @@ func _ready() -> void:
 	GameState.purchase_research("army_005", "damage_1")
 	check(not GameState.get_building("army_001").research.has("damage_1"), "Research stays on selected duplicate")
 	hud.close_panel()
+	GameState.set_reorganizing(false)
 	town.director.start_now()
 	var before: int = town.director.simulation.alive_count(0)
 	var first_unit: Dictionary = town.director.simulation.units[0]

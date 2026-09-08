@@ -41,6 +41,7 @@ func _ready() -> void:
 	town.director.phase_changed.connect(refresh_panel)
 	town.director.battle_finished.connect(_on_result)
 	get_viewport().size_changed.connect(_layout)
+	GameState.settings_changed.connect(_layout)
 	_layout()
 
 func _label(text: String, size: int = 17, color: Color = INK) -> Label:
@@ -85,15 +86,12 @@ func _build_hud() -> void:
 	row.add_child(phase_label)
 	_spacer(row)
 	row.add_child(_button("Build", open_build))
-	row.add_child(_button("Research", func(): open_research(selected_army)))
+	row.add_child(_button("Buildings", func(): open_research(selected_army)))
 	start_button = _button("Start now", func(): town.director.start_now())
 	row.add_child(start_button)
 	mode_button = _button("Farm", func(): GameState.set_advancing(not GameState.advancing))
 	row.add_child(mode_button)
-	expand_button = _button("Compact", func():
-		close_panel()
-		town.cancel_placement()
-		town.desktop.toggle())
+	expand_button = _button("Arrange", _toggle_arrange)
 	row.add_child(expand_button)
 	row.add_child(_button("Options", open_options))
 	bottom = PanelContainer.new()
@@ -104,7 +102,6 @@ func _build_hud() -> void:
 	hint_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	hint_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom_row.add_child(hint_label)
-	bottom_row.add_child(_button("Report", open_report))
 	for strip in [top, bottom]:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color("263a3b")
@@ -133,15 +130,12 @@ func _build_hud() -> void:
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: close_panel())
 	panel = PanelContainer.new()
 	overlay.add_child(panel)
-	# Crop the existing wood-table frame, excluding the transparent atlas border.
-	var frame := StyleBoxTexture.new()
-	var atlas := AtlasTexture.new()
-	atlas.atlas = preload("res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Wood Table/WoodTable.png")
-	atlas.region = Rect2(48, 48, 352, 368)
-	frame.texture = atlas
-	for edge in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-		frame.set_texture_margin(edge, 28)
-		frame.set_content_margin(edge, 20)
+	var frame := StyleBoxFlat.new()
+	frame.bg_color = Color("30291f")
+	frame.border_color = Color("9b8b5d")
+	frame.set_border_width_all(2)
+	frame.set_corner_radius_all(5)
+	for edge in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]: frame.set_content_margin(edge, 18)
 	panel.add_theme_stylebox_override("panel", frame)
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 12)
@@ -160,37 +154,46 @@ func _build_hud() -> void:
 
 func _layout() -> void:
 	var size_now := get_viewport_rect().size
-	top.position = Vector2(8, 6)
-	top.size = Vector2(size_now.x - 16, 48)
-	bottom.position = Vector2(8, size_now.y - 52)
-	bottom.size = Vector2(size_now.x - 16, 46)
+	start_button.visible = false
+	mode_button.visible = not GameState.settings.compact
+	var strip_width := minf(820 if GameState.settings.compact else 1100, size_now.x - 16)
+	top.position = Vector2((size_now.x - strip_width) * 0.5, size_now.y - 50)
+	top.size = Vector2(strip_width, 44)
+	bottom.position = Vector2((size_now.x - strip_width) * 0.5, size_now.y - 80)
+	bottom.size = Vector2(strip_width, 28)
 	panel.size = Vector2(minf(940, size_now.x - 24), minf(680, size_now.y - 24))
 	panel.position = (size_now - panel.size) * 0.5
 	var boss_box: Control = $BossHUD
 	boss_box.position = Vector2(size_now.x * 0.5 - 150, 57)
-	phase_label.custom_minimum_size.x = 180 if size_now.x >= 1000 else 125
-	gold_label.custom_minimum_size.x = 100 if size_now.x >= 1000 else 80
+	phase_label.custom_minimum_size.x = 260 if size_now.x >= 1000 else 160
+	gold_label.custom_minimum_size.x = 135 if size_now.x >= 1000 else 100
 	phase_label.add_theme_font_size_override("font_size", 16 if size_now.x >= 1000 else 14)
 	(top.get_child(0) as HBoxContainer).add_theme_constant_override("separation", 8 if size_now.x >= 1000 else 4)
 	theme.default_font_size = 17 if size_now.x >= 1000 else 14
 	gold_label.add_theme_font_size_override("font_size", 20 if size_now.x >= 1000 else 17)
 	# Theme/minimum-size changes settle after this resize notification.
-	top.set_deferred("size", Vector2(size_now.x - 16, 48))
+	top.set_deferred("size", Vector2(strip_width, 44))
+	town.desktop.update_mouse_region.call_deferred()
 
 func _process(delta: float) -> void:
 	toast_remaining = maxf(0, toast_remaining - delta)
-	gold_label.text = "%s gold" % _number(GameState.gold)
+	gold_label.text = "%sg · S%d" % [_number(GameState.gold), town.director.stage_number]
 	var director: BattleDirector = town.director
 	var stage: StageData = GameData.STAGES[director.stage_number]
-	phase_label.text = "Stage %d/20 · %s %ds" % [director.stage_number, {"PREPARE":"Prepare", "BATTLE":"Battle", "RESULTS":"Rest"}[director.phase], ceili(director.remaining)]
-	if get_viewport_rect().size.x < 1000:
-		phase_label.text = "S%d · %s %ds" % [director.stage_number, {"PREPARE":"Ready", "BATTLE":"Fight", "RESULTS":"Rest"}[director.phase], ceili(director.remaining)]
+	phase_label.text = GameState.objective_text()
+	phase_label.tooltip_text = phase_label.text
 	start_button.disabled = director.phase != "PREPARE" or GameState.buildings.is_empty()
 	mode_button.text = "Farm" if GameState.advancing else "Challenge"
 	mode_button.disabled = GameState.cleared_stage >= 20
-	expand_button.text = "Expand" if GameState.settings.compact else "Compact"
+	expand_button.text = "Resume" if GameState.reorganizing else "Arrange"
+	expand_button.tooltip_text = "Hold after this battle to reorganize and refund safely"
 	hint_label.text = toast_text if toast_remaining > 0 else _hint()
-	$BossHUD.visible = director.phase == "BATTLE" and not stage.boss.is_empty()
+	var hint_was_visible := bottom.visible
+	bottom.visible = not GameState.settings.compact or toast_remaining > 0 or GameState.tutorial < 1 or GameState.reorganizing or not GameState.save_error.is_empty()
+	if bottom.visible != hint_was_visible: town.desktop.update_mouse_region.call_deferred()
+	start_button.visible = false
+	mode_button.visible = not GameState.settings.compact
+	$BossHUD.visible = director.phase == "BATTLE" and not stage.boss.is_empty() and not GameState.settings.compact
 	if $BossHUD.visible and director.simulation != null:
 		for unit in director.simulation.units:
 			if not unit.get("boss", "").is_empty():
@@ -199,11 +202,12 @@ func _process(delta: float) -> void:
 				break
 
 func _hint() -> String:
+	if GameState.reorganizing: return "Regrouping after this battle…" if town.director.phase == "BATTLE" else "Reorganizing · refunds available · Resume when ready"
 	if not GameState.save_error.is_empty(): return "Unsaved progress: " + GameState.save_error
 	if not town.placement_type.is_empty() or not town.move_id.is_empty(): return "Choose a free town tile · Right-click / Escape cancels"
 	match GameState.tutorial:
 		0: return "Welcome to Hero Town. Build your first Barracks to recruit three Warriors."
-		1: return "Your army is ready. Start now or let the preparation countdown finish."
+		1: return "Your recruits fight automatically. Click their building to improve the army."
 		2: return "Victory! Open Research and choose a Crew, Rarity, or Training node."
 	if GameState.cleared_stage >= 20: return "The frontier is safe! Demo complete · Your armies continue farming gold."
 	if GameState.buildings.size() == 1 and GameState.cleared_stage >= 2: return "Rangers unlocked! Place a Range behind your Warriors to add ranged support."
@@ -292,7 +296,7 @@ func open_research(instance_id: String = "") -> void:
 	for view: ArmyBuildingView in town.building_views.values():
 		view.selected = view.record.id == selected_army
 		view.queue_redraw()
-	_open("research", "Army research")
+	_open("research", "Building workshop")
 	var selector := OptionButton.new()
 	selector.custom_minimum_size.y = 36
 	for record in GameState.buildings:
@@ -306,8 +310,18 @@ func open_research(instance_id: String = "") -> void:
 	var building: BuildingData = GameData.BUILDINGS[record.type]
 	var hero: HeroData = GameData.hero_for(record.type, TownRules.rarity(record))
 	var stats := TownRules.stats(hero, record)
+	content.add_child(_paragraph(_role_text(record.type)))
 	content.add_child(_label("Per soldier: %d HP · %.0f damage · %.2fs attack interval" % [stats.hp, stats.damage, stats.interval], 17, MUTED))
 	var tree_body := _scroll(content)
+	if record.type == "barracks":
+		var spec := OptionButton.new()
+		for title in ["Balanced · standard Warrior", "Bulwark · stronger protection", "Vanguard · stronger damage"]: spec.add_item(title)
+		spec.select(["balanced","bulwark","vanguard"].find(record.get("specialization","balanced")))
+		spec.item_selected.connect(func(index):
+			GameState.set_specialization(selected_army,["balanced","bulwark","vanguard"][index])
+			toast("Specialization changed free · takes effect next battle."))
+		tree_body.add_child(spec)
+		tree_body.add_child(_paragraph("Bulwark: +30% HP, -10% damage, 40% nearby guard. Vanguard: +30% damage, -10% HP, 15% guard. Balanced guard: 25%. Free to switch; training improves guard further."))
 	var research_scroll := tree_body.get_parent() as ScrollContainer
 	research_scroll.name = "ResearchScroll"
 	research_scroll.set_deferred("scroll_vertical", _tree_scroll_positions.get(selected_army, 0))
@@ -326,7 +340,7 @@ func open_research(instance_id: String = "") -> void:
 		for node: ResearchNodeData in GameData.research_for(building):
 			if (branch == "training" and node.branch in TownRules.TRAINING) or node.branch == branch:
 				var owned: bool = record.research.has(node.id)
-				var button := _button(("✓ " if owned else "") + node.title, func():
+				var button := _button(("✓ " if owned else "") + node.title + ("" if owned else " · %dg" % node.cost), func():
 					selected_node = node.id
 					open_research(selected_army))
 				button.add_theme_font_size_override("font_size", 15)
@@ -344,11 +358,17 @@ func open_research(instance_id: String = "") -> void:
 	detail.add_child(details)
 	details.add_child(_label(node.title + " · " + str(node.cost) + " gold", 20, GOLD))
 	details.add_child(_paragraph(node.description + " " + _node_effect(record, building, node)))
+	var affordability := ProgressBar.new()
+	affordability.max_value = maxi(1,node.cost)
+	affordability.value = mini(GameState.gold,node.cost)
+	affordability.custom_minimum_size.y = 8
+	affordability.show_percentage = false
+	details.add_child(affordability)
 	var reason: String = GameState.research_error(selected_army, selected_node)
-	details.add_child(_label(reason if not reason.is_empty() else "Ready to research. Takes effect next round during combat.", 15, MUTED))
+	details.add_child(_label(reason if not reason.is_empty() else "%d/%d gold · Ready. Applies next battle." % [mini(GameState.gold,node.cost),node.cost], 15, MUTED))
 	var actions := HBoxContainer.new()
 	content.add_child(actions)
-	var buy := _button("Research · %d gold" % node.cost, func():
+	var buy := _button("Improve · %d gold" % node.cost, func():
 		var response: Dictionary = GameState.purchase_research(selected_army, selected_node)
 		toast("Research complete." if response.ok else response.message)
 		if response.ok: sfx.play("upgrade"))
@@ -360,9 +380,10 @@ func open_research(instance_id: String = "") -> void:
 	var reset := _button("Refund %d gold" % refund, func():
 		var response: Dictionary = GameState.refund_research(selected_army)
 		toast("Research refunded. Away earning rate resumes after your next victory." if response.ok else response.message))
-	reset.disabled = town.director.phase != "PREPARE" or refund == 0
-	reset.tooltip_text = "Preparation only. Returns recorded research spending; preserves the building."
+	reset.disabled = town.director.phase != "PREPARE" or not GameState.reorganizing or refund == 0
+	reset.tooltip_text = "Choose Arrange, then wait for this battle to finish. Returns recorded spending; preserves the building."
 	actions.add_child(reset)
+	actions.add_child(_button("Pin goal", func(): GameState.pin_upgrade(selected_army,selected_node)))
 
 func _node_effect(record: Dictionary, data: BuildingData, node: ResearchNodeData) -> String:
 	if node.branch == "crew": return "Crew %d → %d." % [TownRules.crew(record, data), mini(6, data.starting_crew + node.rank)]
@@ -373,6 +394,18 @@ func _node_effect(record: Dictionary, data: BuildingData, node: ResearchNodeData
 func open_options() -> void:
 	_open("options", "Companion settings")
 	var body := _scroll(content)
+	body.add_child(_button("Return to companion" if not GameState.settings.compact else "Open full window", func():
+		close_panel()
+		town.cancel_placement()
+		town.desktop.toggle()))
+	body.add_child(_button("Battle report", open_report))
+	body.add_child(_button("Challenge next stage", func(): GameState.set_advancing(true)))
+	body.add_child(_label("Landscape", 20, GOLD))
+	var landscapes := OptionButton.new()
+	for title in ["Waterside village", "Terraced castle town", "Scattered hamlet"]: landscapes.add_item(title)
+	landscapes.select(int(GameState.settings.landscape))
+	landscapes.item_selected.connect(func(index): GameState.update_setting("landscape", index))
+	body.add_child(landscapes)
 	body.add_child(_label("Master volume", 20, GOLD))
 	var volume := HSlider.new()
 	volume.min_value = 0
@@ -382,7 +415,7 @@ func open_options() -> void:
 	volume.custom_minimum_size.y = 35
 	volume.value_changed.connect(func(value): GameState.update_setting("volume", value))
 	body.add_child(volume)
-	for entry in [["always_on_top", "Keep the game above other windows"], ["reduced_effects", "Reduce particles and effects"]]:
+	for entry in [["always_on_top", "Keep the game above other windows"], ["reduced_effects", "Reduce ambient animation and effects"]]:
 		var button := CheckButton.new()
 		button.text = entry[1]
 		button.button_pressed = GameState.settings[entry[0]]
@@ -406,7 +439,7 @@ func open_options() -> void:
 	stages.disabled = stages.item_count == 0
 	stages.item_selected.connect(func(index): GameState.select_farm(stages.get_item_id(index)))
 	body.add_child(stages)
-	body.add_child(_paragraph("Away earnings use half your measured ordinary-battle rate, including preparation and recovery, for up to eight hours. Bosses and new stages need the game running."))
+	body.add_child(_paragraph("Away earnings use half your measured ordinary-battle rate, including the short recovery transition, for up to eight hours. Bosses and new stages need the game running."))
 	body.add_child(_button("Save and quit", func():
 		GameState.request_quit()))
 
@@ -416,7 +449,7 @@ func _on_result(report: Dictionary) -> void:
 	if report.won:
 		var unlock := ""
 		if report.first_clear:
-			unlock = {2: " · Rangers unlocked!", 4: " · Clerics unlocked!", 7: " · Lancers unlocked!", 5: " · Four army slots!", 10: " · Six army slots!", 15: " · Eight army slots!", 20: " · Demo complete!"}.get(report.stage, "")
+			unlock = {2: " · Rangers unlocked!", 4: " · Clerics unlocked!", 7: " · Lancers unlocked!", 5: " · East Commons opened — fourth army plot!", 10: " · Six army slots!", 15: " · Eight army slots!", 20: " · Demo complete!"}.get(report.stage, "")
 		toast("%s cleared · +%d gold%s" % [stage.title, report.gold, unlock])
 		sfx.play("coin")
 		if not GameState.settings.reduced_effects:
@@ -449,3 +482,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_pressed() and event.keycode == KEY_ESCAPE and overlay.visible:
 		close_panel()
 		get_viewport().set_input_as_handled()
+
+func _toggle_arrange() -> void:
+	GameState.set_reorganizing(not GameState.reorganizing)
+	toast("Regroup after this battle; then move buildings or refund research." if GameState.reorganizing else "Army resumed · battles start automatically.")
+
+func _role_text(type: String) -> String:
+	var role: String = {"barracks":"Warriors · frontline protection and close combat", "mage_tower":"Rangers · rear-line ranged damage and three-target volley", "cleric_hall":"Clerics · keep injured allies fighting with healing", "rogue_den":"Lancers · reach through clustered enemies with piercing attacks"}.get(type,"Army")
+	return role + ". Building position sets deployment; changes and recruits join next battle."

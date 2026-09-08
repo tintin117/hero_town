@@ -58,3 +58,13 @@ Commands and scene responsibilities are in [REMASTER.md](REMASTER.md). When runn
 The host prints a root-certificate-store warning during headless initialization. This is separate from the game's checks and does not occur in the native graphics run.
 
 Human review remains useful for combat readability, sound balance, companion-mode comfort, and progression choices. No game screenshots were captured; layout validation used control bounds and native window properties.
+
+
+## Companion redesign follow-up (Godot 4.6.3)
+
+The later visual redesign has rendered native captures and updated checks: 169 game/persistence, 162 UI, and 21 desktop checks pass. See [COMPANION_REDESIGN.md](COMPANION_REDESIGN.md) for the three landscapes, actual-size screenshots, capacity measurement, and explicit native click-through validation limits. The no-screenshot note above describes only the earlier baseline.
+
+
+## Building prototype follow-up — 2026-09-08
+
+Current gameplay validation supersedes the historical cadence/pacing above: 29 focused prototype assertions, 169 game/save checks, 177 UI checks, and 21 native desktop checks passed through Godot MCP. Three specialization policies clear stage 20 in 35–37 minutes. See [BUILDING_PROTOTYPE.md](BUILDING_PROTOTYPE.md) for scope, screenshots, pacing, and remaining human playtest questions. Prior endurance measurements were not rerun for this update.

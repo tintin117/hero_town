@@ -15,7 +15,7 @@ func reset_state() -> void:
 	GameState.persistence_enabled = false
 
 func _ready() -> void:
-	if not OS.get_cmdline_user_args().has("--test"):
+	if not GameState.is_test_session():
 		push_error("Tests require -- --test to protect the player save.")
 		get_tree().quit(1)
 		return
@@ -39,6 +39,7 @@ func _run() -> void:
 	check(GameState.purchase_research(placed.id, "damage_1").ok, "First research affordable")
 	check(not GameState.purchase_research(placed.id, "damage_1").ok, "Duplicate purchase rejected")
 	check(not GameState.purchase_research(placed.id, "rarity_1").ok, "Rarity gate enforced")
+	GameState.set_reorganizing(true)
 	check(GameState.refund_research(placed.id).gold == 50, "Exact research refund")
 	check(GameState.refund_research(placed.id).gold == 0, "Refund cannot be duplicated")
 	var sim := BattleSimulation.new()
@@ -91,6 +92,7 @@ func _transactions() -> void:
 	GameState.phase = "BATTLE"
 	check(not GameState.refund_research("army_001").ok, "Refund locked in battle")
 	GameState.phase = "PREPARE"
+	GameState.set_reorganizing(true)
 	GameState.refund_research("army_001")
 	check(GameState.samples.is_empty(), "Refund invalidates measured earnings")
 	check(not GameState.get_building("army_002").research.is_empty(), "Refund preserves other armies")
@@ -184,7 +186,14 @@ func _save_and_offline() -> void:
 	check(is_equal_approx(GameState.offline_rate(), 1.0), "Offline rate is half the measured gold rate")
 	check(GameState.offline_reward(10000, 1000).gold == 9000, "Offline amount uses elapsed time")
 	check(GameState.offline_reward(100000, 1000).gold == 28800, "Offline amount caps at eight hours")
+	GameState.update_setting("landscape", 2)
 	var saved := GameState.serialize(1000)
+	var legacy := saved.duplicate(true)
+	legacy.settings.erase("landscape")
+	check(GameState.valid_save(legacy), "Existing saves without a landscape remain valid")
+	GameState.deserialize(legacy)
+	check(GameState.settings.landscape == 0, "Existing saves default to waterside without resetting progression")
+	GameState.deserialize(saved)
 	var invalid := saved.duplicate(true)
 	invalid.settings.volume = {}
 	check(not GameState.valid_save(invalid), "Invalid settings rejected without conversion errors")
@@ -203,6 +212,7 @@ func _save_and_offline() -> void:
 	check(GameState.save_game(1000), "Save writes successfully")
 	GameState.gold = 999
 	check(GameState.load_game(1100), "Save reload succeeds")
+	check(GameState.settings.landscape == 2, "Landscape choice survives the real save and reload path")
 	check(GameState.gold == 150, "Offline gold added to saved balance")
 	check(GameState.load_game(1100) and GameState.gold == 150, "Repeated load cannot duplicate offline credit")
 	GameState.gold = 175

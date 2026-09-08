@@ -1,8 +1,8 @@
 class_name TownRules
 extends RefCounted
 
-const PREP_SECONDS := 20.0
-const RESULT_SECONDS := 5.0
+const PREP_SECONDS := 0.0
+const RESULT_SECONDS := 0.8
 const MAX_CREW := 6
 const MAX_ENEMIES := 20
 const OFFLINE_CAP := 28800.0
@@ -50,9 +50,11 @@ static func rarity(record: Dictionary) -> int:
 	return mini(4, training_rank(record, "rarity"))
 
 static func stats(hero: HeroData, record: Dictionary) -> Dictionary:
+	var specialization: String = record.get("specialization", "balanced") if record.type == "barracks" else "balanced"
 	return {
-		"hp": hero.base_hp * (1.0 + 0.2 * training_rank(record, "health")),
-		"damage": hero.base_power * (1.0 + 0.2 * training_rank(record, "damage")),
+		"guard_strength": 0.40 if specialization == "bulwark" else (0.15 if specialization == "vanguard" else 0.25),
+		"hp": (1.30 if specialization == "bulwark" else (0.90 if specialization == "vanguard" else 1.0)) * hero.base_hp * (1.0 + 0.2 * training_rank(record, "health")),
+		"damage": (1.30 if specialization == "vanguard" else (0.90 if specialization == "bulwark" else 1.0)) * hero.base_power * (1.0 + 0.2 * training_rank(record, "damage")),
 		"interval": hero.atk_speed / (1.0 + 0.15 * training_rank(record, "haste")),
 		"specialty": 1.0 + 0.25 * training_rank(record, "specialty"),
 	}

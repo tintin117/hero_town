@@ -9,7 +9,7 @@ signal settings_changed
 signal save_failed(message: String)
 signal battle_mode_selected(advance_enabled: bool)
 
-const DEFAULT_SETTINGS := {"volume": 0.55, "always_on_top": true, "reduced_effects": false, "compact": false, "compact_height": 260}
+const DEFAULT_SETTINGS := {"volume": 0.55, "always_on_top": true, "reduced_effects": false, "compact": false, "compact_height": 260, "landscape": 0}
 var gold: int = 150
 var shard: int = 0 # Retired prototype compatibility; the demo uses only gold.
 var buildings: Array[Dictionary] = []
@@ -31,11 +31,13 @@ var save_path: String = "user://hero_town_v1.json"
 var save_error: String = ""
 var _checkpoint: float = 0.0
 var quitting: bool = false
+var reorganizing: bool = false
+var pinned_goal: Dictionary = {}
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
 	get_tree().root.close_requested.connect(func(): request_quit())
-	persistence_enabled = not OS.get_cmdline_user_args().has("--test")
+	persistence_enabled = not is_test_session()
 	if persistence_enabled:
 		load_game()
 
@@ -133,6 +135,7 @@ func purchase_research(instance_id: String, node_id: String) -> Dictionary:
 	var node: ResearchNodeData = GameData.RESEARCH[node_id]
 	gold -= node.cost
 	record.research[node_id] = node.cost
+	if pinned_goal.get("army") == instance_id and pinned_goal.get("node") == node_id: pinned_goal.clear()
 	tutorial = maxi(tutorial, 3)
 	save_game()
 	currency_changed.emit(gold, 0)
@@ -141,7 +144,7 @@ func purchase_research(instance_id: String, node_id: String) -> Dictionary:
 	return {"ok": true}
 
 func refund_research(instance_id: String) -> Dictionary:
-	if phase != "PREPARE": return {"ok": false, "message": "Research can be reset during preparation."}
+	if phase != "PREPARE" or not reorganizing: return {"ok": false, "message": "Choose Arrange, then wait for this battle to finish before refunding."}
 	var record := get_building(instance_id)
 	if record.is_empty(): return {"ok": false, "message": "Army unavailable."}
 	var refund := 0
@@ -208,6 +211,7 @@ func update_setting(key: String, value: Variant) -> void:
 	if not DEFAULT_SETTINGS.has(key): return
 	if key == "volume": settings[key] = clampf(float(value), 0.0, 1.0)
 	elif key == "compact_height": settings[key] = clampi(int(value), 220, 400)
+	elif key == "landscape": settings[key] = clampi(int(value), 0, 2)
 	else: settings[key] = bool(value)
 	save_game()
 	settings_changed.emit()
@@ -227,7 +231,7 @@ func offline_reward(now: float, timestamp: float) -> Dictionary:
 func serialize(now: float) -> Dictionary:
 	return {"version": TownRules.SAVE_VERSION, "gold": gold, "buildings": buildings.duplicate(true),
 		"cleared_stage": cleared_stage, "farm_stage": farm_stage, "advancing": advancing,
-		"settings": settings.duplicate(), "samples": samples.duplicate(true), "tutorial": tutorial,
+		"settings": settings.duplicate(), "pinned_goal": pinned_goal.duplicate(), "samples": samples.duplicate(true), "tutorial": tutorial,
 		"next_building_id": next_building_id, "next_round_id": next_round_id,
 		"settled_round_id": settled_round_id, "last_seen": maxf(last_seen, now)}
 
@@ -243,13 +247,15 @@ func valid_save(data: Variant) -> bool:
 	if data.next_building_id < 1 or data.next_round_id < 1 or data.settled_round_id < 0 or data.last_seen < 0: return false
 	for key in DEFAULT_SETTINGS:
 		if not data.settings.has(key): continue
-		if key in ["volume", "compact_height"]:
+		if key in ["volume", "compact_height", "landscape"]:
 			if not (data.settings[key] is float or data.settings[key] is int): return false
 		elif not data.settings[key] is bool: return false
 	var ids := {}
 	var cells := {}
 	for record in data.buildings:
 		if not record is Dictionary or not record.get("id") is String or not record.get("type") in TownRules.ARMY_TYPES: return false
+		if not record.get("specialization", "balanced") in ["balanced", "bulwark", "vanguard"]: return false
+		if record.type != "barracks" and record.get("specialization", "balanced") != "balanced": return false
 		if ids.has(record.id) or not record.get("cell") is Array or record.cell.size() != 2: return false
 		if not (record.cell[0] is float or record.cell[0] is int) or not (record.cell[1] is float or record.cell[1] is int): return false
 		var cell := Vector2i(record.cell[0], record.cell[1])
@@ -269,7 +275,7 @@ func valid_save(data: Variant) -> bool:
 			if not research.prerequisite.is_empty() and not record.research.has(research.prerequisite): return false
 	for sample in data.samples:
 		if not sample is Dictionary or not (sample.get("gold") is float or sample.get("gold") is int) or not (sample.get("seconds") is float or sample.get("seconds") is int): return false
-		if sample.gold < 0 or sample.seconds < 25.0: return false
+		if sample.gold < 0 or sample.seconds < TownRules.RESULT_SECONDS + 0.05: return false
 	return true
 
 func deserialize(data: Dictionary) -> void:
@@ -283,6 +289,7 @@ func deserialize(data: Dictionary) -> void:
 		if data.settings.has(key):
 			if key == "volume": settings[key] = clampf(float(data.settings[key]), 0, 1)
 			elif key == "compact_height": settings[key] = clampi(int(data.settings[key]), 220, 400)
+			elif key == "landscape": settings[key] = clampi(int(data.settings[key]), 0, 2)
 			else: settings[key] = bool(data.settings[key])
 	samples.assign(data.samples.duplicate(true))
 	tutorial = int(data.tutorial)
@@ -292,6 +299,13 @@ func deserialize(data: Dictionary) -> void:
 	active_round_id = 0
 	phase = "PREPARE"
 	last_seen = float(data.last_seen)
+	reorganizing = false
+	pinned_goal = {}
+	var goal: Variant = data.get("pinned_goal", {})
+	if goal is Dictionary and goal.get("army") is String and goal.get("node") is String:
+		var record := get_building(goal.army)
+		if not record.is_empty() and GameData.RESEARCH.has(goal.node) and not record.research.has(goal.node):
+			pinned_goal = {"army": goal.army, "node": goal.node}
 
 func _read_save(path: String) -> Variant:
 	if not FileAccess.file_exists(path): return null
@@ -344,3 +358,53 @@ func _save_failure(message: String) -> bool:
 	save_failed.emit(message)
 	push_warning(message)
 	return false
+
+func is_test_session() -> bool:
+	if OS.get_cmdline_user_args().has("--test"): return true
+	for arg in OS.get_cmdline_args():
+		var path: String = arg.replace("\\", "/")
+		if path.begins_with("res://tests/") and path.ends_with(".tscn"): return true
+	return false
+
+func set_reorganizing(value: bool) -> void:
+	reorganizing = value
+	progression_changed.emit()
+
+func set_specialization(instance_id: String, choice: String) -> Dictionary:
+	var record := get_building(instance_id)
+	if record.is_empty() or record.type != "barracks" or not choice in ["balanced", "bulwark", "vanguard"]:
+		return {"ok": false, "message": "Choose a Barracks specialization."}
+	if record.get("specialization", "balanced") == choice: return {"ok": true}
+	record.specialization = choice
+	save_game()
+	research_changed.emit(instance_id)
+	army_improved.emit(instance_id)
+	return {"ok": true}
+
+func pin_upgrade(instance_id: String, node_id: String) -> void:
+	var record := get_building(instance_id)
+	if record.is_empty() or not GameData.RESEARCH.has(node_id) or record.research.has(node_id): return
+	pinned_goal = {"army":instance_id, "node":node_id}
+	save_game()
+	progression_changed.emit()
+
+func objective_text() -> String:
+	if not pinned_goal.is_empty():
+		var record := get_building(pinned_goal.get("army", ""))
+		var node: ResearchNodeData = GameData.RESEARCH.get(pinned_goal.get("node", ""))
+		if not record.is_empty() and node != null and not record.research.has(node.id):
+			return "%s: %d/%dg" % [node.title, mini(gold,node.cost), node.cost]
+	if buildings.is_empty(): return "Build a Barracks · 100g"
+	if tutorial < 3: return "Improve your Barracks · 50g"
+	if cleared_stage < 2: return "Stage 2 → Rangers"
+	if cleared_stage < 4: return "Stage 4 → Clerics"
+	if cleared_stage < 5: return "Boss 5 → fourth army plot"
+	if buildings.size() < capacity_for_town(): return "Commons open · %d/%d army plots" % [buildings.size(),capacity_for_town()]
+	if cleared_stage < 7: return "Stage 7 → Lancers"
+	if cleared_stage < 10: return "Boss 10 → six army plots"
+	if cleared_stage < 15: return "Boss 15 → eight army plots"
+	if cleared_stage < 20: return "Stage 20 → secure the frontier"
+	return "Frontier safe · improve your town"
+
+func capacity_for_town() -> int:
+	return TownRules.capacity(cleared_stage)

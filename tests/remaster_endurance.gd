@@ -12,9 +12,10 @@ var initial_memory: int = 0
 var failed: bool = false
 
 func _ready() -> void:
-	if not OS.get_cmdline_user_args().has("--test"):
+	if not GameState.is_test_session():
 		get_tree().quit(1)
 		return
+	if not OS.get_cmdline_user_args().has("--test"): duration = 60.0
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--duration="): duration = float(arg.trim_prefix("--duration="))
 	GameState.persistence_enabled = false

@@ -20,6 +20,7 @@ var selected_id: String = ""
 var _visual_clock: float = 0.0
 var _effect_time: float = 0.0
 var _sound_time: float = 0.0
+var _landscape: int = -1
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("203f49"))
@@ -42,6 +43,7 @@ func _ready() -> void:
 	director.combat_events.connect(_combat_events)
 	GameState.buildings_changed.connect(_sync_buildings)
 	GameState.research_changed.connect(_research_changed)
+	GameState.settings_changed.connect(_refresh_landscape)
 	get_viewport().size_changed.connect(_fit_camera)
 	_sync_buildings()
 	_fit_camera()
@@ -56,33 +58,19 @@ func _ready() -> void:
 		hud.show_offline.call_deferred(GameState.offline_summary.duplicate())
 		GameState.offline_summary.clear()
 
+func _refresh_landscape() -> void:
+	if _landscape == int(GameState.settings.landscape): return
+	var previous := get_node_or_null("Scenery")
+	if previous != null:
+		remove_child(previous)
+		previous.queue_free()
+	_build_terrain()
+
 func _build_terrain() -> void:
-	var map := TileMapLayer.new()
-	map.name = "Terrain"
-	map.position = Vector2(-576, -96)
-	map.z_index = -20
-	var tiles := TileSet.new()
-	tiles.tile_size = Vector2i(64, 64)
-	var sheet := preload("res://asset/Tiny Swords (Free Pack)/Terrain/Tileset/Tilemap_color1.png")
-	for id in 3:
-		var source := TileSetAtlasSource.new()
-		source.texture = sheet if id < 2 else preload("res://asset/Tiny Swords (Free Pack)/Terrain/Tileset/Water Background color.png")
-		source.texture_region_size = Vector2i(64, 64)
-		source.margins = Vector2i(96, 96) if id == 0 else (Vector2i(416, 256) if id == 1 else Vector2i.ZERO)
-		source.create_tile(Vector2i.ZERO)
-		tiles.add_source(source, id)
-	map.tile_set = tiles
-	for col in range(-2, 20):
-		for row in range(-2, 5):
-			var source := 0 if col >= 0 and col < 18 and row >= 0 and row < 3 else 1
-			if col < -1 or col > 18 or row < -1 or row > 3: source = 2
-			map.set_cell(Vector2i(col, row), source, Vector2i.ZERO)
-	add_child(map)
-	_add_prop(preload("res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Castle.png"), TownRules.cell_position(Vector2i(0, 1)), 0.30)
-	_add_prop(preload("res://asset/Tiny Swords (Free Pack)/Buildings/Red Buildings/Tower.png"), Vector2(530, 0), 0.35)
-	for index in 10:
-		var rock: Texture2D = load(Art.ROCKS[index % Art.ROCKS.size()])
-		_add_prop(rock, Vector2(-570 + index * 127, 140 if index % 2 == 0 else -114), 0.25)
+	_landscape = int(GameState.settings.landscape)
+	var scenery := preload("res://scripts/remaster/scenery.gd").new()
+	scenery.name = "Scenery"
+	add_child(scenery)
 
 func _add_prop(texture: Texture2D, at: Vector2, scale_factor: float) -> void:
 	var sprite := Sprite2D.new()
@@ -96,9 +84,10 @@ func _add_prop(texture: Texture2D, at: Vector2, scale_factor: float) -> void:
 func _fit_camera() -> void:
 	if camera == null: return
 	var viewport_size := get_viewport_rect().size
-	var zoom_value := minf((viewport_size.x - 40) / 1240.0, (viewport_size.y - 82) / 320.0)
+	var zoom_value := minf((viewport_size.x - 40) / 1320.0, (viewport_size.y - 54) / 390.0)
 	camera.zoom = Vector2.ONE * maxf(0.35, minf(2.6, zoom_value))
-	camera.position = Vector2(0, -14)
+	camera.position = Vector2(0, -6 + 25.0 / camera.zoom.y)
+	desktop.update_mouse_region.call_deferred()
 
 func _sync_buildings() -> void:
 	for record in GameState.buildings:
@@ -113,17 +102,12 @@ func _sync_buildings() -> void:
 	if director.phase != "BATTLE":
 		_prepare_visuals()
 	else:
-		# New armies are visible at home, but do not enter the current snapshot.
-		var present := {}
-		for unit in director.simulation.units: present[unit.get("army", "")] = true
-		for record in GameState.buildings:
-			if not present.has(record.id):
-				for unit in BattleSimulation.army_units([record]):
-					_spawn_view(unit, "waiting_%s_%d" % [record.id, unit.member])
+		_sync_waiting_recruits()
 
 func _research_changed(_id: String) -> void:
 	for view: ArmyBuildingView in building_views.values(): view.refresh()
 	if director.phase == "PREPARE": _prepare_visuals()
+	elif director.phase == "BATTLE": _sync_waiting_recruits()
 
 func _clear_units() -> void:
 	for view in unit_views.values():
@@ -139,6 +123,7 @@ func _spawn_view(unit: Dictionary, key: String) -> void:
 	if unit_views.has(key): return
 	var view := UNIT_VIEW.new()
 	view.model = unit
+	if key.begins_with("waiting_"): view.modulate = Color(0.7,0.9,1.0,0.75)
 	unit_views[key] = view
 	add_child(view)
 
@@ -210,8 +195,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		var response: Dictionary = GameState.place_building(placement_type, hover_cell) if move_id.is_empty() else GameState.move_building(move_id, hover_cell)
 		if response.ok:
 			selected_id = response.get("id", move_id)
+			var recruited := move_id.is_empty()
 			sfx.play("place")
 			cancel_placement()
+			var record := GameState.get_building(selected_id)
+			hud.toast(("%d recruits ready · join next battle" % TownRules.crew(record,GameData.BUILDINGS[record.type])) if recruited else "Deployment moved · applies next battle")
 		else:
 			hud.toast(response.message)
 			sfx.play("error")
@@ -225,9 +213,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 
 func _draw() -> void:
-	var font: Font = preload("res://fonts/PeaberryBase.ttf")
-	draw_string(font, Vector2(-270, 155), "YOUR TOWN", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("dfd9a3"))
-	draw_string(font, Vector2(90, 155), "THE FRONTIER", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("dfd9a3"))
+	for slot in TownRules.capacity(GameState.cleared_stage):
+		draw_circle(Vector2(-564 + slot * 8, 28), 3, Color("f3cf7b") if slot < GameState.buildings.size() else Color("617e68"))
+	_draw_deployment()
 	if not placement_type.is_empty() or not move_id.is_empty():
 		for x in TownRules.GRID_SIZE.x:
 			for y in TownRules.GRID_SIZE.y:
@@ -252,3 +240,34 @@ func _draw() -> void:
 		else:
 			draw_circle(warning.position, warning.radius, Color(1, 0.35, 0.15, alpha))
 			draw_arc(warning.position, warning.radius, 0, TAU, 36, Color("ffe3a5"), 2)
+
+func _sync_waiting_recruits() -> void:
+	for key in unit_views.keys():
+		if str(key).begins_with("waiting_"):
+			unit_views[key].queue_free()
+			unit_views.erase(key)
+	var deployed := {}
+	for unit in director.simulation.units:
+		if unit.side == 0: deployed[unit.army] = int(deployed.get(unit.army,0)) + 1
+	for record in GameState.buildings:
+		for unit in BattleSimulation.army_units([record]):
+			if unit.member >= int(deployed.get(record.id,0)):
+				_spawn_view(unit,"waiting_%s_%d" % [record.id,unit.member])
+
+func _draw_deployment() -> void:
+	var record: Dictionary = {}
+	if not move_id.is_empty(): record = GameState.get_building(move_id).duplicate(true)
+	elif not placement_type.is_empty(): record = {"id":"preview", "type":placement_type,"cell":[0,0],"research":{}}
+	elif GameState.reorganizing and not selected_id.is_empty(): record = GameState.get_building(selected_id).duplicate(true)
+	if record.is_empty(): return
+	if not move_id.is_empty() or not placement_type.is_empty():
+		if not TownRules.cell_valid(hover_cell): return
+		record.cell = [hover_cell.x,hover_cell.y]
+	var origin := TownRules.cell_position(Vector2i(record.cell[0],record.cell[1]))
+	var color := Color("b1e9d4")
+	for unit in BattleSimulation.army_units([record]):
+		draw_circle(unit.position,7,color,false,2)
+		draw_line(unit.position,unit.position + Vector2(16,0),color,1)
+	draw_line(origin + Vector2(48,0),origin + Vector2(100,0),color,2)
+	draw_line(origin + Vector2(100,0),origin + Vector2(90,-6),color,2)
+	draw_line(origin + Vector2(100,0),origin + Vector2(90,6),color,2)

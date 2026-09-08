@@ -27,6 +27,7 @@ static func army_units(records: Array) -> Array[Dictionary]:
 				"class": int(data.hero_class), "visual": data.visual_unit, "rarity": TownRules.rarity(record),
 				"position": pos, "home": pos, "hp": stats.hp, "max_hp": stats.hp,
 				"damage": stats.damage, "interval": stats.interval, "specialty": stats.specialty,
+				"guard_strength": stats.guard_strength, "specialization": record.get("specialization", "balanced"),
 				"range": [52.0, 78.0, 245.0, 225.0][int(data.hero_class)],
 				"ability": hero.ability, "side": 0})
 	return result
@@ -221,7 +222,7 @@ func _use_specialty(unit: Dictionary, target: Dictionary) -> void:
 				for ally in units:
 					if ally.side == 0 and ally.hp > 0 and unit.position.distance_to(ally.position) <= 150:
 						var previous: float = ally.guard if ally.guard_time > 0 else 0.0
-						ally.guard = maxf(previous, minf(0.65, 0.25 * unit.specialty))
+						ally.guard = maxf(previous, minf(0.65, float(unit.get("guard_strength", 0.25)) * unit.specialty))
 						ally.guard_time = 3.0
 				events.append({"kind": "guard", "position": unit.position})
 			"volley":

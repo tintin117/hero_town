@@ -42,7 +42,7 @@ func _physics_process(delta: float) -> void:
 
 func advance(delta: float) -> void:
 	if phase == "PREPARE":
-		if GameState.buildings.is_empty(): return
+		if GameState.buildings.is_empty() or GameState.reorganizing: return
 		remaining -= delta
 		if remaining <= 0: start_now()
 	elif phase == "BATTLE":
@@ -58,7 +58,7 @@ func advance(delta: float) -> void:
 		if remaining <= 0: prepare()
 
 func start_now() -> void:
-	if phase != "PREPARE" or GameState.buildings.is_empty(): return
+	if phase != "PREPARE" or GameState.buildings.is_empty() or GameState.reorganizing: return
 	_refresh_stage()
 	round_id = GameState.begin_battle()
 	simulation = BattleSimulation.new()

@@ -1,16 +1,29 @@
 extends Node
-
 var game_seconds := 0.0
 var milestones: Dictionary = {}
 var economy_milestones: Dictionary = {}
-var policy: String = "balanced"
+var policy := "balanced"
 
 func _ready() -> void:
-	if not OS.get_cmdline_user_args().has("--test"):
+	if not GameState.is_test_session():
 		get_tree().quit(1)
 		return
-	for arg in OS.get_cmdline_user_args():
-		if arg.begins_with("--policy="): policy = arg.trim_prefix("--policy=")
+	var initial := GameState.serialize(1000)
+	var results := []
+	for choice in ["balanced","bulwark","vanguard"]:
+		GameState.deserialize(initial)
+		GameState.persistence_enabled = false
+		policy = choice
+		game_seconds = 0
+		milestones.clear()
+		economy_milestones.clear()
+		results.append(await run_campaign())
+	print("PACING COMPARISON ", JSON.stringify(results))
+	var file := FileAccess.open("res://.godot/prototype_pacing.json",FileAccess.WRITE)
+	if file != null: file.store_string(JSON.stringify(results,"  "))
+	get_tree().quit(0 if results.all(func(result): return result.cleared == 20) else 1)
+
+func run_campaign() -> Dictionary:
 	GameState.persistence_enabled = false
 	GameState.place_building("barracks", Vector2i(4, 1))
 	for round_index in 400:
@@ -19,7 +32,7 @@ func _ready() -> void:
 		var sim := BattleSimulation.new()
 		sim.setup(GameState.buildings, GameData.STAGES[stage])
 		while sim.outcome == -1: sim.step()
-		game_seconds += 25.0 + sim.elapsed
+		game_seconds += TownRules.PREP_SECONDS + TownRules.RESULT_SECONDS + sim.elapsed
 		var id: int = GameState.begin_battle()
 		var result: Dictionary = GameState.settle_battle(id, stage, sim.outcome == 1, sim.elapsed)
 		if result.first_clear:
@@ -27,11 +40,13 @@ func _ready() -> void:
 			print("BALANCE stage=%d minute=%.1f battle=%.1fs armies=%d gold=%d" % [stage, game_seconds / 60, sim.elapsed, GameState.buildings.size(), GameState.gold])
 		if GameState.cleared_stage >= 20: break
 		if round_index % 10 == 0: await get_tree().process_frame
-	print("BALANCE COMPLETE ", JSON.stringify({"policy": policy, "minutes": game_seconds / 60, "cleared": GameState.cleared_stage, "milestones": milestones, "economy_minutes": economy_milestones, "buildings": GameState.buildings}))
-	get_tree().quit(0 if GameState.cleared_stage == 20 else 1)
+	return {"policy":policy,"minutes":game_seconds/60,"cleared":GameState.cleared_stage,"milestones":milestones.duplicate(),"economy_minutes":economy_milestones.duplicate()}
 
 func shop() -> void:
 	var changed := false
+	# ponytail: deterministic shopping heuristic; validate comfort with a human first-15-minute playtest.
+	for record in GameState.buildings:
+		if record.type == "barracks": GameState.set_specialization(record.id,policy)
 	# Buy one of each unlocked class, then repeat the four-army composition.
 	var desired: String = TownRules.ARMY_TYPES[GameState.buildings.size() % 4]
 	var data: BuildingData = GameData.BUILDINGS[desired]
