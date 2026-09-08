@@ -17,22 +17,22 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 config/name="hero town"
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="uid://d21vtdhgwondi"
+config/icon="res://icon.svg"
 
 [autoload]
 
 GameData="*res://scripts/game_data.gd"
 GameState="*res://scripts/game_state.gd"
-fx="*uid://u6sqyh22tpu3"
+fx="*res://vfx/fx.gd"
 sfx="*res://scripts/sfx.gd"
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
 
-window/size/viewport_width=1920
-window/size/viewport_height=1080
+window/size/viewport_width=1280
+window/size/viewport_height=720
 window/stretch/mode="canvas_items"
-mouse_cursor/custom_image="uid://ctn20ajhfvcni"
+mouse_cursor/custom_image="res://asset/Pointers/01.png"
 mouse_cursor/custom_image_hotspot=Vector2(22, 17)
 
 [editor_plugins]
@@ -41,7 +41,7 @@ enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/ridi
 
 [gui]
 
-theme/custom_font="uid://bws7oah63ge53"
+theme/custom_font="res://fonts/PeaberryBase.ttf"
 
 [input]
 

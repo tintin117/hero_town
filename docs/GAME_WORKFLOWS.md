@@ -1,5 +1,7 @@
 # Hero Town workflows
 
+> **Superseded by the remaster.** Building research, all four armies, wave battles, bosses, saving, and offline gold are now implemented in the active entry scenes. See [REMASTER.md](REMASTER.md). The diagrams below describe the earlier prototype.
+
 The game is an idle town builder: heroes fight automatically while the player manages buildings and progression. The diagrams below separate working gameplay from the proposed research system. **The class research interface currently previews progression; it does not execute it.**
 
 ## 1. Idle combat and rewards — implemented

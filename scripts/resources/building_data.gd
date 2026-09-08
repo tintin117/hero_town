@@ -10,6 +10,10 @@ extends Resource
 @export var model_scene: PackedScene
 @export var levels: Array[Dictionary] = []
 @export var is_hero_building: bool = false
+@export var starting_crew: int = 1
+@export var unlock_stage: int = 0
+@export var specialty: String = ""
+@export var visual_unit: String = "warrior"
 
 ## Hero class this building produces (Warrior/Rogue/Mage/Cleric). Only meaningful
 ## for hero-producing buildings (e.g. Barracks); ignored by Portal/Town Hall/etc.

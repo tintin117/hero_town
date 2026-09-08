@@ -1,5 +1,7 @@
 # Hero Town — Code Structure & Runtime Flow
 
+> **Historical prototype reference.** The September 2026 remaster now runs through `scripts/remaster/`. See [REMASTER.md](REMASTER.md) for the current architecture, save format, controls, and tests. The runtime description below documents the retired prototype and must not be used to reconnect its combat or preview panels to the active game.
+
 This document describes how the game actually boots and runs today, and what every
 `.gd` script in the active (non-archived) codebase does. It reflects the real state
 of the project as read from `project.godot`, the scene files, and the scripts —

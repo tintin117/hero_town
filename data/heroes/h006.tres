@@ -1,15 +1,15 @@
 [gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
-
 [ext_resource type="Script" path="res://scripts/resources/hero_data.gd" id="1"]
-
 [resource]
 script = ExtResource("1")
 id = "H006"
-display_name = "Ember Scholar"
+display_name = "Uncommon Ranger"
 rarity = 1
 hero_class = 2
 unit_type = 1
-base_power = 20.0
-power_per_level = 3.6
-base_hp = 110.0
-atk_speed = 2.0
+base_power = 25.50
+base_hp = 153.00
+atk_speed = 1.5
+visual_unit = "archer"
+ability = "volley"
+ability_interval = 7.0

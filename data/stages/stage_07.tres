@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StageData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/resources/stage_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+number = 7
+title = "Red scouts"
+gold = 79
+first_clear_gold = 54
+boss = ""
+time_limit = 60.0
+enemies = Array[Dictionary]([{"unit":"warrior","hp":222,"damage":12,"interval":1.8,"ability":"cleave"},
+{"unit":"warrior","hp":222,"damage":12,"interval":1.8,"ability":""},
+{"unit":"archer","hp":222,"damage":12,"interval":1.8,"ability":""},
+{"unit":"lancer","hp":222,"damage":12,"interval":1.8,"ability":""},
+{"unit":"warrior","hp":222,"damage":12,"interval":1.8,"ability":""}])

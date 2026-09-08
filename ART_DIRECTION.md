@@ -1,5 +1,7 @@
 # Art Direction Change — Cardboard Diorama (HD-2D style)
 
+> **Superseded on 2026-09-08.** The accepted and implemented remaster keeps polished 2D Tiny Swords pixel art and prioritizes the desktop companion. The 3D proposal below is historical, outside the current demo scope.
+
 Status: **Proposed, not yet implemented.** Decided in conversation on 2026-06-29, carried over to continue work on another machine.
 
 ## The Idea

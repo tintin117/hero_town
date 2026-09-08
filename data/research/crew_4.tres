@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResearchNodeData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/resources/research_node_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "crew_4"
+branch = "crew"
+rank = 4
+title = "Additional recruit 4"
+description = "Add one soldier to this army."
+cost = 850
+required_stage = 0
+prerequisite = "crew_3"
+value = 0

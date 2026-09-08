@@ -1,15 +1,15 @@
 [gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
-
 [ext_resource type="Script" path="res://scripts/resources/hero_data.gd" id="1"]
-
 [resource]
 script = ExtResource("1")
 id = "H014"
-display_name = "Void Alchemist"
+display_name = "Epic Ranger"
 rarity = 3
 hero_class = 2
 unit_type = 1
-base_power = 62.0
-power_per_level = 7.8
-base_hp = 280.0
-atk_speed = 2.0
+base_power = 73.50
+base_hp = 441.00
+atk_speed = 1.5
+visual_unit = "archer"
+ability = "volley"
+ability_interval = 7.0

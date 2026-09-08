@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StageData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/resources/stage_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+number = 3
+title = "Border skirmish"
+gold = 36
+first_clear_gold = 28
+boss = ""
+time_limit = 60.0
+enemies = Array[Dictionary]([{"unit":"warrior","hp":110,"damage":7,"interval":1.8,"ability":""},
+{"unit":"warrior","hp":110,"damage":7,"interval":1.8,"ability":""},
+{"unit":"archer","hp":110,"damage":7,"interval":1.8,"ability":""}])

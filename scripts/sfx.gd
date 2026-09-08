@@ -21,9 +21,11 @@ func _ready() -> void:
 		var player := AudioStreamPlayer.new()
 		player.volume_db = -6.0
 		add_child(player)
+		player.add_to_group("remaster_audio")
 		_players.append(player)
 
 func play(sound_name: String, pitch_jitter: float = 0.06) -> void:
+	if DisplayServer.get_name() == "headless" or GameState.quitting or GameState.settings.volume <= 0: return
 	if not SOUNDS.has(sound_name):
 		return
 	for player in _players:
@@ -35,3 +37,9 @@ func play(sound_name: String, pitch_jitter: float = 0.06) -> void:
 	# All voices busy: steal the first.
 	_players[0].stream = SOUNDS[sound_name]
 	_players[0].play()
+
+func _exit_tree() -> void:
+	for player in _players:
+		if is_instance_valid(player):
+			player.stop()
+			player.stream = null

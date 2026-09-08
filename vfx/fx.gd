@@ -10,15 +10,19 @@ const EFFECTS := {
 
 var _flash_layer: CanvasLayer
 var _flash_rect: ColorRect
-var _popup_font: SystemFont
+var _popup_font: Font
 var _hitstop_busy := false
 var _shake_tween: Tween
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_popup_font = SystemFont.new()
-	_popup_font.font_names = PackedStringArray(["Arial Black", "Arial", "Sans-Serif"])
-	_popup_font.font_weight = 900
+	_popup_font = preload("res://fonts/PeaberryBase.ttf")
+
+func _exit_tree() -> void:
+	# Release cursor and cached sprite resources before RenderingServer shuts down.
+	Input.set_custom_mouse_cursor(null)
+	Art.clear_frame_cache()
+	_popup_font = null
 
 ## Spawn an effect by name at a global position.
 ## opts: { "parent": Node, "size": float, "speed": float,
@@ -43,6 +47,7 @@ func spawn(effect_name: String, global_pos: Vector2, opts: Dictionary = {}) -> F
 
 ## Shake the active Camera2D. strength in pixels.
 func shake(strength: float = 3.0, duration: float = 0.25) -> void:
+	if GameState.settings.get("compact", false) or GameState.settings.get("reduced_effects", false): return
 	var cam := get_viewport().get_camera_2d()
 	if cam == null:
 		return
@@ -65,6 +70,7 @@ func shake(strength: float = 3.0, duration: float = 0.25) -> void:
 
 ## Freeze-frame: dip Engine.time_scale for a moment. Safe to call repeatedly.
 func hitstop(duration: float = 0.06, time_scale: float = 0.05) -> void:
+	if GameState.settings.get("compact", false) or GameState.settings.get("reduced_effects", false): return
 	if _hitstop_busy:
 		return
 	_hitstop_busy = true

@@ -1,5 +1,7 @@
 # Class research UI
 
+> **Historical preview documentation.** The active remaster uses `scripts/remaster/town_hud.gd` and the resource nodes in `data/research/`. Purchases now execute authoritative transactions for individual building IDs. See [REMASTER.md](REMASTER.md). The standalone preview scenes described below are retained only as prototype references.
+
 This implementation is a visual prototype. The player can inspect nodes, switch tabs/classes, preview training, and choose among three sample hero cards. Those actions do **not** spend currency, upgrade a real building, alter stats, recruit heroes, roll randomness, or save progression.
 
 ## Try it

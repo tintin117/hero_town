@@ -21,6 +21,7 @@ const UNIT_ANIM := {
 		"idle": {"file": "Warrior/Warrior_Idle.png", "frames": 8},
 		"run": {"file": "Warrior/Warrior_Run.png", "frames": 6},
 		"attack": {"file": "Warrior/Warrior_Attack1.png", "frames": 4},
+		"guard": {"file": "Warrior/Warrior_Guard.png", "frames": 0},
 	},
 	"archer": {
 		"idle": {"file": "Archer/Archer_Idle.png", "frames": 6},
@@ -85,6 +86,17 @@ const CLOUDS := [
 	DECOR_ROOT + "Clouds/Clouds_05.png",
 ]
 
+static var _frame_cache: Dictionary = {}
+
+static func clear_frame_cache() -> void:
+	_frame_cache.clear()
+
+static func unit_frames(unit_key: String, red: bool = false) -> SpriteFrames:
+	var key := unit_key + ("_red" if red else "_blue")
+	if not _frame_cache.has(key):
+		_frame_cache[key] = _build_sprite_frames(unit_key, Faction.RED if red else Faction.BLUE)
+	return _frame_cache[key]
+
 static func hero_sprite_frames(hero_class: HeroData.HeroClass) -> SpriteFrames:
 	return _build_sprite_frames(CLASS_UNIT.get(hero_class, "warrior"), Faction.BLUE)
 
@@ -100,9 +112,11 @@ static func _build_sprite_frames(unit_key: String, faction: Faction) -> SpriteFr
 		var entry: Dictionary = anim_table[anim_name]
 		var tex: Texture2D = load(folder + entry["file"])
 		var frame_count: int = entry["frames"]
+		if frame_count == 0: frame_count = tex.get_width() / tex.get_height()
 		frames.add_animation(anim_name)
-		frames.set_animation_loop(anim_name, anim_name != "attack")
-		frames.set_animation_speed(anim_name, 10.0 if anim_name != "attack" else float(frame_count) / 0.4)
+		var is_action: bool = anim_name in ["attack", "guard"]
+		frames.set_animation_loop(anim_name, not is_action)
+		frames.set_animation_speed(anim_name, float(frame_count) / 0.4 if is_action else 10.0)
 		var frame_w := tex.get_width() / frame_count
 		var frame_h := tex.get_height()
 		for i in frame_count:

@@ -1,5 +1,9 @@
 # Hero Town — Claude Code Context
 
+## Current remaster (2026-09-08)
+
+The active project is Godot **4.6.2**, 2D Tiny Swords, with a 20-stage idle army demo. Read `docs/REMASTER.md` first. `scenes/main_menu.tscn` and `scenes/town_2d.tscn` now use scripts in `scripts/remaster/`; the former scene/combat/research scripts described below are retained prototype references. Research is real, every placed army has an independent tree, and `GameState` persists gold, buildings, campaign progress, settings, and offline income. Use `-- --test` for all test scenes so the player's save is never loaded. The old 3D art proposal is superseded. Preserve third-party addons and existing assets.
+
 ## Project Identity
 
 A Steam demo inspired by **Crusaders Quest: Hero Town** (idle RPG town builder) in Godot 4.5.
