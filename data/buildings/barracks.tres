@@ -1,12 +1,13 @@
 [gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/building_data.gd" id="1"]
-[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Monastery.png" id="2"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Barracks.png" id="2"]
 
 [resource]
 script = ExtResource("1")
 id = "barracks"
-display_name = "Barracks"
+display_name = "Warrior Barracks"
+is_hero_building = true
 build_cost = 0
 unlock_th_level = 2
 thumbnail = ExtResource("2")

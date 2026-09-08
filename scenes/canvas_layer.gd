@@ -7,8 +7,18 @@ extends CanvasLayer
 @onready var shard_label: Label = $"Shard_HUD/ShardLabel"
 
 var hero_instances: Dictionary = {}  # BuildingBase -> Array[Hero]
+const RESEARCH_OVERLAY = preload("res://scripts/research_overlay.gd")
+var research_overlay: Control
 
 func _ready() -> void:
+	research_overlay = RESEARCH_OVERLAY.new()
+	research_overlay.visible = false
+	add_child(research_overlay)
+	research_overlay.panel.class_selected.connect(_on_research_class_selected)
+	research_overlay.panel.move_requested.connect(func(building: BuildingBase):
+		research_overlay.close()
+		_on_move_requested(building))
+	_add_research_shortcuts()
 	build_menu_popup.build_requested.connect(_on_build_requested)
 	building_popup.move_requested.connect(_on_move_requested)
 	building_popup.spawn_requested.connect(_on_spawn_requested)
@@ -23,6 +33,12 @@ func connect_building(building: BuildingBase) -> void:
 		_sync_hero_building(building)
 
 func _on_building_clicked(building: BuildingBase) -> void:
+	if building.get_data().is_hero_building:
+		building_popup.close()
+		build_menu_popup.hide_popup()
+		research_overlay.open(building)
+		return
+	research_overlay.close()
 	var world_pos: Vector2 = building.global_position
 	var screen_pos: Vector2 = get_viewport().get_canvas_transform() * world_pos
 	var pixel_offset_y = 140
@@ -37,6 +53,7 @@ func _on_building_clicked(building: BuildingBase) -> void:
 	building_popup.open(building)
 
 func _on_placement_button_pressed() -> void:
+	research_overlay.close()
 	var options: Array = []
 	for data in GameData.BUILDINGS.values():
 		if data.build_cost <= 0:
@@ -49,6 +66,32 @@ func _on_placement_button_pressed() -> void:
 			"thumbnail": data.thumbnail,
 		})
 	build_menu_popup.show_options(options)
+
+## Class shortcuts also make small buildings accessible in Compact mode.
+func _add_research_shortcuts() -> void:
+	var bar := HBoxContainer.new()
+	bar.name = "ResearchShortcuts"
+	bar.theme = preload("res://resources/research_theme.tres")
+	add_child(bar)
+	bar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	bar.position = Vector2(get_viewport().get_visible_rect().size.x - 410, get_viewport().get_visible_rect().size.y - 44)
+	var ids := ["barracks", "cleric_hall", "mage_tower", "rogue_den"]
+	var labels := ["Warrior", "Cleric", "Mage", "Rogue"]
+	for index in ids.size():
+		var button := Button.new()
+		button.text = labels[index]
+		button.tooltip_text = "Open %s research" % labels[index]
+		button.custom_minimum_size = Vector2(94, 32)
+		button.pressed.connect(_on_research_class_selected.bind(ids[index]))
+		bar.add_child(button)
+	get_viewport().size_changed.connect(func():
+		bar.position = Vector2(get_viewport().get_visible_rect().size.x - 410, get_viewport().get_visible_rect().size.y - 44))
+
+func _on_research_class_selected(building_id: String) -> void:
+	for target in get_tree().get_nodes_in_group("buildings"):
+		if target.building_id == building_id:
+			_on_building_clicked(target)
+			return
 
 func _on_build_requested(building_type: String) -> void:
 	placement_controller.start_placement(GameData.BUILDINGS[building_type])

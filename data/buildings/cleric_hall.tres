@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/building_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Monastery.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = "cleric_hall"
+display_name = "Cleric Sanctuary"
+build_cost = 0
+unlock_th_level = 1
+thumbnail = ExtResource("2")
+sprite_texture = ExtResource("2")
+is_hero_building = true
+hero_class = 3
+levels = Array[Dictionary]([{"cost": 0, "label": "Lv1"}, {"cost": 500, "label": "Lv2"}, {"cost": 1500, "label": "Lv3"}, {"cost": 4500, "label": "Lv4"}, {"cost": 12000, "label": "Lv5"}])

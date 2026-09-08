@@ -9,6 +9,7 @@ extends Resource
 @export var sprite_texture: Texture2D
 @export var model_scene: PackedScene
 @export var levels: Array[Dictionary] = []
+@export var is_hero_building: bool = false
 
 ## Hero class this building produces (Warrior/Rogue/Mage/Cleric). Only meaningful
 ## for hero-producing buildings (e.g. Barracks); ignored by Portal/Town Hall/etc.
