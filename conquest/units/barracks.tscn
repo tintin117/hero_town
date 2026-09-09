@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://conquest/units/building.tscn" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Barracks.png" id="2"]
+
+
+[node name="Barracks" instance=ExtResource("1")]
+action = "barracks"
+
+[node name="Visual" parent="."]
+texture = ExtResource("2")
+scale = Vector2(0.5, 0.5)

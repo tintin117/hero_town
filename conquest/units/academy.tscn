@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://conquest/units/building.tscn" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Monastery.png" id="2"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Black Buildings/Monastery.png" id="3"]
+
+
+[node name="Academy" instance=ExtResource("1")]
+action = "academy"
+
+[node name="Visual" parent="."]
+texture = ExtResource("2")
+scale = Vector2(0.48, 0.48)
+
+[node name="LockedVisual" parent="."]
+texture = ExtResource("3")
+scale = Vector2(0.48, 0.48)

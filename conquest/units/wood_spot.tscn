@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://conquest/units/resource_spot.tscn" id="1"]
+[ext_resource type="Resource" path="res://conquest/data/wood.tres" id="2"]
+[ext_resource type="SpriteFrames" path="res://conquest/units/tree_idle.tres" id="tree_idle"]
+
+[node name="WoodSpot" instance=ExtResource("1")]
+display_name = "Wood spot"
+gathering = ExtResource("2")
+
+[node name="Visual" parent="."]
+sprite_frames = ExtResource("tree_idle")
+animation = &"idle"
+autoplay = "idle"
+scale = Vector2(0.45, 0.45)

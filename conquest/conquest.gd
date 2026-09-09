@@ -3,6 +3,10 @@ const Rules = preload("res://conquest/conquest_state.gd")
 const PACK := "res://asset/Tiny Swords (Free Pack)/"
 @export var save_path: String = Rules.SAVE
 var game = Rules.new()
+@export var balance: ConquestBalance = Rules.DEFAULT_BALANCE:
+	set(value):
+		balance = value
+		game = Rules.new(value)
 var ui: CanvasLayer
 var world: Node2D
 var army: Node2D
@@ -182,15 +186,15 @@ func open_building(kind: String) -> void:
 	button(popup,"Close",Vector2(464,410),Vector2(140,46),func(): popup.hide())
 	if not game.s.battle.is_empty(): return
 	match kind:
-		"home": button(popup,"Develop • 60 gold",Vector2(32,240),Vector2(350,50),func(): act(game.develop()); open_building(kind))
+		"home": button(popup,"Develop • %d gold" % game.balance.development_cost,Vector2(32,240),Vector2(350,50),func(): act(game.develop()); open_building(kind))
 		"barracks":
 			var p: Dictionary = game.project("warriors")
-			var b := button(popup,"+2 warriors • %d gold / %s" % [p.cost,timer(p.duration)],Vector2(32,240),Vector2(530,50),func(): act(game.start("warriors")); open_building(kind))
+			var b := button(popup,"+%d warriors • %d gold / %s" % [game.balance.warrior_reward,p.cost,timer(p.duration)],Vector2(32,240),Vector2(530,50),func(): act(game.start("warriors")); open_building(kind))
 			b.disabled = game.s.projects.has(kind) or game.s.gold < p.cost
 		"academy":
 			if not game.s.academy:
-				var b := button(popup,"Build academy • 60 gold + 1 plot",Vector2(32,240),Vector2(540,50),func(): act(game.build_academy()); open_building(kind))
-				b.disabled = int(game.s.plots) < 1 or game.s.gold < 60
+				var b := button(popup,"Build academy • %d gold + %d plots" % [game.balance.academy_cost,game.balance.academy_plots],Vector2(32,240),Vector2(540,50),func(): act(game.build_academy()); open_building(kind))
+				b.disabled = int(game.s.plots) < game.balance.academy_plots or game.s.gold < game.balance.academy_cost
 			else:
 				var key := "mage" if int(game.s.mages) == 0 else "healing"
 				if not game.s.healing:
@@ -205,9 +209,9 @@ func update_popup() -> void:
 	if not popup.visible or not is_instance_valid(popup_text): return
 	var text := ""
 	match popup_kind:
-		"home": text = "HOME\nDevelop your estate: +5 gold/min permanently.\nCost: 60 gold. Instant. No plot required.\nCurrent income: %.0f gold/min. Free plots: %d." % [game.income(),game.s.plots]
+		"home": text = "HOME\nDevelop your estate: +%.1f gold/min permanently.\nCost: %d gold. Instant. No plot required.\nCurrent income: %.0f gold/min. Free plots: %d." % [game.balance.development_income,game.balance.development_cost,game.income(),game.s.plots]
 		"barracks": text = "BARRACKS\nChoose one project. Pay once; troops join automatically.\nCompleted warriors: %d" % game.s.warriors
-		"academy": text = "ACADEMY\n" + ("Build on a conquered plot to train your first mage.\nCost: 60 gold and 1 plot. Instant.\nFree plots: %d" % game.s.plots if not game.s.academy else "One mage, two learnable spells. Equipping is instant.\nEquipped: %s" % str(game.s.spell).capitalize())
+		"academy": text = "ACADEMY\n" + ("Build on a conquered plot to train your first mage.\nCost: %d gold and %d plots. Instant.\nFree plots: %d" % [game.balance.academy_cost,game.balance.academy_plots,game.s.plots] if not game.s.academy else "One mage, two learnable spells. Equipping is instant.\nEquipped: %s" % str(game.s.spell).capitalize())
 	if game.s.projects.has(popup_kind):
 		var p: Dictionary = game.s.projects[popup_kind]
 		text += "\n\n%s • %d gold paid\n%s / %s left • %d%% complete\nReward: %s" % [game.project(p.key).name,p.cost,timer(p.remaining),timer(p.duration),int(100*(1-float(p.remaining)/float(p.duration))),game.project(p.key).reward]
@@ -217,7 +221,7 @@ func update_popup() -> void:
 		if c is Button and c.has_meta("project"):
 			var p: Dictionary = game.project(c.get_meta("project"))
 			c.disabled = game.s.projects.has(p.building) or game.s.gold < p.cost or (c.get_meta("project") == "mage" and game.s.mages > 0) or (c.get_meta("project") == "healing" and game.s.healing)
-		elif c is Button and c.has_meta("build"): c.disabled = game.s.academy or game.s.plots < 1 or game.s.gold < 60
+		elif c is Button and c.has_meta("build"): c.disabled = game.s.academy or game.s.plots < game.balance.academy_plots or game.s.gold < game.balance.academy_cost
 func timer(seconds: float) -> String:
 	return "%d:%02d" % [int(ceil(seconds))/60,int(ceil(seconds))%60]
 func act(ok: bool) -> void:
@@ -237,17 +241,17 @@ func deploy() -> void:
 func refresh() -> void:
 	hud.text = "%d GOLD   •   +%.0f / min   •   %d warriors + %d mage   •   %d free plots" % [int(game.s.gold),game.income(),game.s.warriors,game.s.mages,game.s.plots]
 	var text := ""
-	for i in Rules.LANDS.size():
-		var land: Dictionary = Rules.LANDS[i]
+	for i in game.balance.encounters.size():
+		var land: ConquestEncounter = game.balance.encounters[i]
 		text += "%s  %s\n+%d gold/min   •   %d %s\n" % ["OWNED" if i < int(game.s.owned) else "%02d" % (i+1),land.name,land.income,land.plots,"plot" if land.plots == 1 else "plots"]
 		if i == int(game.s.owned): text += land.hint + "\n"
 		text += "\n"
-	if int(game.s.owned) == 3: text += "The valley is yours. Develop the estate and grow your army at your own pace."
+	if int(game.s.owned) >= game.balance.encounters.size(): text += "The valley is yours. Develop the estate and grow your army at your own pace."
 	else: text += "Next reward is permanent.\nNo troops or land lost on defeat."
 	detail.text = text
 	var in_battle: bool = not game.s.battle.is_empty()
-	deploy_button.disabled = not in_battle and (game.s.recovery > 0 or int(game.s.owned) == 3)
-	deploy_button.text = "Skip to saved result" if in_battle else ("Recovering • " + timer(game.s.recovery) if game.s.recovery > 0 else ("Valley conquered" if int(game.s.owned) == 3 else "Launch expedition"))
+	deploy_button.disabled = not in_battle and (game.s.recovery > 0 or int(game.s.owned) >= game.balance.encounters.size())
+	deploy_button.text = "Skip to saved result" if in_battle else ("Recovering • " + timer(game.s.recovery) if game.s.recovery > 0 else ("Valley conquered" if int(game.s.owned) >= game.balance.encounters.size() else "Launch expedition"))
 	status.text = notice
 	for building in indicators:
 		indicators[building].text = ""
@@ -263,9 +267,9 @@ func refresh() -> void:
 func rebuild_army() -> void:
 	for c in army.get_children(): c.queue_free()
 	var fighting: bool = not game.s.battle.is_empty()
-	for i in int(game.s.owned):
+	for i in mini(int(game.s.owned), game.balance.encounters.size()):
 		sprite(army,"Buildings/Blue Buildings/House1.png",Vector2(280+i*160,550),0.3)
-		label_at(army,"%s +%d/min" % [Rules.LANDS[i].name,Rules.LANDS[i].income],Vector2(205+i*175,578),180,13,Color("244d40"))
+		label_at(army,"%s +%d/min" % [game.balance.encounters[i].name,game.balance.encounters[i].income],Vector2(205+i*175,578),180,13,Color("244d40"))
 	if game.s.academy: sprite(army,"Buildings/Blue Buildings/Monastery.png",Vector2(680,265),0.8)
 	else:
 		label_at(army,"+ OPEN PLOT" if int(game.s.plots)>0 else "LOCKED PLOT",Vector2(610,250),190,20,Color("365547"))
@@ -277,7 +281,7 @@ func rebuild_army() -> void:
 		unit.set_meta("frontline",i)
 	if int(game.s.mages)>0: sprite(army,"Units/Blue Units/Monk/Heal.png" if fighting else "Units/Blue Units/Monk/Idle.png",Vector2(240,480),0.85,6)
 	if fighting:
-		for i in int(Rules.LANDS[int(game.s.battle.index)].count):
+		for i in int(game.s.battle.get("enemy_count", game.s.battle.timeline[0].alive)):
 			var p := sprite(army,"Units/Red Units/Warrior/Warrior_Attack1.png",Vector2(575+(i%4)*44,450+(i/4)*44),0.77,6)
 			p.flip_h = true
 			p.set_meta("enemy",i)
@@ -302,7 +306,7 @@ func _process(delta: float) -> void:
 	if animated.size() > 150: animated = animated.filter(func(p): return is_instance_valid(p))
 	if not game.s.battle.is_empty():
 		var b: Dictionary = game.s.battle
-		var fraction := 1.0 - float(b.remaining)/Rules.PRESENTATION
+		var fraction := 1.0 - float(b.remaining)/float(b.get("duration", game.balance.presentation_duration))
 		var step: Dictionary = b.timeline[mini(int(fraction*b.timeline.size()),b.timeline.size()-1)]
 		friendly_bar.max_value = b.max_hp
 		friendly_bar.value = step.hp
@@ -310,7 +314,7 @@ func _process(delta: float) -> void:
 		enemy_bar.value = step.enemy_hp
 		for unit in army.get_children():
 			if unit.has_meta("enemy"): unit.modulate.a = 1.0 if int(unit.get_meta("enemy")) < int(step.alive) else 0.18
-			elif unit.has_meta("frontline"): unit.modulate.a = 1.0 if int(unit.get_meta("frontline")) < int(ceil(float(step.hp)/40.0)) else 0.18
+			elif unit.has_meta("frontline"): unit.modulate.a = 1.0 if int(unit.get_meta("frontline")) < int(ceil(float(step.hp)/game.balance.warrior_hp)) else 0.18
 		battle_label.text = "%d enemies  •  %s" % [step.alive, str(step.effect).to_upper() if step.effect != "" else "FRONTLINE ENGAGED"]
 		if is_instance_valid(effect):
 			effect.visible = step.effect != ""

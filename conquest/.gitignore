@@ -1,6 +1,8 @@
 # Local review captures and temporary playtest state; source and fixtures stay tracked.
 *.png
 *.png.import
+!ui/*.png
+!ui/*.png.import
 *.jpg
 *.jpg.import
 *.log

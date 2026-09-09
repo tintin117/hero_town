@@ -1,0 +1,77 @@
+[gd_scene load_steps=28 format=3]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Attack1.png" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Guard.png" id="2"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Attack2.png" id="3"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Idle.png" id="4"]
+[sub_resource type="AtlasTexture" id="Atlas0"]
+atlas = ExtResource("1")
+region = Rect2(0, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas1"]
+atlas = ExtResource("1")
+region = Rect2(192, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas2"]
+atlas = ExtResource("1")
+region = Rect2(384, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas3"]
+atlas = ExtResource("1")
+region = Rect2(576, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas4"]
+atlas = ExtResource("2")
+region = Rect2(0, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas5"]
+atlas = ExtResource("2")
+region = Rect2(192, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas6"]
+atlas = ExtResource("2")
+region = Rect2(384, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas7"]
+atlas = ExtResource("2")
+region = Rect2(576, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas8"]
+atlas = ExtResource("2")
+region = Rect2(768, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas9"]
+atlas = ExtResource("2")
+region = Rect2(960, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas10"]
+atlas = ExtResource("3")
+region = Rect2(0, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas11"]
+atlas = ExtResource("3")
+region = Rect2(192, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas12"]
+atlas = ExtResource("3")
+region = Rect2(384, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas13"]
+atlas = ExtResource("3")
+region = Rect2(576, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas14"]
+atlas = ExtResource("4")
+region = Rect2(0, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas15"]
+atlas = ExtResource("4")
+region = Rect2(192, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas16"]
+atlas = ExtResource("4")
+region = Rect2(384, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas17"]
+atlas = ExtResource("4")
+region = Rect2(576, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas18"]
+atlas = ExtResource("4")
+region = Rect2(768, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas19"]
+atlas = ExtResource("4")
+region = Rect2(960, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas20"]
+atlas = ExtResource("4")
+region = Rect2(1152, 0, 192, 192)
+[sub_resource type="AtlasTexture" id="Atlas21"]
+atlas = ExtResource("4")
+region = Rect2(1344, 0, 192, 192)
+[sub_resource type="SpriteFrames" id="Frames"]
+animations = [{"frames": [{"duration": 1.0, "texture": SubResource("Atlas0")}, {"duration": 1.0, "texture": SubResource("Atlas1")}, {"duration": 1.0, "texture": SubResource("Atlas2")}, {"duration": 1.0, "texture": SubResource("Atlas3")}, {"duration": 1.0, "texture": SubResource("Atlas4")}, {"duration": 1.0, "texture": SubResource("Atlas5")}, {"duration": 1.0, "texture": SubResource("Atlas6")}, {"duration": 1.0, "texture": SubResource("Atlas7")}, {"duration": 1.0, "texture": SubResource("Atlas8")}, {"duration": 1.0, "texture": SubResource("Atlas9")}, {"duration": 1.0, "texture": SubResource("Atlas10")}, {"duration": 1.0, "texture": SubResource("Atlas11")}, {"duration": 1.0, "texture": SubResource("Atlas12")}, {"duration": 1.0, "texture": SubResource("Atlas13")}, {"duration": 1.0, "texture": SubResource("Atlas14")}, {"duration": 1.0, "texture": SubResource("Atlas15")}, {"duration": 1.0, "texture": SubResource("Atlas16")}, {"duration": 1.0, "texture": SubResource("Atlas17")}, {"duration": 1.0, "texture": SubResource("Atlas18")}, {"duration": 1.0, "texture": SubResource("Atlas19")}, {"duration": 1.0, "texture": SubResource("Atlas20")}, {"duration": 1.0, "texture": SubResource("Atlas21")}], "loop": true, "name": &"practice", "speed": 8.0}]
+[node name="Trainee" type="AnimatedSprite2D"]
+sprite_frames = SubResource("Frames")
+animation = &"practice"
+scale = Vector2(0.45, 0.45)

@@ -1,0 +1,29 @@
+[gd_resource type="Theme" format=3 uid="uid://cpi6yc01kr116"]
+
+[ext_resource type="Texture2D" uid="uid://135yuq0gq6lp" path="res://conquest/ui/paper.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://bkfs687v6bh68" path="res://conquest/ui/blue.png" id="2"]
+[ext_resource type="FontFile" uid="uid://b0r1vmd417svj" path="res://fonts/PeaberryBase.ttf" id="3"]
+
+[sub_resource type="StyleBoxTexture" id="Blue"]
+texture = ExtResource("2")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxTexture" id="Paper"]
+texture = ExtResource("1")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[resource]
+default_font = ExtResource("3")
+default_font_size = 16
+Button/colors/font_disabled_color = Color(0.3, 0.27, 0.22, 1)
+Button/styles/hover = SubResource("Blue")
+Button/styles/normal = SubResource("Blue")
+Button/styles/pressed = SubResource("Blue")
+Label/colors/font_color = Color(0.26, 0.24, 0.2, 1)
+Panel/styles/panel = SubResource("Paper")

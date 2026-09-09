@@ -9,8 +9,9 @@ func _initialize() -> void:
 	call_deferred("run_checks")
 func run_checks() -> void:
 	var c = Companion.instantiate()
-	c.save_path = "res://conquest/companion-check-save.json"
+	c.save_path = "user://companion-check-save.json"
 	c.seed_from_full_window = false
+	DirAccess.remove_absolute(c.save_path)
 	c.game.s.owned = 2
 	c.game.s.academy = true
 	c.game.s.warriors = 7
@@ -20,20 +21,14 @@ func run_checks() -> void:
 	await process_frame
 	var terrain: Node2D = c.settlement.get_node("Terrain")
 	check(terrain.get_child_count() == 5,"editable terrain layers present")
-	check(c.workers.workers.size() == 3,"wood gold and food workers present")
-	check(c.district.position.x == c.DISTRICT_OFFSET and c.formation.get_parent() == c.district,"buildings and army shift together")
-	check(c.trainees[0].get_parent() == c.district,"training remains beside moved barracks")
-	c.workers.clock = 0
-	c.workers._process(0)
-	var woodcutter: Dictionary = c.workers.workers[0]
-	check(woodcutter.actor.texture == woodcutter.work,"woodcutter uses work animation")
-	c.workers.clock = 6
-	c.workers._process(0)
-	check(woodcutter.actor.texture == woodcutter.carry and woodcutter.actor.position.x > woodcutter.home.x,"worker carries resource toward delivery")
-	c.workers.clock = 9
-	c.workers._process(0)
-	check(woodcutter.actor.texture == woodcutter["return"] and woodcutter.actor.flip_h,"worker returns with tool")
-	c.workers.clock = 0
+	check(c.villager_views.size() == 3, "three authored villagers present")
+	check(c.resource_spots.size() == 3, "three authored clickable resource spots present")
+	check(c.district.position.x == 480 and c.formation.get_parent() == c.district, "authored district placement preserved")
+	check(c.trainees[0].get_parent() == c.district.get_node("Barracks"), "training moves with barracks")
+	var woodcutter = c.villager_views.woodcutter
+	check(woodcutter.destination == c.resource_spots.wood_01, "initial assignment drives worker destination")
+	woodcutter._process(1.0)
+	check(woodcutter.get_node("Visual").animation == &"work_wood", "assigned villager works at marker")
 	for layer in terrain.get_children():
 		check(not layer.get_used_cells().is_empty(),str(layer.name)+" has painted terrain")
 	var expected_width: int = load("res://scripts/presentation_scale.gd").window_width(root)
@@ -68,9 +63,9 @@ func run_checks() -> void:
 		await process_frame
 		check(Rect2i(usable).encloses(Rect2i(root.position, root.size)),kind+" expanded window fits monitor")
 		check(Rect2(Vector2.ZERO,Vector2(c.view_width,500)).encloses(c.popup.get_rect()),kind+" popup inside window")
-		var end: float = c.popup_body.position.y+c.popup_body.size.y
-		var limit := 250.0
-		for b in c.panel_buttons: limit=minf(limit,b.position.y)
+		var end: float = c.get_node("Popup/Content/BodyScroll").get_global_rect().end.y
+		var limit: float = c.popup.get_global_rect().end.y - 8.0
+		for b in c.panel_buttons: limit=minf(limit,b.global_position.y)
 		check(end<=limit,kind+" text does not overlap actions")
 		c.close_panel()
 		check(root.size==compact_size,kind+" closes to compact")
@@ -86,7 +81,7 @@ func run_checks() -> void:
 		root.get_texture().get_image().save_png("res://conquest/companion-training.png")
 	var army_before: int = c.game.s.warriors
 	c.perform("deploy")
-	var seconds_per_step: float = c.Rules.PRESENTATION / c.game.s.battle.timeline.size()
+	var seconds_per_step: float = c.game.balance.presentation_duration / c.game.s.battle.timeline.size()
 	c.update_combat_presentation(c.game.s.battle, 0, 0.1 / seconds_per_step)
 	check(c.damage_numbers.get_child_count() == 0,"first swing winds up before damage")
 	c.update_combat_presentation(c.game.s.battle, 0, 0.21 / seconds_per_step)
@@ -185,6 +180,6 @@ func run_checks() -> void:
 		check(Rect2i(screen_area).encloses(Rect2i(root.position, root.size)),"restored town fits tested monitor " + str(screen))
 	root.remove_child(c)
 	c.free()
-	DirAccess.remove_absolute("res://conquest/companion-check-save.json")
+	DirAccess.remove_absolute("user://companion-check-save.json")
 	print("COMPANION CHECKS: %d checks, %d failures" % [checks,failures])
 	quit(1 if failures else 0)

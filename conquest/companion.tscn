@@ -1,9 +1,295 @@
-[gd_scene format=3 uid="uid://c43mlsgtljbyj"]
+[gd_scene format=3 uid="uid://cs6427njtoswj"]
 
 [ext_resource type="Script" uid="uid://bcf4yir651yyo" path="res://conquest/companion.gd" id="1"]
-[ext_resource type="PackedScene" path="res://conquest/terrain.tscn" id="2_terrain"]
+[ext_resource type="PackedScene" path="res://conquest/terrain.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://conquest/units/home.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://conquest/units/barracks.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://conquest/units/academy.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://conquest/units/army.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://conquest/units/frontier.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://conquest/units/trainee.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://conquest/units/wood_spot.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://conquest/units/villager.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://conquest/units/gold_spot.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://conquest/units/food_spot.tscn" id="13"]
+[ext_resource type="Texture2D" uid="uid://bei8xd2wf1tuk" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Stump 1.png" id="14"]
+[ext_resource type="Texture2D" uid="uid://fmo264mwxfyo" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Wood Resource/Wood Resource.png" id="15"]
+[ext_resource type="Texture2D" uid="uid://f8jnhl1vvdm" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Gold/Gold Resource/Gold_Resource.png" id="16"]
+[ext_resource type="Texture2D" uid="uid://dr2arftflyl4b" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Meat/Meat Resource/Meat Resource.png" id="17"]
+[ext_resource type="Texture2D" uid="uid://8e3xi18c6046" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/House1.png" id="18"]
+[ext_resource type="Texture2D" uid="uid://cbp02y7ot0sa3" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Meat/Sheep/Sheep_Idle.png" id="19"]
+[ext_resource type="SpriteFrames" path="res://conquest/units/tree_idle.tres" id="tree_idle"]
+[ext_resource type="Texture2D" uid="uid://ugkioce1i6bb" path="res://asset/Tiny Swords (Free Pack)/Terrain/Decorations/Rocks/Rock2.png" id="21"]
+[ext_resource type="PackedScene" path="res://conquest/ui/hud.tscn" id="22"]
+[ext_resource type="PackedScene" path="res://conquest/ui/popup.tscn" id="23"]
+[ext_resource type="Script" uid="uid://cwgtndulwyuvs" path="res://conquest/taskbar_sparring.gd" id="24"]
 
-[node name="GrowingBannerCompanion" type="Node2D" unique_id=613875653]
+[sub_resource type="AtlasTexture" id="Atlas0"]
+atlas = ExtResource("19")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas1"]
+atlas = ExtResource("19")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas2"]
+atlas = ExtResource("19")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas3"]
+atlas = ExtResource("19")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas4"]
+atlas = ExtResource("19")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas5"]
+atlas = ExtResource("19")
+region = Rect2(640, 0, 128, 128)
+
+[sub_resource type="SpriteFrames" id="Frames6"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas5")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 8.0
+}]
+
+[node name="GrowingBannerCompanion" type="Node2D" unique_id=1639676939]
 script = ExtResource("1")
 
-[node name="Terrain" parent="." unique_id=821653279 instance=ExtResource("2_terrain")]
+[node name="Settlement" type="Node2D" parent="." unique_id=2048516625]
+
+[node name="Terrain" parent="Settlement" unique_id=4327348 instance=ExtResource("3")]
+
+[node name="TownDistrict" type="Node2D" parent="Settlement" unique_id=1491151640]
+position = Vector2(480, 0)
+
+[node name="Home" parent="Settlement/TownDistrict" unique_id=1316754242 instance=ExtResource("4")]
+position = Vector2(120, 109)
+
+[node name="Barracks" parent="Settlement/TownDistrict" unique_id=461646252 instance=ExtResource("5")]
+position = Vector2(284, 124)
+
+[node name="Trainee1" parent="Settlement/TownDistrict/Barracks" unique_id=512019836 instance=ExtResource("9")]
+position = Vector2(-60, 42)
+
+[node name="Trainee2" parent="Settlement/TownDistrict/Barracks" unique_id=642027637 instance=ExtResource("9")]
+position = Vector2(-16, 42)
+frame = 8
+flip_h = true
+
+[node name="Academy" parent="Settlement/TownDistrict" unique_id=61262345 instance=ExtResource("6")]
+position = Vector2(399, 113)
+
+[node name="Army" parent="Settlement/TownDistrict" unique_id=529057945 instance=ExtResource("7")]
+position = Vector2(620, 143)
+
+[node name="Frontier" parent="Settlement/TownDistrict" unique_id=19899442 instance=ExtResource("8")]
+position = Vector2(874, 126)
+
+[node name="Formation" type="Node2D" parent="Settlement/TownDistrict" unique_id=1302859765]
+
+[node name="DamageNumbers" type="Node2D" parent="Settlement/TownDistrict" unique_id=247891306]
+z_index = 20
+
+[node name="Anchors" type="Node2D" parent="Settlement/TownDistrict" unique_id=1541991986]
+
+[node name="Allies" type="Marker2D" parent="Settlement/TownDistrict/Anchors" unique_id=1100059108]
+position = Vector2(543, 143)
+
+[node name="Mage" type="Marker2D" parent="Settlement/TownDistrict/Anchors" unique_id=2126801776]
+position = Vector2(499, 157)
+
+[node name="Enemies" type="Marker2D" parent="Settlement/TownDistrict/Anchors" unique_id=867235588]
+position = Vector2(707, 143)
+
+[node name="Fire" type="Marker2D" parent="Settlement/TownDistrict/Anchors" unique_id=1696790202]
+position = Vector2(746, 151)
+
+[node name="Heal" type="Marker2D" parent="Settlement/TownDistrict/Anchors" unique_id=1052587883]
+position = Vector2(578, 151)
+
+[node name="EnemyDamage" type="Marker2D" parent="Settlement/TownDistrict/Anchors" unique_id=1150966223]
+position = Vector2(731, 105)
+
+[node name="AllyDamage" type="Marker2D" parent="Settlement/TownDistrict/Anchors" unique_id=256983744]
+position = Vector2(555, 103)
+
+[node name="Healing" type="Marker2D" parent="Settlement/TownDistrict/Anchors" unique_id=562297383]
+position = Vector2(515, 82)
+
+[node name="WorkingHamlet" type="Node2D" parent="Settlement" unique_id=684910186]
+
+[node name="WoodSpot" parent="Settlement/WorkingHamlet" unique_id=441396199 instance=ExtResource("10")]
+position = Vector2(48, 130)
+spot_id = "wood_01"
+
+[node name="Alex" parent="Settlement/WorkingHamlet" unique_id=799304329 instance=ExtResource("11")]
+position = Vector2(77, 163)
+villager_id = "woodcutter"
+display_name = "Alex"
+initial_spot_id = "wood_01"
+
+[node name="GoldSpot" parent="Settlement/WorkingHamlet" unique_id=269858788 instance=ExtResource("12")]
+position = Vector2(207, 158)
+spot_id = "gold_01"
+
+[node name="Sam" parent="Settlement/WorkingHamlet" unique_id=204104708 instance=ExtResource("11")]
+position = Vector2(238, 163)
+villager_id = "miner"
+display_name = "Sam"
+initial_spot_id = "gold_01"
+
+[node name="FoodSpot" parent="Settlement/WorkingHamlet" unique_id=1595251272 instance=ExtResource("13")]
+position = Vector2(378, 162)
+spot_id = "food_01"
+
+[node name="Jamie" parent="Settlement/WorkingHamlet" unique_id=1893310378 instance=ExtResource("11")]
+position = Vector2(399, 171)
+villager_id = "foodgatherer"
+display_name = "Jamie"
+initial_spot_id = "food_01"
+
+[node name="Decorations" type="Node2D" parent="Settlement" unique_id=520861915]
+visible = false
+
+[node name="Decoration1" type="Sprite2D" parent="Settlement/Decorations" unique_id=1213621129]
+position = Vector2(105, 171)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("14")
+
+[node name="Decoration2" type="Sprite2D" parent="Settlement/Decorations" unique_id=1846948432]
+position = Vector2(151, 169)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("15")
+
+[node name="Decoration3" type="Sprite2D" parent="Settlement/Decorations" unique_id=1267458271]
+position = Vector2(300, 174)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("16")
+
+[node name="Decoration4" type="Sprite2D" parent="Settlement/Decorations" unique_id=521950623]
+position = Vector2(451, 174)
+scale = Vector2(0.65, 0.65)
+texture = ExtResource("17")
+
+[node name="Decoration5" type="Sprite2D" parent="Settlement/Decorations" unique_id=1591086707]
+position = Vector2(532, 168)
+scale = Vector2(0.23, 0.23)
+texture = ExtResource("18")
+
+[node name="Decoration6" type="AnimatedSprite2D" parent="Settlement/Decorations" unique_id=1537528360]
+position = Vector2(679, 179)
+scale = Vector2(0.5, 0.5)
+sprite_frames = SubResource("Frames6")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Decoration7" type="AnimatedSprite2D" parent="Settlement/Decorations" unique_id=1212867367]
+position = Vector2(508, 132)
+scale = Vector2(0.45, 0.45)
+sprite_frames = ExtResource("tree_idle")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Decoration8" type="AnimatedSprite2D" parent="Settlement/Decorations" unique_id=1704160475]
+position = Vector2(680, 132)
+scale = Vector2(0.45, 0.45)
+sprite_frames = ExtResource("tree_idle")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Decoration9" type="AnimatedSprite2D" parent="Settlement/Decorations" unique_id=648922377]
+position = Vector2(941, 132)
+scale = Vector2(0.45, 0.45)
+sprite_frames = ExtResource("tree_idle")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Decoration10" type="AnimatedSprite2D" parent="Settlement/Decorations" unique_id=1122366272]
+position = Vector2(1403, 132)
+scale = Vector2(0.45, 0.45)
+sprite_frames = ExtResource("tree_idle")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Decoration11" type="AnimatedSprite2D" parent="Settlement/Decorations" unique_id=147792853]
+position = Vector2(1540, 132)
+scale = Vector2(0.45, 0.45)
+sprite_frames = ExtResource("tree_idle")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Decoration12" type="AnimatedSprite2D" parent="Settlement/Decorations" unique_id=118881693]
+position = Vector2(1820, 132)
+scale = Vector2(0.45, 0.45)
+sprite_frames = ExtResource("tree_idle")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Decoration13" type="AnimatedSprite2D" parent="Settlement/Decorations" unique_id=593885130]
+position = Vector2(2200, 132)
+scale = Vector2(0.45, 0.45)
+sprite_frames = ExtResource("tree_idle")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Decoration14" type="AnimatedSprite2D" parent="Settlement/Decorations" unique_id=209035502]
+position = Vector2(2670, 132)
+scale = Vector2(0.45, 0.45)
+sprite_frames = ExtResource("tree_idle")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Decoration15" type="Sprite2D" parent="Settlement/Decorations" unique_id=1243695634]
+position = Vector2(947, 171)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("21")
+
+[node name="Decoration16" type="Sprite2D" parent="Settlement/Decorations" unique_id=1092267764]
+position = Vector2(1604, 171)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("21")
+
+[node name="Decoration17" type="Sprite2D" parent="Settlement/Decorations" unique_id=1684375191]
+position = Vector2(1884, 171)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("21")
+
+[node name="Decoration18" type="Sprite2D" parent="Settlement/Decorations" unique_id=1736978076]
+position = Vector2(2264, 171)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("21")
+
+[node name="Decoration19" type="Sprite2D" parent="Settlement/Decorations" unique_id=1418622375]
+position = Vector2(2734, 171)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("21")
+
+[node name="HUD" parent="." unique_id=1339221666 instance=ExtResource("22")]
+
+[node name="Popup" parent="." unique_id=1813399626 instance=ExtResource("23")]
+
+[node name="Sparring" type="Node2D" parent="." unique_id=739049425]
+visible = false
+script = ExtResource("24")

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ConquestBalance" load_steps=6 format=3]
+[ext_resource type="Script" path="res://conquest/data/balance.gd" id="1"]
+[ext_resource type="Script" path="res://conquest/data/encounter.gd" id="2"]
+[ext_resource type="Resource" path="res://conquest/data/meadow.tres" id="3"]
+[ext_resource type="Resource" path="res://conquest/data/quarry.tres" id="4"]
+[ext_resource type="Resource" path="res://conquest/data/river.tres" id="5"]
+[resource]
+script = ExtResource("1")
+encounters = Array[ExtResource("2")]([ExtResource("3"), ExtResource("4"), ExtResource("5")])

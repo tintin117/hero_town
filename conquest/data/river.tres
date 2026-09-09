@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ConquestEncounter" load_steps=2 format=3]
+[ext_resource type="Script" path="res://conquest/data/encounter.gd" id="1"]
+[resource]
+script = ExtResource("1")
+name = "River Watch"
+income = 10
+plots = 2
+count = 4
+hp = 130.0
+attack = 9.0
+hint = "Four armored guards. A deeper frontline and healing can outlast them."

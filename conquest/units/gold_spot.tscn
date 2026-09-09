@@ -1,0 +1,22 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://conquest/units/resource_spot.tscn" id="1"]
+[ext_resource type="Resource" path="res://conquest/data/gold.tres" id="2"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Gold/Gold Stones/Gold Stone 6.png" id="3"]
+
+[sub_resource type="AtlasTexture" id="Atlas0"]
+atlas = ExtResource("3")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="SpriteFrames" id="Frames1"]
+animations = [{"frames": [{"duration": 1.0, "texture": SubResource("Atlas0")}], "loop": true, "name": &"idle", "speed": 8.0}]
+
+[node name="GoldSpot" instance=ExtResource("1")]
+display_name = "Gold spot"
+gathering = ExtResource("2")
+
+[node name="Visual" parent="."]
+sprite_frames = SubResource("Frames1")
+animation = &"idle"
+autoplay = "idle"
+scale = Vector2(0.9, 0.9)

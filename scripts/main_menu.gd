@@ -2,6 +2,7 @@ extends Control
 
 const Rules = preload("res://conquest/conquest_state.gd")
 const Presentation = preload("res://scripts/presentation_scale.gd")
+@export var companion_scene: PackedScene = preload("res://conquest/companion.tscn")
 @export var companion_save_path := "user://conquest_companion_v1.json"
 var status: Label
 
@@ -29,14 +30,14 @@ func _ready() -> void:
 
 
 func _on_play_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://conquest/companion.tscn")
+	get_tree().change_scene_to_packed(companion_scene)
 
 
 func _on_compact_button_pressed() -> void:
 	if not create_fresh_save():
 		status.text = "Could not start a new game. Your current save has been kept."
 		return
-	get_tree().change_scene_to_file("res://conquest/companion.tscn")
+	get_tree().change_scene_to_packed(companion_scene)
 	
 
 
@@ -49,4 +50,7 @@ func create_fresh_save() -> bool:
 	if FileAccess.file_exists(companion_save_path):
 		if DirAccess.copy_absolute(companion_save_path, companion_save_path + ".previous") != OK:
 			return false
-	return Rules.new().save_game(companion_save_path)
+	var level = companion_scene.instantiate()
+	var initial_state = Rules.new(level.balance)
+	level.free()
+	return initial_state.save_game(companion_save_path)

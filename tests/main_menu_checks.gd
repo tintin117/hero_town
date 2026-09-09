@@ -24,6 +24,18 @@ func run_checks() -> void:
 	assert(fresh.s.warriors == 3 and fresh.s.owned == 0 and fresh.s.projects.is_empty())
 	var previous = JSON.parse_string(FileAccess.get_file_as_string(menu.companion_save_path + ".previous"))
 	assert(previous.warriors == 17 and previous.owned == 2)
+	var level = menu.companion_scene.instantiate()
+	var custom_balance = level.balance.duplicate(true)
+	custom_balance.starting_gold = 321
+	custom_balance.starting_warriors = 6
+	level.balance = custom_balance
+	var custom_scene := PackedScene.new()
+	assert(custom_scene.pack(level) == OK)
+	level.free()
+	menu.companion_scene = custom_scene
+	assert(menu.create_fresh_save())
+	fresh.load_game(menu.companion_save_path)
+	assert(fresh.s.gold == 321 and fresh.s.warriors == 6)
 	assert(root.transparent and root.transparent_bg and root.borderless)
 	assert(not menu.get_node("MainMenuScene/water").visible)
 	assert(not menu.get_node("MainMenuScene/foam_water").visible)

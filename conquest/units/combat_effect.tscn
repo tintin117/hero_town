@@ -1,0 +1,11 @@
+[gd_scene load_steps=4 format=3]
+[ext_resource type="PackedScene" path="res://conquest/units/combat_unit.tscn" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Particle FX/Explosion_01.png" id="2"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Monk/Heal_Effect.png" id="3"]
+[node name="CombatEffect" instance=ExtResource("1")]
+texture = ExtResource("2")
+attack_texture = ExtResource("2")
+idle_texture = ExtResource("3")
+hframes = 8
+frame_width = 192
+scale = Vector2(0.8, 0.8)

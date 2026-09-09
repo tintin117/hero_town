@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://conquest/units/building.tscn" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Red Buildings/Tower.png" id="2"]
+
+
+[node name="Frontier" instance=ExtResource("1")]
+action = "frontier"
+
+[node name="Visual" parent="."]
+texture = ExtResource("2")
+scale = Vector2(0.45, 0.45)

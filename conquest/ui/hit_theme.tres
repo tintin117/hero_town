@@ -1,0 +1,7 @@
+[gd_resource type="Theme" load_steps=2 format=3]
+[sub_resource type="StyleBoxEmpty" id="Empty"]
+[resource]
+Button/styles/normal = SubResource("Empty")
+Button/styles/hover = SubResource("Empty")
+Button/styles/pressed = SubResource("Empty")
+Button/styles/focus = SubResource("Empty")

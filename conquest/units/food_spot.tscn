@@ -1,0 +1,66 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="PackedScene" path="res://conquest/units/resource_spot.tscn" id="1"]
+[ext_resource type="Resource" path="res://conquest/data/food.tres" id="2"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Meat/Sheep/Sheep_Grass.png" id="3"]
+
+[sub_resource type="AtlasTexture" id="Atlas0"]
+atlas = ExtResource("3")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas1"]
+atlas = ExtResource("3")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas2"]
+atlas = ExtResource("3")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas3"]
+atlas = ExtResource("3")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas4"]
+atlas = ExtResource("3")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas5"]
+atlas = ExtResource("3")
+region = Rect2(640, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas6"]
+atlas = ExtResource("3")
+region = Rect2(768, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas7"]
+atlas = ExtResource("3")
+region = Rect2(896, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas8"]
+atlas = ExtResource("3")
+region = Rect2(1024, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas9"]
+atlas = ExtResource("3")
+region = Rect2(1152, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas10"]
+atlas = ExtResource("3")
+region = Rect2(1280, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="Atlas11"]
+atlas = ExtResource("3")
+region = Rect2(1408, 0, 128, 128)
+
+[sub_resource type="SpriteFrames" id="Frames12"]
+animations = [{"frames": [{"duration": 1.0, "texture": SubResource("Atlas0")}, {"duration": 1.0, "texture": SubResource("Atlas1")}, {"duration": 1.0, "texture": SubResource("Atlas2")}, {"duration": 1.0, "texture": SubResource("Atlas3")}, {"duration": 1.0, "texture": SubResource("Atlas4")}, {"duration": 1.0, "texture": SubResource("Atlas5")}, {"duration": 1.0, "texture": SubResource("Atlas6")}, {"duration": 1.0, "texture": SubResource("Atlas7")}, {"duration": 1.0, "texture": SubResource("Atlas8")}, {"duration": 1.0, "texture": SubResource("Atlas9")}, {"duration": 1.0, "texture": SubResource("Atlas10")}, {"duration": 1.0, "texture": SubResource("Atlas11")}], "loop": true, "name": &"idle", "speed": 8.0}]
+
+[node name="FoodSpot" instance=ExtResource("1")]
+display_name = "Food spot"
+gathering = ExtResource("2")
+
+[node name="Visual" parent="."]
+sprite_frames = SubResource("Frames12")
+animation = &"idle"
+autoplay = "idle"
+scale = Vector2(0.5, 0.5)

@@ -1,5 +1,7 @@
 # Taskbar companion version
 
+For the current scene-based layout, villager assignment, gathering economy, and editable balance assets, see [the designer guide](../docs/DESIGNER_GUIDE.md). The notes and measurements below describe the earlier companion version.
+
 Press **F5** to open the main menu, then choose **Resume** to continue or **New Game** to start fresh. New Game keeps the previous companion save in a `.previous` backup. Keep Godot's Embed Game on Play disabled for native desktop behavior, and select **Game → Input**, not the 2D/3D inspection modes, to interact with buttons. The original **conquest.tscn** remains the full-window version (F6).
 
 ## Painting terrain
