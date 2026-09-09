@@ -5,21 +5,12 @@ func _ready() -> void:
 
 
 func _on_play_button_pressed() -> void:
+	GameState.update_setting("compact", false)
 	get_tree().change_scene_to_file("res://scenes/town_2d.tscn")
 
 
 func _on_compact_button_pressed() -> void:
-	const OVERLAY_H := 120
-	var sw := DisplayServer.screen_get_size().x
-	var sh := DisplayServer.screen_get_size().y
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_TRANSPARENT, true)
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
-	DisplayServer.window_set_size(Vector2i(sw, OVERLAY_H))
-	DisplayServer.window_set_position(Vector2i(0, sh - OVERLAY_H))
-	get_tree().root.transparent_bg = true
-	get_tree().root.content_scale_size = Vector2i(sw, OVERLAY_H)
-	get_tree().change_scene_to_file("res://scenes/town_2d.tscn")
+	get_tree().change_scene_to_file("res://conquest/companion.tscn")
 	
 
 

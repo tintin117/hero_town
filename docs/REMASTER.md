@@ -4,7 +4,7 @@ The active game is now a 20-stage idle army demo. It uses the existing Tiny Swor
 
 ## Play
 
-Open `project.godot` in Godot 4.6.2 and press F5. Choose **Begin your town** (or **Continue your town**) for a normal window, or **Play as desktop companion** for a strip along the current screen's bottom edge.
+F5 now opens the Growing Banner companion (`conquest/companion.tscn`). To play this older 20-stage remaster, open `scenes/main_menu.tscn`, press F6, and choose Play. The visual menu is preserved from main; its compact button opens Growing Banner.
 
 Use a separate game window for desktop companion mode; disable Godot's embedded game preview if it is enabled, so the game can resize and position its own native window.
 

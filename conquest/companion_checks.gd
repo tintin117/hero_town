@@ -18,6 +18,13 @@ func run_checks() -> void:
 	c.game.s.gold = 200.0
 	root.add_child(c)
 	await process_frame
+	var terrain: Node2D = c.settlement.get_node("Terrain")
+	check(terrain.get_child_count() == 5,"editable terrain layers present")
+	var menu: Node2D = load("res://scenes/main_menu_scene.tscn").instantiate()
+	check(terrain.get_node("Ground").tile_set == menu.get_node("ground_1").tile_set,"menu and companion share terrain definitions")
+	menu.free()
+	for layer in terrain.get_children():
+		check(not layer.get_used_cells().is_empty(),str(layer.name)+" has painted terrain")
 	check(root.size == Vector2i(960,220),"compact dimensions")
 	check(root.transparent and root.transparent_bg and root.borderless,"native transparency and borderless")
 	check(not Geometry2D.is_point_in_polygon(Vector2(1,1),root.mouse_passthrough_polygon),"empty outer area excluded")

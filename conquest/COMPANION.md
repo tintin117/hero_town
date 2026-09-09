@@ -1,6 +1,12 @@
 # Taskbar companion version
 
-Run **res://conquest/companion.tscn** with F6. Keep Godot's Embed Game on Play disabled for native desktop behavior. The original **conquest.tscn** remains the full-window version.
+Press **F5** to launch the companion, now the project's main scene. Keep Godot's Embed Game on Play disabled for native desktop behavior, and select **Game → Input**, not the 2D/3D inspection modes, to interact with buttons. The original **conquest.tscn** remains the full-window version (F6).
+
+## Painting terrain
+
+Open `res://conquest/terrain.tscn` to paint the Ground, Cliff, CastleTerrace, VillageTerrace, and FrontierTerrace TileMapLayer nodes. In the TileMap editor's Terrains tab, use terrain set 0: `ground` for grass and `cliff` for rock faces. Terrain Connect chooses neighboring edge tiles automatically. The shared `companion_terrain.tres` is extracted from the new main menu's `ground_1` layer without changing its terrain definitions; changes to that TileSet also affect the menu. Paint cell layouts independently in each scene.
+
+The terrain scene is instanced under the companion and moves with the settlement when panels expand. Keep terrain within the 960×220 compact view and the existing mouse outline when repainting. `scenes/main_menu.tscn` retains the visual menu from main; its compact button opens this companion, while Play opens the remastered town.
 
 The companion is a native 960×220 borderless transparent window, centered just above the current monitor's Windows usable-work-area boundary. It does not draw a fake taskbar or change Windows settings. It stays above other windows. On narrower work areas it scales down proportionally. Popups expand the same window upward to 960×500, preserve the settlement's bottom edge when space permits, and clamp to the work area.
 

@@ -100,23 +100,8 @@ func sprite(parent: Node, path: String, at: Vector2, factor: float, frames := 1)
 	if p.hframes>1: animations.append(p)
 	return p
 func make_town() -> void:
-	var map := TileMapLayer.new()
-	map.position = Vector2(0,148)
-	map.scale = Vector2(0.5,0.5)
-	map.z_index = -5
-	var tiles := TileSet.new()
-	tiles.tile_size = Vector2i(64,64)
-	var atlas := TileSetAtlasSource.new()
-	atlas.texture = load(PACK+"Terrain/Tileset/Tilemap_color1.png")
-	atlas.texture_region_size = Vector2i(64,64)
-	for x in 3:
-		for y in 3: atlas.create_tile(Vector2i(x,y))
-	tiles.add_source(atlas,0)
-	map.tile_set = tiles
-	for x in 30:
-		for y in 2:
-			map.set_cell(Vector2i(x,y),0,Vector2i(0 if x==0 else (2 if x==29 else 1),0 if y==0 else 2))
-	settlement.add_child(map)
+	# Authored TileMap layers stay paintable in the editor and move with popups.
+	$Terrain.reparent(settlement)
 	for at in [Vector2(28,130),Vector2(200,133),Vector2(461,132),Vector2(923,128)]: sprite(settlement,"Terrain/Resources/Wood/Trees/Tree1.png",at,0.45,8)
 	sprite(settlement,"Buildings/Blue Buildings/Castle.png",Vector2(120,109),0.44)
 	sprite(settlement,"Buildings/Blue Buildings/Barracks.png",Vector2(284,124),0.5)
