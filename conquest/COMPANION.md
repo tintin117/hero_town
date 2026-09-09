@@ -10,7 +10,7 @@ The terrain scene is instanced under the companion and moves with the settlement
 
 The companion is a native 1280×293 borderless transparent window, centered just above the current monitor's Windows usable-work-area boundary. It does not draw a fake taskbar or change Windows settings. It stays above other windows. On narrower work areas it scales down proportionally. Popups expand the same window upward to 1280×667, preserve the settlement's bottom edge when space permits, and clamp to the work area.
 
-Click the castle, barracks, academy, army or red frontier tower for details. Only gold and active timers remain on the strip. `>>` means working/deployed; `II` means paused/recovering. Building indicators never include project names. Gold opens the retained offline/battle report. Notices fade after a few seconds. The frontier popup previews the reward before deployment. Battle effects and two health bars fit in the strip.
+Click the castle, barracks, academy, army or red frontier tower for details. Only gold and active timers remain on the strip. `>>` means working/deployed; `II` means paused/recovering. Building indicators never include project names. Gold opens the retained offline/battle report. Notices fade after a few seconds. The frontier popup previews the reward before deployment. Battle effects and floating damage numbers show each combat step without health bars. Yellow numbers show damage to enemies, red numbers show damage to your army, and green numbers show healing.
 
 Small controls, left to right at the lower right: `>` frontier; `::` drag; `v` dock; `-` minimize; `x` save and close. Restore a minimized companion from its Windows taskbar entry. Close popups with their x or Escape. Empty desktop above the settlement is outside the native mouse interaction outline. The outline is conservative around sprites; this is not per-pixel click-through between every branch or soldier.
 
@@ -58,3 +58,5 @@ Restoring remembers the original monitor and positions the window inside that mo
 Closing the game completely pauses training, battles, recovery, and gold income. Reopening resumes the saved remaining time, without offline catch-up. Minimizing to the visible sparring scene keeps the game running and progress continues.
 
 Drag the minimized characters left or right to reposition them along the current monitor's taskbar edge. A short click restores town; dragging does not. The position is remembered per monitor for the current game session, and movement stays inside that monitor.
+
+Combat swings run at a fixed 10 FPS, independently of simulation-step duration. Every swing distributes a portion of the recorded battle damage into small 1–2 point popups; counters are offset slightly. Numbers fade quickly and the total damage and battle results remain unchanged.

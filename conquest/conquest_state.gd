@@ -84,6 +84,9 @@ func simulate(index: int) -> Dictionary:
 			if e > 0: alive += 1
 		if hp <= 0 or alive == 0: break
 		var effect := ""
+		var tick_healing := 0.0
+		var enemy_hp_before := 0.0
+		for enemy in enemies: enemy_hp_before += maxf(0, enemy)
 		if int(s.mages) > 0 and tick % 3 == 0:
 			if s.spell == "fireball":
 				effect = "fireball"
@@ -94,6 +97,7 @@ func simulate(index: int) -> Dictionary:
 				effect = "healing"
 				var heal := minf(40.0, maximum - hp)
 				healed += heal
+				tick_healing = heal
 				hp += heal
 		var damage := ceilf(hp / 40.0) * 4.0 + int(s.mages) * 4.0
 		for i in enemies.size():
@@ -105,8 +109,10 @@ func simulate(index: int) -> Dictionary:
 		for e in enemies:
 			if e > 0: alive += 1
 			enemy_hp += maxf(0,e)
-		hp = maxf(0, hp - alive * float(land.attack))
-		timeline.append({"hp":hp,"enemy_hp":enemy_hp,"alive":alive,"effect":effect})
+		var incoming := minf(hp, alive * float(land.attack))
+		hp = maxf(0, hp - incoming)
+		timeline.append({"hp":hp,"enemy_hp":enemy_hp,"alive":alive,"effect":effect,
+			"enemy_damage":enemy_hp_before-enemy_hp,"ally_damage":incoming,"healing":tick_healing})
 	var won := true
 	for e in enemies:
 		if e > 0: won = false

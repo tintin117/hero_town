@@ -32,7 +32,11 @@ var drag_offset := Vector2i.ZERO
 var paper: StyleBoxTexture
 var blue: StyleBoxTexture
 var fire: Sprite2D
-var bars: Array[ProgressBar] = []
+var damage_numbers: Node2D
+var last_damage_step := -1
+var last_counter_step := -1
+
+
 var panel_buttons: Array[Button] = []
 var trainees: Array[AnimatedSprite2D] = []
 var hud: Node2D
@@ -63,6 +67,10 @@ func _ready() -> void:
 	settlement.add_child(district)
 	formation = Node2D.new()
 	district.add_child(formation)
+	damage_numbers = Node2D.new()
+	damage_numbers.name = "DamageNumbers"
+	damage_numbers.z_index = 20
+	district.add_child(damage_numbers)
 	make_town()
 	hud = Node2D.new()
 	add_child(hud)
@@ -181,19 +189,6 @@ func make_controls() -> void:
 	popup.add_theme_stylebox_override("panel",paper)
 	add_child(popup)
 	popup.hide()
-	for i in 2:
-		var bar := ProgressBar.new()
-		bar.position = Vector2(516+i*126,189)
-		bar.size = Vector2(112,9)
-		bar.show_percentage = false
-		var bg := StyleBoxFlat.new()
-		bg.bg_color = Color("243f3f")
-		var fill := StyleBoxFlat.new()
-		fill.bg_color = Color("4db8d1") if i==0 else Color("d46453")
-		bar.add_theme_stylebox_override("background",bg)
-		bar.add_theme_stylebox_override("fill",fill)
-		settlement.add_child(bar)
-		bars.append(bar)
 	# Keep navigation and window controls reachable while the town scrolls.
 	for control in [gold, frontier, toast]: control.reparent(hud)
 	for control in settlement.get_children():
@@ -201,9 +196,6 @@ func make_controls() -> void:
 			control.reparent(hud)
 			right_controls.append(control)
 	right_controls.push_front(frontier)
-	for bar in bars:
-		bar.reparent(hud)
-		bar.position.y = 170
 
 func scroll_town(value: float) -> void:
 	scroll_offset = clampf(value, 0.0, maxf(0.0, land_width - view_width))
@@ -491,7 +483,9 @@ func rebuild_formation() -> void:
 	for i in mini(int(game.s.warriors),30):
 		var p := sprite(formation,"Units/Blue Units/Warrior/Warrior_Attack1.png" if battling else "Units/Blue Units/Warrior/Warrior_Idle.png",Vector2(543+(i%5)*27,143+(i/5)*14),0.55,1)
 		p.set_meta("ally",i)
-	if game.s.mages>0: sprite(formation,"Units/Blue Units/Monk/Heal.png" if battling else "Units/Blue Units/Monk/Idle.png",Vector2(499,157),0.57,1)
+	if game.s.mages>0:
+		var caster := sprite(formation,"Units/Blue Units/Monk/Heal.png" if battling else "Units/Blue Units/Monk/Idle.png",Vector2(499,157),0.57,1)
+		caster.set_meta("caster", true)
 	if battling:
 		for i in Rules.LANDS[int(game.s.battle.index)].count:
 			var p := sprite(formation,"Units/Red Units/Warrior/Warrior_Attack1.png",Vector2(707+(i%4)*25,143+(i/4)*20),0.55,1)
@@ -499,7 +493,78 @@ func rebuild_formation() -> void:
 			p.set_meta("enemy",i)
 		fire = sprite(formation,"Particle FX/Explosion_01.png",Vector2(745,151),0.8,8)
 	else: fire = null
-	for bar in bars: bar.visible = battling
+
+func show_combat_number(amount: float, at: Vector2, tint: Color, healing := false) -> void:
+	if amount <= 0 or taskbar_mode: return
+	var number := Label.new()
+	number.text = ("+" if healing else "-") + str(roundi(amount))
+	number.position = at
+	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	number.add_theme_font_size_override("font_size", 18)
+	number.add_theme_color_override("font_color", tint)
+	number.add_theme_color_override("font_outline_color", Color("18282e"))
+	number.add_theme_constant_override("outline_size", 5)
+	number.set_meta("amount", amount)
+	damage_numbers.add_child(number)
+	var tween := number.create_tween().set_parallel(true)
+	tween.tween_property(number, "position", at + Vector2(8, -25), 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(number, "modulate:a", 0.0, 0.25).set_delay(0.25)
+	tween.chain().tween_callback(number.queue_free)
+
+func emit_damage_packets(amount: int, at: Vector2, tint: Color, healing := false) -> void:
+	var left := amount
+	var packet := 0
+	while left > 0:
+		var hit := mini(2, left)
+		show_combat_number(hit, at + Vector2((packet % 6) * 14 - 35, -(packet / 6) * 16), tint, healing)
+		left -= hit
+		packet += 1
+
+func update_combat_presentation(battle: Dictionary, index: int, phase: float) -> void:
+	var elapsed: float = (index + phase) * Rules.PRESENTATION / battle.timeline.size()
+	var totals := Vector3.ZERO
+	var previous_hp: float = battle.max_hp
+	var previous_enemy: float = battle.enemy_max
+	for entry in battle.timeline:
+		totals.x += entry.get("enemy_damage", maxf(0, previous_enemy-entry.enemy_hp))
+		totals.y += entry.get("ally_damage", maxf(0, previous_hp-entry.hp))
+		totals.z += entry.get("healing", maxf(0, entry.hp-previous_hp))
+		previous_hp = entry.hp
+		previous_enemy = entry.enemy_hp
+	# Four-frame swings always play at 10 FPS, independent of simulation tick count.
+	var attack_beat := floori((elapsed - 0.2) / 0.4)
+	var counter_beat := floori((elapsed - 0.3) / 0.4)
+	var beats := 35.0
+	if attack_beat > last_damage_step:
+		var before := maxf(0, last_damage_step + 1) / beats
+		var after := minf(1, (attack_beat + 1) / beats)
+		emit_damage_packets(roundi(totals.x*after)-roundi(totals.x*before), Vector2(731,105), Color("ffdc70"))
+		emit_damage_packets(roundi(totals.z*after)-roundi(totals.z*before), Vector2(515,82), Color("89f4aa"), true)
+		last_damage_step = attack_beat
+	if counter_beat > last_counter_step:
+		var before := maxf(0, last_counter_step + 1) / beats
+		var after := minf(1, (counter_beat + 1) / beats)
+		emit_damage_packets(roundi(totals.y*after)-roundi(totals.y*before), Vector2(555,103), Color("ff8a7c"))
+		last_counter_step = counter_beat
+	var step: Dictionary = battle.timeline[index]
+	for actor in formation.get_children():
+		if actor.has_meta("ally"):
+			actor.frame = int(elapsed * 10) % actor.hframes
+			actor.modulate.a = 1.0 if actor.get_meta("ally") < ceilf(float(step.hp)/40) else 0.15
+		elif actor.has_meta("enemy"):
+			actor.frame = int(maxf(0, elapsed-0.1) * 10) % actor.hframes
+			actor.modulate.a = 1.0 if actor.get_meta("enemy") < step.alive else 0.15
+		elif actor.has_meta("caster"):
+			actor.frame = int(elapsed * 10) % actor.hframes
+	if is_instance_valid(fire):
+		var pulse := fposmod(elapsed - 0.2, 0.4)
+		fire.visible = step.effect != "" and elapsed >= 0.2 and pulse < 0.22
+		fire.frame = 0
+		fire.texture = load(PACK + ("Units/Blue Units/Monk/Heal_Effect.png" if step.effect == "healing" else "Particle FX/Explosion_01.png"))
+		fire.hframes = 11 if step.effect == "healing" else 8
+		fire.frame = mini(fire.hframes-1, floori(pulse / 0.22 * fire.hframes))
+		fire.position.x = 578 if step.effect == "healing" else 746
+
 func _process(delta: float) -> void:
 	if not popup.visible and not taskbar_mode:
 		var direction := Input.get_axis("ui_left", "ui_right")
@@ -524,23 +589,18 @@ func _process(delta: float) -> void:
 		if clock>flash[key]: flash.erase(key)
 	if toast.visible and clock>toast_until: toast.hide(); update_mouse_region()
 	for p in animations:
-		if is_instance_valid(p): p.frame=int(clock*8)%p.hframes
+		if is_instance_valid(p):
+			if not game.s.battle.is_empty() and (p.has_meta("ally") or p.has_meta("enemy") or p.has_meta("caster") or p == fire): continue
+			p.frame=int(clock*8)%p.hframes
 	if animations.size()>100: animations=animations.filter(func(p): return is_instance_valid(p))
 	if not game.s.battle.is_empty():
 		var b: Dictionary = game.s.battle
-		var step: Dictionary = b.timeline[mini(int((1-float(b.remaining)/Rules.PRESENTATION)*b.timeline.size()),b.timeline.size()-1)]
-		bars[0].max_value=b.max_hp
-		bars[0].value=step.hp
-		bars[1].max_value=b.enemy_max
-		bars[1].value=step.enemy_hp
-		for p in formation.get_children():
-			if p.has_meta("ally"): p.modulate.a=1.0 if p.get_meta("ally")<ceilf(float(step.hp)/40) else 0.15
-			if p.has_meta("enemy"): p.modulate.a=1.0 if p.get_meta("enemy")<step.alive else 0.15
-		if is_instance_valid(fire):
-			fire.visible=step.effect!=""
-			fire.texture=load(PACK+("Units/Blue Units/Monk/Heal_Effect.png" if step.effect=="healing" else "Particle FX/Explosion_01.png"))
-			fire.hframes=11 if step.effect=="healing" else 8
-			fire.position.x=578 if step.effect=="healing" else 746
+		var progress: float = (1-float(b.remaining)/Rules.PRESENTATION)*b.timeline.size()
+		var step_index := mini(int(progress), b.timeline.size()-1)
+		update_combat_presentation(b, step_index, progress-step_index)
+	else:
+		last_damage_step = -1
+		last_counter_step = -1
 	refresh()
 	if save_clock>5: save_clock=0; persist()
 	if get_window().position!=previous_position and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):

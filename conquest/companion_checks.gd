@@ -86,6 +86,16 @@ func run_checks() -> void:
 		root.get_texture().get_image().save_png("res://conquest/companion-training.png")
 	var army_before: int = c.game.s.warriors
 	c.perform("deploy")
+	var seconds_per_step: float = c.Rules.PRESENTATION / c.game.s.battle.timeline.size()
+	c.update_combat_presentation(c.game.s.battle, 0, 0.1 / seconds_per_step)
+	check(c.damage_numbers.get_child_count() == 0,"first swing winds up before damage")
+	c.update_combat_presentation(c.game.s.battle, 0, 0.21 / seconds_per_step)
+	check(c.damage_numbers.get_child_count() > 0,"fast first swing emits small hits")
+	for number in c.damage_numbers.get_children():
+		check(float(number.get_meta("amount")) >= 1.0 and float(number.get_meta("amount")) <= 2.0,"damage packets are one or two")
+	var packets_before: int = c.damage_numbers.get_child_count()
+	c.update_combat_presentation(c.game.s.battle, 0, 0.21 / seconds_per_step)
+	check(c.damage_numbers.get_child_count() == packets_before,"same swing does not duplicate damage")
 	var remaining: float = c.game.s.projects.barracks.remaining
 	var gold_before: float = c.game.s.gold
 	await create_timer(0.3).timeout
@@ -93,6 +103,12 @@ func run_checks() -> void:
 	check(c.game.s.gold>gold_before,"battle income continues")
 	check(c.activity.barracks.text.begins_with("II "),"generic paused indicator")
 	check(not c.trainees[0].is_playing(),"practice pauses during deployment")
+	var number_count: int = c.damage_numbers.get_child_count()
+	check(number_count > 0,"combat displays floating damage")
+	c.update_combat_presentation(c.game.s.battle, 0, 0.21 / seconds_per_step)
+	check(c.damage_numbers.get_child_count() == number_count,"same combat step does not duplicate numbers")
+	check(float(c.damage_numbers.get_child(0).get_meta("amount")) <= 2.0,"small damage values stay readable")
+	check(c.damage_numbers.get_child(0).mouse_filter == Control.MOUSE_FILTER_IGNORE,"damage does not block clicks")
 	c.persist()
 	var restored = load("res://conquest/conquest_state.gd").new()
 	restored.load_game(c.save_path)
