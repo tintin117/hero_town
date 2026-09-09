@@ -1,5 +1,5 @@
 extends Node2D
-
+@export var arrow_scene:= preload("res://scenes/arrow.tscn")
 const HUD_SCRIPT = preload("res://scripts/remaster/town_hud.gd")
 const UNIT_VIEW = preload("res://scripts/remaster/unit_view.gd")
 const BUILDING_VIEW = preload("res://scripts/remaster/town_building.gd")
@@ -21,6 +21,9 @@ var _visual_clock: float = 0.0
 var _effect_time: float = 0.0
 var _sound_time: float = 0.0
 var _landscape: int = -1
+
+var _tracked_shots: Array = []
+var _active_arrows: Array = []
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("203f49"))
@@ -149,7 +152,7 @@ func _combat_events(events: Array[Dictionary]) -> void:
 					{"size": 0.35, "color_main": Color("9edf9c") if event.kind == "heal" else Color("f3c77d")})
 		elif event.kind == "hit" and _effect_time > 0.18 and not GameState.settings.reduced_effects:
 			_effect_time = 0
-			fx.spawn("impact_spark", event.position + Vector2(0, -18), {"size": 0.16})
+			fx.spawn("impact_spark", event.position + Vector2(0, -50), {"size": 0.2})
 
 func _process(delta: float) -> void:
 	_visual_clock += delta
@@ -227,12 +230,32 @@ func _draw() -> void:
 			draw_rect(Rect2(TownRules.cell_position(hover_cell) - Vector2(30, 30), Vector2(60, 60)), Color(0.4, 1, 0.6, 0.5) if valid else Color(1, 0.4, 0.3, 0.5))
 	if director == null or director.simulation == null or director.phase != "BATTLE": return
 	for shot in director.simulation.projectiles:
+		#var target := director.simulation.find_unit(int(shot.target))
+		#if target.is_empty(): continue
+		#var direction: Vector2 = (target.position - shot.position).normalized()
+		#var pos: Vector2 = shot.position + Vector2(0, -18)
+		#draw_line(pos - direction * 13, pos, Color("ffe3a5") if shot.side == 0 else Color("ff9e7f"), 3)
+		#draw_circle(pos, 3, Color("fff3cd"))
 		var target := director.simulation.find_unit(int(shot.target))
-		if target.is_empty(): continue
-		var direction: Vector2 = (target.position - shot.position).normalized()
-		var pos: Vector2 = shot.position + Vector2(0, -18)
-		draw_line(pos - direction * 13, pos, Color("ffe3a5") if shot.side == 0 else Color("ff9e7f"), 3)
-		draw_circle(pos, 3, Color("fff3cd"))
+		if target.is_empty():
+			continue
+		if _tracked_shots.any(func(s): return is_same(s, shot)):
+			continue
+
+		var arrow := arrow_scene.instantiate()
+		add_child(arrow)
+		var color := Color("54b2f9ff") if shot.side == 0 else Color("ff9e7f")
+		arrow.setup(shot.position, target.position, color)
+
+		_tracked_shots.append(shot)
+		_active_arrows.append(arrow)
+
+	# untrack shots that no longer exist in the simulation
+	for i in range(_tracked_shots.size() - 1, -1, -1):
+		var still_present := director.simulation.projectiles.any(func(s): return is_same(s, _tracked_shots[i]))
+		if not still_present:
+			_tracked_shots.remove_at(i)
+			_active_arrows.remove_at(i)
 	for warning in director.simulation.warnings:
 		var alpha: float = 0.3 + 0.2 * sin(_visual_clock * 18)
 		if warning.kind == "charge":

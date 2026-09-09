@@ -11,7 +11,7 @@ func _ready() -> void:
 	sprite = AnimatedSprite2D.new()
 	sprite.sprite_frames = Art.unit_frames(model.visual, model.side == 1)
 	var frame := sprite.sprite_frames.get_frame_texture("idle", 0)
-	sprite.offset.y = -frame.get_height() * 0.5
+	#sprite.offset.y = -frame.get_height() * 0.5
 	sprite.scale = Vector2.ONE * (0.58 if not model.get("boss", "").is_empty() else 0.4)
 	add_child(sprite)
 	sprite.play("idle")
@@ -26,8 +26,35 @@ func update_view(delta: float, battle_time: float) -> void:
 		if not _dead:
 			_dead = true
 			sprite.stop()
-			sprite.rotation = -PI * 0.5
-			sprite.modulate = Color(0.65, 0.65, 0.7, 0.45 if model.side == 0 else 0.0)
+			#sprite.rotation = -PI * 0.5
+			#sprite.modulate = Color(0.65, 0.65, 0.7, 0.45 if model.side == 0 else 0.0)
+
+			var dust := AnimatedSprite2D.new()
+			var frames := SpriteFrames.new()
+			frames.add_animation("dust")
+			frames.set_animation_loop("dust", false)
+			frames.set_animation_speed("dust", 10.0)
+
+			var sheet: Texture2D = preload("res://asset/Tiny Swords (Free Pack)/Particle FX/Dust_02.png")
+			var frame_count := 10
+			var frame_width := sheet.get_width() / frame_count
+
+			for i in range(frame_count):
+				var atlas := AtlasTexture.new()
+				atlas.atlas = sheet
+				atlas.region = Rect2(i * frame_width, 0, frame_width, sheet.get_height())
+				frames.add_frame("dust", atlas)
+
+			dust.sprite_frames = frames
+			dust.animation = "dust"
+			get_parent().add_child(dust)
+			dust.global_position = global_position
+			dust.scale = Vector2(0.5,0.5)
+			dust.play("dust")
+			var duration := frame_count / 10
+			var tween := create_tween()
+			tween.tween_property(sprite, "modulate:a", 0.0, duration)
+			dust.animation_finished.connect(dust.queue_free)
 	else:
 		_dead = false
 		sprite.rotation = 0

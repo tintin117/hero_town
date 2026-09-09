@@ -1,4 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://c13te58sskhho"]
-[ext_resource type="Script" path="res://scripts/remaster/town.gd" id="1"]
-[node name="Town2D" type="Node2D"]
+[gd_scene format=3 uid="uid://c13te58sskhho"]
+
+[ext_resource type="Script" uid="uid://dewsywlc6ktiu" path="res://scripts/remaster/town.gd" id="1"]
+
+[node name="Town2D" type="Node2D" unique_id=2128553895]
 script = ExtResource("1")
