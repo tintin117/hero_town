@@ -70,7 +70,7 @@ grow_vertical = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/normal_font_size = 64
-text = "Play"
+text = "Resume"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -97,7 +97,7 @@ grow_vertical = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.95815676, 0.95815676, 0.95815676, 1)
 theme_override_font_sizes/normal_font_size = 64
-text = "Compact"
+text = "New Game"
 horizontal_alignment = 1
 vertical_alignment = 1
 

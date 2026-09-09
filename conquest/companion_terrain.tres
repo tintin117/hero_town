@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" format=3]
+[gd_resource type="TileSet" format=3 uid="uid://bcvljaw0py5a1"]
 
 [ext_resource type="Texture2D" uid="uid://tfn34criw4nj" path="res://asset/Tiny Swords (Free Pack)/Terrain/Tileset/Tilemap_color1.png" id="4_sb6w7"]
 
@@ -150,4 +150,3 @@ terrain_set_0/terrain_0/color = Color(0.5, 0.34375, 0.25, 1)
 terrain_set_0/terrain_1/name = "cliff"
 terrain_set_0/terrain_1/color = Color(0.5, 0.4375, 0.25, 1)
 sources/2 = SubResource("TileSetAtlasSource_yj20m")
-

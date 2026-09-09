@@ -1,6 +1,7 @@
 extends Node2D
 ## A separate desktop presentation of the same conquest rules.
 const Rules = preload("res://conquest/conquest_state.gd")
+const Presentation = preload("res://scripts/presentation_scale.gd")
 const PACK := "res://asset/Tiny Swords (Free Pack)/"
 const COMPACT_HEIGHT := 220
 const EXPANDED_HEIGHT := 500
@@ -33,16 +34,45 @@ var blue: StyleBoxTexture
 var fire: Sprite2D
 var bars: Array[ProgressBar] = []
 var panel_buttons: Array[Button] = []
+var trainees: Array[AnimatedSprite2D] = []
+var hud: Node2D
+var view_width := 960.0
+var land_width := 2880.0
+var scroll_offset := 0.0
+var right_controls: Array[Control] = []
+var taskbar_mode := false
+var taskbar_screen := 0
+var taskbar_pointer_down := false
+var taskbar_dragged := false
+var taskbar_press_position := Vector2i.ZERO
+var taskbar_window_position := Vector2i.ZERO
+var taskbar_positions: Dictionary = {}
+var sparring: Node2D
+var district: Node2D
+var workers: Node2D
+const DISTRICT_OFFSET := 480.0
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	paper = style("Papers/RegularPaper.png",16)
 	blue = style("Buttons/BigBlueButton_Regular.png",10)
 	settlement = Node2D.new()
 	add_child(settlement)
+	district = Node2D.new()
+	district.name = "TownDistrict"
+	district.position.x = DISTRICT_OFFSET
+	settlement.add_child(district)
 	formation = Node2D.new()
-	settlement.add_child(formation)
+	district.add_child(formation)
 	make_town()
+	hud = Node2D.new()
+	add_child(hud)
 	make_controls()
+	make_training_drill()
+	sparring = preload("res://conquest/taskbar_sparring.gd").new()
+	sparring.hide()
+	add_child(sparring)
+	sparring.restore_requested.connect(restore_town)
+	sparring.drag_started.connect(func(): begin_taskbar_drag(DisplayServer.mouse_get_position()))
 	if seed_from_full_window and not FileAccess.file_exists(save_path):
 		summary = game.load_game(Rules.SAVE)
 		persist()
@@ -102,23 +132,38 @@ func sprite(parent: Node, path: String, at: Vector2, factor: float, frames := 1)
 func make_town() -> void:
 	# Authored TileMap layers stay paintable in the editor and move with popups.
 	$Terrain.reparent(settlement)
-	for at in [Vector2(28,130),Vector2(200,133),Vector2(461,132),Vector2(923,128)]: sprite(settlement,"Terrain/Resources/Wood/Trees/Tree1.png",at,0.45,8)
-	sprite(settlement,"Buildings/Blue Buildings/Castle.png",Vector2(120,109),0.44)
-	sprite(settlement,"Buildings/Blue Buildings/Barracks.png",Vector2(284,124),0.5)
-	sprite(settlement,"Buildings/Red Buildings/Tower.png",Vector2(874,126),0.45)
-	sprite(settlement,"Buildings/Blue Buildings/House1.png",Vector2(52,168),0.23)
-	sprite(settlement,"Units/Blue Units/Pawn/Pawn_Interact Axe.png",Vector2(37,159),0.55,6)
-	sprite(settlement,"Units/Blue Units/Pawn/Pawn_Interact Pickaxe.png",Vector2(448,164),0.5,6)
-	sprite(settlement,"Terrain/Decorations/Rocks/Rock2.png",Vector2(467,171),0.48)
-	sprite(settlement,"Terrain/Resources/Meat/Sheep/Sheep_Idle.png",Vector2(199,179),0.5,6)
+	for terrace in ["CastleTerrace", "VillageTerrace", "FrontierTerrace"]:
+		settlement.get_node("Terrain/" + terrace).position.x += DISTRICT_OFFSET
+	workers = preload("res://conquest/town_workers.gd").new()
+	workers.name = "WorkingHamlet"
+	settlement.add_child(workers)
+	# Extend the paintable terrain into a continuous district for future buildings.
+	for layer_name in ["Ground", "Cliff"]:
+		var layer: TileMapLayer = settlement.get_node("Terrain/" + layer_name)
+		var cells: Array[Vector2i] = []
+		for x in ceili(land_width / 24.0):
+			for y in (2 if layer_name == "Ground" else 1): cells.append(Vector2i(x, y))
+		layer.set_cells_terrain_connect(cells, 0, 0 if layer_name == "Ground" else 1, false)
+	for x in [1540, 1820, 2200, 2670]:
+		sprite(settlement,"Terrain/Resources/Wood/Trees/Tree1.png",Vector2(x,132),0.45,8)
+		sprite(settlement,"Terrain/Decorations/Rocks/Rock2.png",Vector2(x+64,171),0.48)
+	for at in [Vector2(28,130),Vector2(200,133),Vector2(461,132),Vector2(923,128)]: sprite(district,"Terrain/Resources/Wood/Trees/Tree1.png",at,0.45,8)
+	sprite(district,"Buildings/Blue Buildings/Castle.png",Vector2(120,109),0.44)
+	sprite(district,"Buildings/Blue Buildings/Barracks.png",Vector2(284,124),0.5)
+	sprite(district,"Buildings/Red Buildings/Tower.png",Vector2(874,126),0.45)
+	sprite(district,"Buildings/Blue Buildings/House1.png",Vector2(52,168),0.23)
+	sprite(district,"Units/Blue Units/Pawn/Pawn_Interact Axe.png",Vector2(37,159),0.55,6)
+	sprite(district,"Units/Blue Units/Pawn/Pawn_Interact Pickaxe.png",Vector2(448,164),0.5,6)
+	sprite(district,"Terrain/Decorations/Rocks/Rock2.png",Vector2(467,171),0.48)
+	sprite(district,"Terrain/Resources/Meat/Sheep/Sheep_Idle.png",Vector2(199,179),0.5,6)
 func make_controls() -> void:
 	for entry in [["home",80,40,110,134],["barracks",230,70,110,105],["academy",350,56,108,124],["army",500,85,305,97],["frontier",828,63,90,121]]:
 		var kind: String = entry[0]
-		var hit := button(settlement,"",Vector2(entry[1],entry[2]),Vector2(entry[3],entry[4]),func(): open_panel(kind),kind.capitalize())
+		var hit := button(district,"",Vector2(entry[1],entry[2]),Vector2(entry[3],entry[4]),func(): open_panel(kind),kind.capitalize())
 		for state in ["normal","hover","pressed"]: hit.add_theme_stylebox_override(state,StyleBoxEmpty.new())
-	activity.barracks = label(settlement,"",Vector2(246,51),120)
-	activity.academy = label(settlement,"",Vector2(364,37),125)
-	activity.frontier = label(settlement,"",Vector2(832,38),120)
+	activity.barracks = label(district,"",Vector2(246,51),120)
+	activity.academy = label(district,"",Vector2(364,37),125)
+	activity.frontier = label(district,"",Vector2(832,38),120)
 	gold = button(settlement,"",Vector2(16,184),Vector2(151,30),func(): open_panel("ledger"),"Gold • income • return summary")
 	frontier = button(settlement,">",Vector2(778,184),Vector2(34,30),func(): open_panel("frontier"),"Frontier • preview reward and deploy")
 	var grip := button(settlement,"::",Vector2(818,184),Vector2(30,30),func(): pass,"Drag settlement")
@@ -127,7 +172,7 @@ func make_controls() -> void:
 			dragging = event.pressed
 			if dragging: drag_offset = Vector2i(event.global_position*scale_factor))
 	button(settlement,"v",Vector2(852,184),Vector2(30,30),dock,"Dock above taskbar")
-	button(settlement,"-",Vector2(886,184),Vector2(30,30),func(): persist(); get_window().mode = Window.MODE_MINIMIZED,"Hide • restore from Windows taskbar")
+	button(settlement,"-",Vector2(886,184),Vector2(30,30),minimize_to_sparring,"Minimize town • watch taskbar sparring")
 	button(settlement,"x",Vector2(920,184),Vector2(30,30),func(): persist(); get_tree().quit(),"Save and close")
 	toast = label(settlement,"",Vector2(480,12),456,15)
 	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -149,6 +194,57 @@ func make_controls() -> void:
 		bar.add_theme_stylebox_override("fill",fill)
 		settlement.add_child(bar)
 		bars.append(bar)
+	# Keep navigation and window controls reachable while the town scrolls.
+	for control in [gold, frontier, toast]: control.reparent(hud)
+	for control in settlement.get_children():
+		if control is Button and control.text in ["::", "v", "-", "x"]:
+			control.reparent(hud)
+			right_controls.append(control)
+	right_controls.push_front(frontier)
+	for bar in bars:
+		bar.reparent(hud)
+		bar.position.y = 170
+
+func scroll_town(value: float) -> void:
+	scroll_offset = clampf(value, 0.0, maxf(0.0, land_width - view_width))
+	settlement.position.x = -scroll_offset
+
+func layout_navigation() -> void:
+	for i in right_controls.size(): right_controls[i].position.x = view_width - 182 + i * 35
+	toast.position.x = maxf(0, view_width - 480)
+	scroll_town(scroll_offset)
+func make_training_drill() -> void:
+	var clips := SpriteFrames.new()
+	clips.add_animation("practice")
+	clips.set_animation_speed("practice", 8.0)
+	for clip in ["Attack1", "Guard", "Attack2", "Idle"]:
+		var sheet: Texture2D = load(PACK + "Units/Blue Units/Warrior/Warrior_" + clip + ".png")
+		for frame_index in int(sheet.get_width() / 192):
+			var frame := AtlasTexture.new()
+			frame.atlas = sheet
+			frame.region = Rect2(frame_index * 192, 0, 192, 192)
+			clips.add_frame("practice", frame)
+	for i in 2:
+		var trainee := AnimatedSprite2D.new()
+		trainee.sprite_frames = clips
+		trainee.position = Vector2(224 + i * 44, 166)
+		trainee.scale = Vector2.ONE * 0.45
+		trainee.flip_h = i == 1
+		trainee.animation = "practice"
+		trainee.frame = i * 8
+		district.add_child(trainee)
+		trainees.append(trainee)
+	update_training_drill()
+
+func update_training_drill() -> void:
+	var training: bool = game.s.projects.has("barracks")
+	var paused: bool = not game.s.battle.is_empty()
+	for trainee in trainees:
+		trainee.visible = training
+		trainee.modulate.a = 0.55 if paused else 1.0
+		if training and not paused: trainee.play("practice")
+		else: trainee.pause()
+
 func configure_window() -> void:
 	var w := get_window()
 	w.title = "The Growing Banner • Companion"
@@ -161,26 +257,96 @@ func configure_window() -> void:
 	w.transparent_bg = true
 	w.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	RenderingServer.set_default_clear_color(Color(0,0,0,0))
+	scale_factor = Presentation.window_width(w) / 960.0
 	if DisplayServer.get_name() != "headless":
-		var usable := DisplayServer.screen_get_usable_rect(w.current_screen)
-		scale_factor = minf(1.0,usable.size.x/960.0)
+		view_width = floorf(DisplayServer.screen_get_usable_rect(w.current_screen).size.x / scale_factor)
+	land_width = maxf(2880, view_width + 960)
+	for layer_name in ["Ground", "Cliff"]:
+		var layer: TileMapLayer = settlement.get_node("Terrain/" + layer_name)
+		var cells: Array[Vector2i] = []
+		for x in range(120, ceili(land_width / 24.0)):
+			for y in (2 if layer_name == "Ground" else 1): cells.append(Vector2i(x, y))
+		if not cells.is_empty(): layer.set_cells_terrain_connect(cells, 0, 0 if layer_name == "Ground" else 1, false)
+	layout_navigation()
 	set_height(COMPACT_HEIGHT)
 	dock()
 	Engine.max_fps = 30
-func set_height(height: int) -> void:
+func minimize_to_sparring() -> void:
+	if taskbar_mode: return
+	taskbar_screen = get_window().current_screen
+	persist()
+	if popup.visible: close_panel()
+	dragging = false
+	taskbar_mode = true
+	settlement.hide()
+	hud.hide()
+	sparring.show()
+	var window := get_window()
+	window.content_scale_size = sparring.VIEW_SIZE
+	window.size = Vector2i(roundi(sparring.VIEW_SIZE.x * scale_factor), roundi(sparring.VIEW_SIZE.y * scale_factor))
+	dock(taskbar_screen)
+	update_mouse_region()
+
+func restore_town() -> void:
+	if not taskbar_mode: return
+	taskbar_pointer_down = false
+	taskbar_mode = false
+	sparring.hide()
+	settlement.show()
+	hud.show()
+	set_height(COMPACT_HEIGHT, taskbar_screen)
+	dock(taskbar_screen)
+
+func begin_taskbar_drag(pointer: Vector2i) -> void:
+	if not taskbar_mode: return
+	taskbar_pointer_down = true
+	taskbar_dragged = false
+	taskbar_press_position = pointer
+	taskbar_window_position = get_window().position
+
+func move_taskbar_drag(pointer: Vector2i) -> void:
+	if not taskbar_pointer_down: return
+	var distance := pointer.x - taskbar_press_position.x
+	if abs(distance) >= 6: taskbar_dragged = true
+	if not taskbar_dragged: return
+	var window := get_window()
+	var usable := DisplayServer.screen_get_usable_rect(taskbar_screen)
+	window.position = Vector2i(clampi(taskbar_window_position.x + distance, usable.position.x, maxi(usable.position.x, usable.end.x - window.size.x)), usable.end.y - window.size.y)
+	taskbar_positions[taskbar_screen] = window.position.x
+	previous_position = window.position
+
+func end_taskbar_drag() -> void:
+	if not taskbar_pointer_down: return
+	taskbar_pointer_down = false
+	if not taskbar_dragged: restore_town()
+
+func set_height(height: int, target_screen := -1) -> void:
 	var w := get_window()
 	var bottom := w.position.y+w.size.y
-	w.content_scale_size = Vector2i(960,height)
-	w.size = Vector2i(roundi(960*scale_factor),roundi(height*scale_factor))
-	w.position.y = bottom-w.size.y
+	var target_position := w.position
+	var usable := Rect2i()
+	if DisplayServer.get_name() != "headless":
+		var screen := w.current_screen if target_screen < 0 else clampi(target_screen, 0, DisplayServer.get_screen_count() - 1)
+		usable = DisplayServer.screen_get_usable_rect(screen)
+		# Expand from inside the original monitor, never across its right edge.
+		w.position = usable.position
+	w.content_scale_size = Vector2i(roundi(view_width),height)
+	w.size = Vector2i(roundi(view_width*scale_factor),roundi(height*scale_factor))
+	if DisplayServer.get_name() != "headless":
+		w.position = Vector2i(clampi(target_position.x, usable.position.x, maxi(usable.position.x, usable.end.x-w.size.x)), clampi(bottom-w.size.y, usable.position.y, maxi(usable.position.y, usable.end.y-w.size.y)))
+	else: w.position.y = bottom-w.size.y
 	settlement.position.y = height-COMPACT_HEIGHT
-	clamp_to_work_area()
+	hud.position.y = height-COMPACT_HEIGHT
 	update_mouse_region()
-func dock() -> void:
+func dock(target_screen := -1) -> void:
 	if DisplayServer.get_name()=="headless": return
 	var w := get_window()
-	var usable := DisplayServer.screen_get_usable_rect(w.current_screen)
-	w.position = Vector2i(usable.position.x+(usable.size.x-w.size.x)/2,usable.end.y-w.size.y)
+	var screen := w.current_screen if target_screen < 0 else clampi(target_screen, 0, DisplayServer.get_screen_count()-1)
+	var usable := DisplayServer.screen_get_usable_rect(screen)
+	var dock_x := usable.end.x - w.size.x if taskbar_mode else usable.position.x + (usable.size.x - w.size.x) / 2
+	if taskbar_mode and taskbar_positions.has(screen):
+		dock_x = clampi(taskbar_positions[screen], usable.position.x, maxi(usable.position.x, usable.end.x-w.size.x))
+	w.position = Vector2i(dock_x,usable.end.y-w.size.y)
 	previous_position = w.position
 func clamp_to_work_area() -> void:
 	if DisplayServer.get_name()=="headless" or get_window().mode==Window.MODE_MINIMIZED: return
@@ -188,26 +354,24 @@ func clamp_to_work_area() -> void:
 	var usable := DisplayServer.screen_get_usable_rect(w.current_screen)
 	w.position = Vector2i(clampi(w.position.x,usable.position.x,maxi(usable.position.x,usable.end.x-w.size.x)),clampi(w.position.y,usable.position.y,maxi(usable.position.y,usable.end.y-w.size.y)))
 func update_mouse_region() -> void:
-	# Native interaction outline excludes empty desktop above the buildings.
-	# Like the existing companion, this is a conservative outline, not per-pixel input.
-	var outline := PackedVector2Array([Vector2(0,148),Vector2(8,94),Vector2(70,94),Vector2(70,32),Vector2(177,32),Vector2(177,92),Vector2(229,92),Vector2(229,45),Vector2(340,45),Vector2(340,31),Vector2(455,31),Vector2(480,80),Vector2(814,80),Vector2(814,31),Vector2(922,31),Vector2(954,100),Vector2(960,148),Vector2(960,220),Vector2(0,220)])
-	for i in outline.size(): outline[i].y += settlement.position.y
-	if popup.visible:
-		var rect := popup.get_rect()
-		var panel_shape := PackedVector2Array([rect.position,Vector2(rect.end.x,rect.position.y),rect.end,Vector2(rect.position.x,rect.end.y)])
-		# Connect on-demand popup to the town with a narrow interaction bridge.
-		var bridge := PackedVector2Array([Vector2(rect.position.x,rect.end.y-2),Vector2(rect.end.x,rect.end.y-2),Vector2(rect.end.x,settlement.position.y+160),Vector2(rect.position.x,settlement.position.y+160)])
-		outline = Geometry2D.merge_polygons(outline,bridge)[0]
-		outline = Geometry2D.merge_polygons(outline,panel_shape)[0]
-	if toast.visible and clock<toast_until:
-		var notification := PackedVector2Array([Vector2(478,settlement.position.y+8),Vector2(960,settlement.position.y+8),Vector2(960,settlement.position.y+160),Vector2(478,settlement.position.y+160)])
-		outline = Geometry2D.merge_polygons(outline,notification)[0]
-	for i in outline.size(): outline[i] *= scale_factor
-	get_window().mouse_passthrough_polygon = outline
+	if taskbar_mode:
+		get_window().mouse_passthrough_polygon = PackedVector2Array([
+			Vector2(10, 22) * scale_factor, Vector2(210, 22) * scale_factor,
+			Vector2(210, 84) * scale_factor, Vector2(10, 84) * scale_factor])
+		return
+	# The visible town band stays interactive at every horizontal scroll position.
+	var top := settlement.position.y + 30.0
+	if popup.visible: top = 8.0
+	elif toast.visible and clock < toast_until: top = settlement.position.y + 8.0
+	get_window().mouse_passthrough_polygon = PackedVector2Array([
+		Vector2(0, top) * scale_factor, Vector2(view_width, top) * scale_factor,
+		Vector2(view_width, settlement.position.y + 220) * scale_factor,
+		Vector2(0, settlement.position.y + 220) * scale_factor])
 func open_panel(kind: String) -> void:
 	popup_kind = kind
 	popup_anchor = {"home":130,"barracks":285,"academy":400,"army":610,"frontier":760,"ledger":240}.get(kind,480)
-	popup.position = Vector2(clampf(popup_anchor-215,8,522),12)
+	if kind != "ledger": popup_anchor += DISTRICT_OFFSET
+	popup.position = Vector2(clampf(popup_anchor-scroll_offset-215,8,view_width-438),12)
 	popup.show()
 	set_height(EXPANDED_HEIGHT)
 	rebuild_panel()
@@ -315,6 +479,7 @@ func refresh() -> void:
 	activity.frontier.text = (">> "+timer(game.s.battle.remaining)) if not game.s.battle.is_empty() else ("II "+timer(game.s.recovery) if game.s.recovery>0 else "")
 	var next := "%s/%s/%s/%s/%s" % [game.s.warriors,game.s.mages,game.s.academy,not game.s.battle.is_empty(),game.s.owned]
 	if next!=stamp: stamp=next; rebuild_formation()
+	update_training_drill()
 	update_panel()
 func rebuild_formation() -> void:
 	for child in formation.get_children(): child.queue_free()
@@ -336,6 +501,9 @@ func rebuild_formation() -> void:
 	else: fire = null
 	for bar in bars: bar.visible = battling
 func _process(delta: float) -> void:
+	if not popup.visible and not taskbar_mode:
+		var direction := Input.get_axis("ui_left", "ui_right")
+		if direction != 0: scroll_town(scroll_offset + direction * 420.0 * delta)
 	clock += delta
 	save_clock += delta
 	if dragging:
@@ -349,7 +517,7 @@ func _process(delta: float) -> void:
 		persist()
 	for building in game.completed:
 		flash[building]=clock+4
-		show_toast("Project complete • army updated")
+		show_toast("Two warriors trained • joined your army" if building == "barracks" else "Project complete • army updated")
 		if popup.visible: rebuild_panel()
 	game.completed.clear()
 	for key in flash.keys():
@@ -381,6 +549,23 @@ func _process(delta: float) -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") and popup.visible: close_panel()
 func _input(event: InputEvent) -> void:
+	if taskbar_mode and taskbar_pointer_down:
+		if event is InputEventMouseMotion:
+			move_taskbar_drag(DisplayServer.mouse_get_position())
+			get_viewport().set_input_as_handled()
+			return
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+			move_taskbar_drag(DisplayServer.mouse_get_position())
+			end_taskbar_drag()
+			get_viewport().set_input_as_handled()
+			return
+	if event is InputEventMouseButton and event.pressed and not popup.visible and not taskbar_mode:
+		if event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_LEFT]:
+			scroll_town(scroll_offset - 80)
+			get_viewport().set_input_as_handled()
+		elif event.button_index in [MOUSE_BUTTON_WHEEL_DOWN, MOUSE_BUTTON_WHEEL_RIGHT]:
+			scroll_town(scroll_offset + 80)
+			get_viewport().set_input_as_handled()
 	if dragging and event is InputEventMouseMotion:
 		get_window().position = DisplayServer.mouse_get_position()-drag_offset
 	if dragging and event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT and not event.pressed:

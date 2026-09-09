@@ -4,7 +4,7 @@ The active game is now a 20-stage idle army demo. It uses the existing Tiny Swor
 
 ## Play
 
-F5 now opens the Growing Banner companion (`conquest/companion.tscn`). To play this older 20-stage remaster, open `scenes/main_menu.tscn`, press F6, and choose Play. The visual menu is preserved from main; its compact button opens Growing Banner.
+F5 opens `scenes/main_menu.tscn`. Resume continues the Growing Banner companion; New Game starts a fresh companion save and backs up the previous run. To run the older 20-stage remastered town, open `scenes/town_2d.tscn` and press F6. The menu uses its original 1920×1080 design viewport.
 
 Use a separate game window for desktop companion mode; disable Godot's embedded game preview if it is enabled, so the game can resize and position its own native window.
 

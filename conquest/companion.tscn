@@ -6,4 +6,4 @@
 [node name="GrowingBannerCompanion" type="Node2D" unique_id=613875653]
 script = ExtResource("1")
 
-[node name="Terrain" parent="." instance=ExtResource("2_terrain")]
+[node name="Terrain" parent="." unique_id=821653279 instance=ExtResource("2_terrain")]

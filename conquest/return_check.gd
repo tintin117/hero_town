@@ -13,10 +13,12 @@ func check_return() -> void:
 	root.add_child(scene)
 	await process_frame
 	await create_timer(1.0).timeout
-	assert(scene.notice.begins_with("While you were away:"))
-	assert(scene.notice.contains("+2 troops, Healing learned"))
-	assert(scene.game.s.warriors == 7 and scene.game.s.healing)
-	assert(scene.game.s.projects.is_empty() and scene.game.s.recovery == 0)
+	assert(scene.notice.begins_with("Welcome back"))
+	assert(scene.game.s.warriors == record.state.warriors and scene.game.s.healing == record.state.healing)
+	assert(scene.game.s.projects.size() == record.state.projects.size())
+	for building in record.state.projects:
+		var elapsed: float = record.state.projects[building].remaining - scene.game.s.projects[building].remaining
+		assert(elapsed >= 0 and elapsed < 3.0)
 	assert(scene.game.completed.is_empty())
 	print("RETURN SUMMARY CHECK PASSED: ",scene.notice)
 	if DisplayServer.get_name() != "headless":

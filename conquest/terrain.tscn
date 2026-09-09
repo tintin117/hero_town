@@ -1,6 +1,6 @@
-[gd_scene format=4]
+[gd_scene format=4 uid="uid://dokp52b4ymkjo"]
 
-[ext_resource type="TileSet" path="res://conquest/companion_terrain.tres" id="1_w4rjx"]
+[ext_resource type="TileSet" uid="uid://bcvljaw0py5a1" path="res://conquest/companion_terrain.tres" id="1_w4rjx"]
 
 [node name="Terrain" type="Node2D" unique_id=1219005919]
 z_index = -5

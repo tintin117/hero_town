@@ -139,11 +139,8 @@ func load_game(path: String = SAVE) -> String:
 	if not data is Dictionary or not data.has("projects") or not data.has("last"): return "Save could not be read. A new expedition is ready."
 	for key in s.keys():
 		if data.has(key): s[key] = data[key]
-	var gold := float(s.gold)
-	var troops := int(s.warriors) + int(s.mages)
-	var had_healing: bool = s.healing
-	advance(Time.get_unix_time_from_system())
-	# Keep gains and the last outcome/feedback within the footer; detailed battle
-	# statistics remain in the saved result and the immediate postbattle screen.
+	# Closed time is not play time. Resume every timer from the saved remainder.
+	s.last = Time.get_unix_time_from_system()
+	completed.clear()
 	var last_result := "\n".join(str(s.result).split("\n").slice(0,2))
-	return "While you were away: +%d gold, +%d troops%s.\n%s" % [int(float(s.gold)-gold), int(s.warriors)+int(s.mages)-troops, ", Healing learned" if s.healing and not had_healing else "",last_result]
+	return "Welcome back • resumed where you left off.\n" + last_result

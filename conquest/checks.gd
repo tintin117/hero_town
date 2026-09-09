@@ -39,8 +39,13 @@ func _init() -> void:
 	assert(loaded.save_game("res://conquest/test_save.json"))
 	var offline = Rules.new()
 	var summary = offline.load_game("res://conquest/test_save.json")
-	assert(offline.s.warriors == 7 and offline.s.battle.is_empty() and offline.s.projects.is_empty() and offline.s.recovery == 0)
-	assert(summary.contains("+2 troops"))
+	assert(offline.s.warriors == loaded.s.warriors and offline.s.battle == loaded.s.battle)
+	assert(offline.s.projects == loaded.s.projects and offline.s.recovery == loaded.s.recovery)
+	assert(offline.s.gold == loaded.s.gold and offline.completed.is_empty())
+	assert(summary.contains("resumed where you left off"))
+	var resumed_remaining: float = offline.s.battle.remaining
+	offline.advance(offline.s.last + 1.0)
+	assert(is_equal_approx(offline.s.battle.remaining, resumed_remaining - 1.0))
 	g.advance(g.s.last+207)
 	assert(g.s.warriors==7 and g.s.projects.is_empty() and g.s.recovery==0)
 	var count=g.s.warriors

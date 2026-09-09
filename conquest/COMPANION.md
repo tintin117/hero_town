@@ -1,14 +1,14 @@
 # Taskbar companion version
 
-Press **F5** to launch the companion, now the project's main scene. Keep Godot's Embed Game on Play disabled for native desktop behavior, and select **Game → Input**, not the 2D/3D inspection modes, to interact with buttons. The original **conquest.tscn** remains the full-window version (F6).
+Press **F5** to open the main menu, then choose **Resume** to continue or **New Game** to start fresh. New Game keeps the previous companion save in a `.previous` backup. Keep Godot's Embed Game on Play disabled for native desktop behavior, and select **Game → Input**, not the 2D/3D inspection modes, to interact with buttons. The original **conquest.tscn** remains the full-window version (F6).
 
 ## Painting terrain
 
-Open `res://conquest/terrain.tscn` to paint the Ground, Cliff, CastleTerrace, VillageTerrace, and FrontierTerrace TileMapLayer nodes. In the TileMap editor's Terrains tab, use terrain set 0: `ground` for grass and `cliff` for rock faces. Terrain Connect chooses neighboring edge tiles automatically. The shared `companion_terrain.tres` is extracted from the new main menu's `ground_1` layer without changing its terrain definitions; changes to that TileSet also affect the menu. Paint cell layouts independently in each scene.
+Open `res://conquest/terrain.tscn` to paint the Ground, Cliff, CastleTerrace, VillageTerrace, and FrontierTerrace TileMapLayer nodes. In the TileMap editor's Terrains tab, use terrain set 0: `ground` for grass and `cliff` for rock faces. Terrain Connect chooses neighboring edge tiles automatically. The `companion_terrain.tres` is based on the main menu's terrain definitions. It is independent of the restored menu, so companion terrain edits do not change the menu.
 
-The terrain scene is instanced under the companion and moves with the settlement when panels expand. Keep terrain within the 960×220 compact view and the existing mouse outline when repainting. `scenes/main_menu.tscn` retains the visual menu from main; its compact button opens this companion, while Play opens the remastered town.
+The terrain scene is instanced under the companion and moves with the settlement when panels expand. Keep terrain within the 960×220 compact view and the existing mouse outline when repainting. `scenes/main_menu.tscn` retains the visual menu from main; Resume and New Game open this companion. The menu water and foam are hidden at runtime, and its borderless window has a transparent background.
 
-The companion is a native 960×220 borderless transparent window, centered just above the current monitor's Windows usable-work-area boundary. It does not draw a fake taskbar or change Windows settings. It stays above other windows. On narrower work areas it scales down proportionally. Popups expand the same window upward to 960×500, preserve the settlement's bottom edge when space permits, and clamp to the work area.
+The companion is a native 1280×293 borderless transparent window, centered just above the current monitor's Windows usable-work-area boundary. It does not draw a fake taskbar or change Windows settings. It stays above other windows. On narrower work areas it scales down proportionally. Popups expand the same window upward to 1280×667, preserve the settlement's bottom edge when space permits, and clamp to the work area.
 
 Click the castle, barracks, academy, army or red frontier tower for details. Only gold and active timers remain on the strip. `>>` means working/deployed; `II` means paused/recovering. Building indicators never include project names. Gold opens the retained offline/battle report. Notices fade after a few seconds. The frontier popup previews the reward before deployment. Battle effects and two health bars fit in the strip.
 
@@ -37,3 +37,24 @@ Run the focused check with `godot --path . --rendering-method gl_compatibility -
 
 
 Screenshots referenced here are local review artifacts and are not part of the source commit.
+
+Menu and companion share a preferred 1280-pixel display width. The menu renders its original layout at 1280×720, while the companion scales its 960×220 logical layout up to 1280×293. Both shrink together on smaller monitors, reserving room for expanded panels. The shared sizing policy is in scripts/presentation_scale.gd.
+
+## Screen-wide town and scrolling
+
+The companion now fills the current monitor's usable width while retaining the preferred sprite scale. The landscape is at least 2880 logical pixels wide, with extra open terrain for future building expansion. Roll the mouse wheel to explore left and right; arrow keys also work. There is no visible scrollbar. Gold, frontier access, and window controls remain fixed. Scrolling stops at the map edges and pauses while a management panel is open. Extra terrain does not add new building types or change saved progression.
+
+## Minimized sparring scene
+
+The minus control folds the town into a small transparent scene just above the taskbar. Two warriors spar while a cleric casts behind them; this is cosmetic and does not change combat outcomes, troops, or rewards. Income, training, and expeditions continue normally. Clicking the animated characters restores the screen-wide window and scroll position. The slim preview sits in the bottom-right corner of the current monitor, directly above the taskbar, with no button row beneath the characters. This uses a small visible window instead of Windows' fully hidden minimize state.
+
+## Animated working hamlet
+
+The first 480 logical pixels are a decorative woodcutting, gold-mining, and food-gathering hamlet. Pawns work, carry resources to nearby piles, and return with their tools on staggered loops. The castle, barracks, academy, training drill, army, and their click areas move right together. Worker loops do not generate currency or alter training and combat rules.
+
+
+Restoring remembers the original monitor and positions the window inside that monitor before expanding, preventing jumps to adjacent displays. The mining source uses a large gold deposit; the smaller gold, wood, and meat sprites represent gathered supplies.
+
+Closing the game completely pauses training, battles, recovery, and gold income. Reopening resumes the saved remaining time, without offline catch-up. Minimizing to the visible sparring scene keeps the game running and progress continues.
+
+Drag the minimized characters left or right to reposition them along the current monitor's taskbar edge. A short click restores town; dragging does not. The position is remembered per monitor for the current game session, and movement stays inside that monitor.
