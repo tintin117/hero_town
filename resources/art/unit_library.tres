@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="UnitArtLibrary" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_art_library.gd" id="1"]
+[ext_resource type="SpriteFrames" path="res://resources/art/warrior_blue.tres" id="2"]
+[ext_resource type="SpriteFrames" path="res://resources/art/lancer_blue.tres" id="3"]
+[ext_resource type="SpriteFrames" path="res://resources/art/archer_blue.tres" id="4"]
+[ext_resource type="SpriteFrames" path="res://resources/art/monk_blue.tres" id="5"]
+[ext_resource type="SpriteFrames" path="res://resources/art/warrior_red.tres" id="6"]
+[ext_resource type="SpriteFrames" path="res://resources/art/lancer_red.tres" id="7"]
+[ext_resource type="SpriteFrames" path="res://resources/art/archer_red.tres" id="8"]
+[ext_resource type="SpriteFrames" path="res://resources/art/monk_red.tres" id="9"]
+
+[resource]
+script = ExtResource("1")
+blue = Dictionary[String, SpriteFrames]({
+"warrior": ExtResource("2"),
+"lancer": ExtResource("3"),
+"archer": ExtResource("4"),
+"monk": ExtResource("5")
+})
+red = Dictionary[String, SpriteFrames]({
+"warrior": ExtResource("6"),
+"lancer": ExtResource("7"),
+"archer": ExtResource("8"),
+"monk": ExtResource("9")
+})

@@ -3,21 +3,42 @@ extends Control
 const INK := Color("f7edcf")
 const MUTED := Color("bdc7b3")
 const GOLD := Color("f3cf7b")
-var town: Node2D
-var top: PanelContainer
-var bottom: PanelContainer
-var gold_label: Label
-var phase_label: Label
-var hint_label: Label
-var start_button: Button
-var mode_button: Button
-var expand_button: Button
-var boss_bar: ProgressBar
-var boss_name: Label
-var overlay: ColorRect
-var panel: PanelContainer
-var content: VBoxContainer
-var panel_title: Label
+@export var town: Node2D
+@export_group("Responsive Layout")
+## Disable to arrange the native controls directly with anchors and offsets.
+@export var responsive_layout := true
+@export var toolbar_width := 1100.0
+@export var compact_toolbar_width := 820.0
+@export var toolbar_bottom_offset := 50.0
+@export var hint_bottom_offset := 80.0
+@export var toolbar_height := 44.0
+@export var hint_height := 28.0
+@export var screen_margin := 8.0
+@export var panel_maximum_size := Vector2(940, 680)
+@export var panel_margin := 12.0
+@export var responsive_typography := true
+@export var wide_breakpoint := 1000.0
+@export var text_sizes := Vector2i(17, 14)
+@export var gold_text_sizes := Vector2i(20, 17)
+@export var phase_text_sizes := Vector2i(16, 14)
+@export var gold_minimum_widths := Vector2(135, 100)
+@export var phase_minimum_widths := Vector2(260, 160)
+@export var button_separation := Vector2i(8, 4)
+
+@onready var top: PanelContainer = $Toolbar
+@onready var bottom: PanelContainer = $HintStrip
+@onready var gold_label: Label = $Toolbar/Buttons/Gold
+@onready var phase_label: Label = $Toolbar/Buttons/Phase
+@onready var hint_label: Label = $HintStrip/Row/Hint
+@onready var start_button: Button = $Toolbar/Buttons/Start
+@onready var mode_button: Button = $Toolbar/Buttons/Mode
+@onready var expand_button: Button = $Toolbar/Buttons/Arrange
+@onready var boss_bar: ProgressBar = $BossHUD/Health
+@onready var boss_name: Label = $BossHUD/Name
+@onready var overlay: ColorRect = $Overlay
+@onready var panel: PanelContainer = $Overlay/Panel
+@onready var content: VBoxContainer = $Overlay/Panel/Layout/Content
+@onready var panel_title: Label = $Overlay/Panel/Layout/Header/Title
 var active_panel: String = ""
 var selected_army: String = ""
 var selected_node: String = "damage_1"
@@ -28,11 +49,21 @@ var _tree_scroll_positions: Dictionary = {}
 var _displayed_army: String = ""
 
 func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	theme = preload("res://resources/research_theme.tres").duplicate()
-	theme.default_font_size = 17
-	_build_hud()
+	# Standalone scene preview can run without a town controller.
+	if town == null:
+		set_process(false)
+		return
+	$Toolbar/Buttons/Build.pressed.connect(open_build)
+	$Toolbar/Buttons/Buildings.pressed.connect(func(): open_research(selected_army))
+	start_button.pressed.connect(func(): town.director.start_now())
+	mode_button.pressed.connect(func(): GameState.set_advancing(not GameState.advancing))
+	expand_button.pressed.connect(_toggle_arrange)
+	$Toolbar/Buttons/Options.pressed.connect(open_options)
+	$Overlay/Panel/Layout/Header/Close.pressed.connect(close_panel)
+	for button in [$Toolbar/Buttons/Build, $Toolbar/Buttons/Buildings, start_button, mode_button, expand_button, $Toolbar/Buttons/Options, $Overlay/Panel/Layout/Header/Close]:
+		button.pressed.connect(func(): sfx.play("click"))
+	overlay.gui_input.connect(func(event):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: close_panel())
 	GameState.currency_changed.connect(func(_gold, _shard): refresh_panel())
 	GameState.buildings_changed.connect(refresh_panel)
 	GameState.research_changed.connect(func(_id): refresh_panel())
@@ -71,108 +102,28 @@ func _spacer(parent: Node) -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(spacer)
 
-func _build_hud() -> void:
-	top = PanelContainer.new()
-	add_child(top)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	top.add_child(row)
-	gold_label = _label("150 gold", 20, GOLD)
-	gold_label.custom_minimum_size.x = 100
-	row.add_child(gold_label)
-	phase_label = _label("", 16)
-	phase_label.custom_minimum_size.x = 190
-	phase_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	row.add_child(phase_label)
-	_spacer(row)
-	row.add_child(_button("Build", open_build))
-	row.add_child(_button("Buildings", func(): open_research(selected_army)))
-	start_button = _button("Start now", func(): town.director.start_now())
-	row.add_child(start_button)
-	mode_button = _button("Farm", func(): GameState.set_advancing(not GameState.advancing))
-	row.add_child(mode_button)
-	expand_button = _button("Arrange", _toggle_arrange)
-	row.add_child(expand_button)
-	row.add_child(_button("Options", open_options))
-	bottom = PanelContainer.new()
-	add_child(bottom)
-	var bottom_row := HBoxContainer.new()
-	bottom.add_child(bottom_row)
-	hint_label = _label("", 16, MUTED)
-	hint_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	hint_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bottom_row.add_child(hint_label)
-	for strip in [top, bottom]:
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color("263a3b")
-		style.border_color = Color("9b8b5d")
-		style.set_border_width_all(1)
-		style.content_margin_left = 8
-		style.content_margin_right = 8
-		style.content_margin_top = 4
-		style.content_margin_bottom = 4
-		strip.add_theme_stylebox_override("panel", style)
-	var boss_box := VBoxContainer.new()
-	boss_box.name = "BossHUD"
-	add_child(boss_box)
-	boss_name = _label("", 17, GOLD)
-	boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	boss_box.add_child(boss_name)
-	boss_bar = ProgressBar.new()
-	boss_bar.custom_minimum_size = Vector2(300, 10)
-	boss_bar.show_percentage = false
-	boss_box.add_child(boss_bar)
-	overlay = ColorRect.new()
-	overlay.color = Color(0.04, 0.08, 0.09, 0.72)
-	add_child(overlay)
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.gui_input.connect(func(event):
-		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: close_panel())
-	panel = PanelContainer.new()
-	overlay.add_child(panel)
-	var frame := StyleBoxFlat.new()
-	frame.bg_color = Color("30291f")
-	frame.border_color = Color("9b8b5d")
-	frame.set_border_width_all(2)
-	frame.set_corner_radius_all(5)
-	for edge in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]: frame.set_content_margin(edge, 18)
-	panel.add_theme_stylebox_override("panel", frame)
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
-	panel.add_child(layout)
-	var header := HBoxContainer.new()
-	layout.add_child(header)
-	panel_title = _label("", 25, GOLD)
-	header.add_child(panel_title)
-	_spacer(header)
-	header.add_child(_button("Close", close_panel))
-	content = VBoxContainer.new()
-	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 10)
-	layout.add_child(content)
-	overlay.hide()
-
 func _layout() -> void:
+	if not responsive_layout or town == null: return
 	var size_now := get_viewport_rect().size
 	start_button.visible = false
 	mode_button.visible = not GameState.settings.compact
-	var strip_width := minf(820 if GameState.settings.compact else 1100, size_now.x - 16)
-	top.position = Vector2((size_now.x - strip_width) * 0.5, size_now.y - 50)
-	top.size = Vector2(strip_width, 44)
-	bottom.position = Vector2((size_now.x - strip_width) * 0.5, size_now.y - 80)
-	bottom.size = Vector2(strip_width, 28)
-	panel.size = Vector2(minf(940, size_now.x - 24), minf(680, size_now.y - 24))
+	var strip_width := minf(compact_toolbar_width if GameState.settings.compact else toolbar_width, size_now.x - screen_margin * 2)
+	top.position = Vector2((size_now.x - strip_width) * 0.5, size_now.y - toolbar_bottom_offset)
+	top.size = Vector2(strip_width, toolbar_height)
+	bottom.position = Vector2((size_now.x - strip_width) * 0.5, size_now.y - hint_bottom_offset)
+	bottom.size = Vector2(strip_width, hint_height)
+	panel.size = panel_maximum_size.min(size_now - Vector2.ONE * panel_margin * 2)
 	panel.position = (size_now - panel.size) * 0.5
-	var boss_box: Control = $BossHUD
-	boss_box.position = Vector2(size_now.x * 0.5 - 150, 57)
-	phase_label.custom_minimum_size.x = 260 if size_now.x >= 1000 else 160
-	gold_label.custom_minimum_size.x = 135 if size_now.x >= 1000 else 100
-	phase_label.add_theme_font_size_override("font_size", 16 if size_now.x >= 1000 else 14)
-	(top.get_child(0) as HBoxContainer).add_theme_constant_override("separation", 8 if size_now.x >= 1000 else 4)
-	theme.default_font_size = 17 if size_now.x >= 1000 else 14
-	gold_label.add_theme_font_size_override("font_size", 20 if size_now.x >= 1000 else 17)
+	if responsive_typography:
+		var index := 0 if size_now.x >= wide_breakpoint else 1
+		phase_label.custom_minimum_size.x = phase_minimum_widths[index]
+		gold_label.custom_minimum_size.x = gold_minimum_widths[index]
+		phase_label.add_theme_font_size_override("font_size", phase_text_sizes[index])
+		(top.get_child(0) as HBoxContainer).add_theme_constant_override("separation", button_separation[index])
+		theme.default_font_size = text_sizes[index]
+		gold_label.add_theme_font_size_override("font_size", gold_text_sizes[index])
 	# Theme/minimum-size changes settle after this resize notification.
-	top.set_deferred("size", Vector2(strip_width, 44))
+	top.set_deferred("size", Vector2(strip_width, toolbar_height))
 	town.desktop.update_mouse_region.call_deferred()
 
 func _process(delta: float) -> void:

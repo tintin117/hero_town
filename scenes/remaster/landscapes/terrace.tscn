@@ -1,0 +1,389 @@
+[gd_scene format=4]
+
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Tileset/Tilemap_color2.png" id="1_ti6uo"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Tileset/Water Background color.png" id="2_sa0mm"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Castle.png" id="3_a8cfs"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Tower.png" id="4_my202"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Red Buildings/Tower.png" id="5_ygdgo"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree1.png" id="6_ot1uf"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Decorations/Bushes/Bushe1.png" id="7_alysj"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Decorations/Rocks/Rock2.png" id="8_aqgve"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Meat/Sheep/Sheep_Idle.png" id="9_t7ron"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1lb0h"]
+texture = ExtResource("1_ti6uo")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+0:1/0 = 0
+0:2/0 = 0
+1:0/0 = 0
+1:1/0 = 0
+1:2/0 = 0
+2:0/0 = 0
+2:1/0 = 0
+2:2/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_kgmdl"]
+tile_size = Vector2i(64, 64)
+sources/0 = SubResource("TileSetAtlasSource_1lb0h")
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rsmny"]
+atlas = ExtResource("1_ti6uo")
+region = Rect2(320, 192, 64, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_478qo"]
+atlas = ExtResource("1_ti6uo")
+region = Rect2(384, 192, 64, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xlpnq"]
+atlas = ExtResource("1_ti6uo")
+region = Rect2(384, 192, 64, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j4osa"]
+atlas = ExtResource("1_ti6uo")
+region = Rect2(384, 192, 64, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x6054"]
+atlas = ExtResource("1_ti6uo")
+region = Rect2(384, 192, 64, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6owpg"]
+atlas = ExtResource("1_ti6uo")
+region = Rect2(384, 192, 64, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5d4k2"]
+atlas = ExtResource("1_ti6uo")
+region = Rect2(384, 192, 64, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jjen1"]
+atlas = ExtResource("1_ti6uo")
+region = Rect2(384, 192, 64, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_evc5w"]
+atlas = ExtResource("1_ti6uo")
+region = Rect2(384, 192, 64, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j18ub"]
+atlas = ExtResource("1_ti6uo")
+region = Rect2(448, 192, 64, 128)
+
+[node name="Terrace" type="Node2D" unique_id=790195607]
+
+[node name="Terrain" type="TileMapLayer" parent="." unique_id=869906877]
+z_index = -1
+position = Vector2(-640, 0)
+scale = Vector2(0.5, 0.5)
+tile_map_data = PackedByteArray("AAAAAP7/AAAAAAAAAAAAAP//AAAAAAEAAAAAAAAAAAAAAAEAAAAAAAEAAAAAAAIAAAABAP3/AAAAAAAAAAABAP7/AAABAAEAAAABAP//AAABAAEAAAABAAAAAAABAAEAAAABAAEAAAABAAEAAAABAAIAAAAAAAIAAAACAPz/AAAAAAAAAAACAP3/AAABAAEAAAACAP7/AAABAAEAAAACAP//AAABAAEAAAACAAAAAAABAAEAAAACAAEAAAABAAEAAAACAAIAAAABAAEAAAACAAMAAAAAAAIAAAADAPz/AAABAAAAAAADAP3/AAABAAEAAAADAP7/AAABAAEAAAADAP//AAABAAEAAAADAAAAAAABAAEAAAADAAEAAAABAAEAAAADAAIAAAABAAEAAAADAAMAAAABAAIAAAAEAPv/AAAAAAAAAAAEAPz/AAABAAEAAAAEAP3/AAABAAEAAAAEAP7/AAABAAEAAAAEAP//AAABAAEAAAAEAAAAAAABAAEAAAAEAAEAAAABAAEAAAAEAAIAAAABAAEAAAAEAAMAAAABAAIAAAAFAPv/AAABAAAAAAAFAPz/AAABAAEAAAAFAP3/AAABAAEAAAAFAP7/AAABAAEAAAAFAP//AAABAAEAAAAFAAAAAAABAAEAAAAFAAEAAAABAAEAAAAFAAIAAAABAAEAAAAFAAMAAAABAAIAAAAGAPv/AAABAAAAAAAGAPz/AAABAAEAAAAGAP3/AAABAAEAAAAGAP7/AAABAAEAAAAGAP//AAABAAEAAAAGAAAAAAABAAEAAAAGAAEAAAABAAEAAAAGAAIAAAABAAEAAAAGAAMAAAABAAIAAAAHAPv/AAABAAAAAAAHAPz/AAABAAEAAAAHAP3/AAABAAEAAAAHAP7/AAABAAEAAAAHAP//AAABAAEAAAAHAAAAAAABAAEAAAAHAAEAAAABAAEAAAAHAAIAAAABAAEAAAAHAAMAAAABAAIAAAAIAPv/AAABAAAAAAAIAPz/AAABAAEAAAAIAP3/AAABAAEAAAAIAP7/AAABAAEAAAAIAP//AAABAAEAAAAIAAAAAAABAAEAAAAIAAEAAAABAAEAAAAIAAIAAAABAAEAAAAIAAMAAAABAAIAAAAJAPv/AAABAAAAAAAJAPz/AAABAAEAAAAJAP3/AAABAAEAAAAJAP7/AAABAAEAAAAJAP//AAABAAEAAAAJAAAAAAABAAEAAAAJAAEAAAABAAEAAAAJAAIAAAABAAEAAAAJAAMAAAABAAIAAAAKAPv/AAABAAAAAAAKAPz/AAABAAEAAAAKAP3/AAABAAEAAAAKAP7/AAABAAEAAAAKAP//AAABAAEAAAAKAAAAAAABAAEAAAAKAAEAAAABAAEAAAAKAAIAAAABAAEAAAAKAAMAAAABAAIAAAALAPv/AAABAAAAAAALAPz/AAABAAEAAAALAP3/AAABAAEAAAALAP7/AAABAAEAAAALAP//AAABAAEAAAALAAAAAAABAAEAAAALAAEAAAABAAEAAAALAAIAAAABAAEAAAALAAMAAAABAAIAAAAMAPv/AAABAAAAAAAMAPz/AAABAAEAAAAMAP3/AAABAAEAAAAMAP7/AAABAAEAAAAMAP//AAABAAEAAAAMAAAAAAABAAEAAAAMAAEAAAABAAEAAAAMAAIAAAABAAEAAAAMAAMAAAABAAIAAAANAPv/AAABAAAAAAANAPz/AAABAAEAAAANAP3/AAABAAEAAAANAP7/AAABAAEAAAANAP//AAABAAEAAAANAAAAAAABAAEAAAANAAEAAAABAAEAAAANAAIAAAABAAEAAAANAAMAAAABAAIAAAAOAPv/AAABAAAAAAAOAPz/AAABAAEAAAAOAP3/AAABAAEAAAAOAP7/AAABAAEAAAAOAP//AAABAAEAAAAOAAAAAAABAAEAAAAOAAEAAAABAAEAAAAOAAIAAAABAAEAAAAOAAMAAAABAAIAAAAPAPv/AAACAAAAAAAPAPz/AAABAAEAAAAPAP3/AAABAAEAAAAPAP7/AAABAAEAAAAPAP//AAABAAEAAAAPAAAAAAABAAEAAAAPAAEAAAABAAEAAAAPAAIAAAABAAEAAAAPAAMAAAABAAIAAAAQAPz/AAABAAAAAAAQAP3/AAABAAEAAAAQAP7/AAABAAEAAAAQAP//AAABAAEAAAAQAAAAAAABAAEAAAAQAAEAAAABAAEAAAAQAAIAAAABAAEAAAAQAAMAAAABAAIAAAARAPz/AAABAAAAAAARAP3/AAABAAEAAAARAP7/AAABAAEAAAARAP//AAABAAEAAAARAAAAAAABAAEAAAARAAEAAAABAAEAAAARAAIAAAABAAEAAAARAAMAAAABAAIAAAASAPz/AAACAAAAAAASAP3/AAABAAEAAAASAP7/AAABAAEAAAASAP//AAABAAEAAAASAAAAAAABAAEAAAASAAEAAAABAAEAAAASAAIAAAABAAEAAAASAAMAAAABAAIAAAATAP3/AAABAAAAAAATAP7/AAABAAEAAAATAP//AAABAAEAAAATAAAAAAABAAEAAAATAAEAAAABAAEAAAATAAIAAAABAAEAAAATAAMAAAABAAIAAAAUAP3/AAABAAAAAAAUAP7/AAABAAEAAAAUAP//AAABAAEAAAAUAAAAAAABAAEAAAAUAAEAAAABAAEAAAAUAAIAAAABAAEAAAAUAAMAAAABAAIAAAAVAP3/AAABAAAAAAAVAP7/AAABAAEAAAAVAP//AAABAAEAAAAVAAAAAAABAAEAAAAVAAEAAAABAAEAAAAVAAIAAAABAAEAAAAVAAMAAAABAAIAAAAWAPz/AAAAAAAAAAAWAP3/AAABAAEAAAAWAP7/AAABAAEAAAAWAP//AAABAAEAAAAWAAAAAAABAAEAAAAWAAEAAAABAAEAAAAWAAIAAAABAAEAAAAWAAMAAAABAAIAAAAXAPz/AAABAAAAAAAXAP3/AAABAAEAAAAXAP7/AAABAAEAAAAXAP//AAABAAEAAAAXAAAAAAABAAEAAAAXAAEAAAABAAEAAAAXAAIAAAABAAEAAAAXAAMAAAABAAIAAAAYAPz/AAABAAAAAAAYAP3/AAABAAEAAAAYAP7/AAABAAEAAAAYAP//AAABAAEAAAAYAAAAAAABAAEAAAAYAAEAAAABAAEAAAAYAAIAAAABAAEAAAAYAAMAAAABAAIAAAAZAPz/AAABAAAAAAAZAP3/AAABAAEAAAAZAP7/AAABAAEAAAAZAP//AAABAAEAAAAZAAAAAAABAAEAAAAZAAEAAAABAAEAAAAZAAIAAAABAAEAAAAZAAMAAAABAAIAAAAaAPz/AAABAAAAAAAaAP3/AAABAAEAAAAaAP7/AAABAAEAAAAaAP//AAABAAEAAAAaAAAAAAABAAEAAAAaAAEAAAABAAEAAAAaAAIAAAABAAEAAAAaAAMAAAABAAIAAAAbAPz/AAABAAAAAAAbAP3/AAABAAEAAAAbAP7/AAABAAEAAAAbAP//AAABAAEAAAAbAAAAAAABAAEAAAAbAAEAAAABAAEAAAAbAAIAAAABAAEAAAAbAAMAAAABAAIAAAAcAPz/AAABAAAAAAAcAP3/AAABAAEAAAAcAP7/AAABAAEAAAAcAP//AAABAAEAAAAcAAAAAAABAAEAAAAcAAEAAAABAAEAAAAcAAIAAAABAAEAAAAcAAMAAAABAAIAAAAdAPz/AAABAAAAAAAdAP3/AAABAAEAAAAdAP7/AAABAAEAAAAdAP//AAABAAEAAAAdAAAAAAABAAEAAAAdAAEAAAABAAEAAAAdAAIAAAABAAEAAAAdAAMAAAABAAIAAAAeAPz/AAABAAAAAAAeAP3/AAABAAEAAAAeAP7/AAABAAEAAAAeAP//AAABAAEAAAAeAAAAAAABAAEAAAAeAAEAAAABAAEAAAAeAAIAAAABAAEAAAAeAAMAAAABAAIAAAAfAPz/AAABAAAAAAAfAP3/AAABAAEAAAAfAP7/AAABAAEAAAAfAP//AAABAAEAAAAfAAAAAAABAAEAAAAfAAEAAAABAAEAAAAfAAIAAAABAAEAAAAfAAMAAAABAAIAAAAgAPz/AAABAAAAAAAgAP3/AAABAAEAAAAgAP7/AAABAAEAAAAgAP//AAABAAEAAAAgAAAAAAABAAEAAAAgAAEAAAABAAEAAAAgAAIAAAABAAEAAAAgAAMAAAABAAIAAAAhAPz/AAACAAAAAAAhAP3/AAABAAEAAAAhAP7/AAABAAEAAAAhAP//AAABAAEAAAAhAAAAAAABAAEAAAAhAAEAAAABAAEAAAAhAAIAAAABAAEAAAAhAAMAAAABAAIAAAAiAP3/AAABAAAAAAAiAP7/AAABAAEAAAAiAP//AAABAAEAAAAiAAAAAAABAAEAAAAiAAEAAAABAAEAAAAiAAIAAAABAAEAAAAiAAMAAAABAAIAAAAjAP3/AAABAAAAAAAjAP7/AAABAAEAAAAjAP//AAABAAEAAAAjAAAAAAABAAEAAAAjAAEAAAABAAEAAAAjAAIAAAABAAEAAAAjAAMAAAABAAIAAAAkAP3/AAABAAAAAAAkAP7/AAABAAEAAAAkAP//AAABAAEAAAAkAAAAAAABAAEAAAAkAAEAAAABAAEAAAAkAAIAAAABAAEAAAAkAAMAAAABAAIAAAAlAP3/AAACAAAAAAAlAP7/AAABAAEAAAAlAP//AAABAAEAAAAlAAAAAAABAAEAAAAlAAEAAAABAAEAAAAlAAIAAAABAAEAAAAlAAMAAAACAAIAAAAmAP7/AAACAAAAAAAmAP//AAABAAEAAAAmAAAAAAABAAEAAAAmAAEAAAABAAEAAAAmAAIAAAACAAIAAAAnAP//AAACAAAAAAAnAAAAAAACAAEAAAAnAAEAAAACAAIAAAA=")
+tile_set = SubResource("TileSet_kgmdl")
+
+[node name="Water" type="Polygon2D" parent="." unique_id=2054395594]
+visible = false
+z_index = -2
+texture_repeat = 2
+texture = ExtResource("2_sa0mm")
+polygon = PackedVector2Array(-480, 120, 260, 110, 320, 158, 238, 174, 114, 190, -112, 181, -280, 185, -470, 158)
+
+[node name="Castle1" type="Sprite2D" parent="." unique_id=1312819101]
+z_index = 190
+z_as_relative = false
+position = Vector2(-554, 0)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_a8cfs")
+offset = Vector2(0, -128)
+
+[node name="Cliff2" type="Sprite2D" parent="." unique_id=524705197]
+position = Vector2(-448, -112)
+scale = Vector2(0.5, 0.25)
+texture = SubResource("AtlasTexture_rsmny")
+
+[node name="Cliff3" type="Sprite2D" parent="." unique_id=1654034472]
+position = Vector2(-416, -112)
+scale = Vector2(0.5, 0.25)
+texture = SubResource("AtlasTexture_478qo")
+
+[node name="Cliff4" type="Sprite2D" parent="." unique_id=271070811]
+position = Vector2(-384, -112)
+scale = Vector2(0.5, 0.25)
+texture = SubResource("AtlasTexture_xlpnq")
+
+[node name="Cliff5" type="Sprite2D" parent="." unique_id=1227742028]
+position = Vector2(-352, -112)
+scale = Vector2(0.5, 0.25)
+texture = SubResource("AtlasTexture_j4osa")
+
+[node name="Cliff6" type="Sprite2D" parent="." unique_id=1105906151]
+position = Vector2(-320, -112)
+scale = Vector2(0.5, 0.25)
+texture = SubResource("AtlasTexture_x6054")
+
+[node name="Cliff7" type="Sprite2D" parent="." unique_id=1970717400]
+position = Vector2(-288, -112)
+scale = Vector2(0.5, 0.25)
+texture = SubResource("AtlasTexture_6owpg")
+
+[node name="Cliff8" type="Sprite2D" parent="." unique_id=70567845]
+position = Vector2(-256, -112)
+scale = Vector2(0.5, 0.25)
+texture = SubResource("AtlasTexture_5d4k2")
+
+[node name="Cliff9" type="Sprite2D" parent="." unique_id=2020323623]
+position = Vector2(-224, -112)
+scale = Vector2(0.5, 0.25)
+texture = SubResource("AtlasTexture_jjen1")
+
+[node name="Cliff10" type="Sprite2D" parent="." unique_id=1860798321]
+position = Vector2(-192, -112)
+scale = Vector2(0.5, 0.25)
+texture = SubResource("AtlasTexture_evc5w")
+
+[node name="Cliff11" type="Sprite2D" parent="." unique_id=624122379]
+position = Vector2(-160, -112)
+scale = Vector2(0.5, 0.25)
+texture = SubResource("AtlasTexture_j18ub")
+
+[node name="Tower12" type="Sprite2D" parent="." unique_id=365096683]
+z_index = 62
+z_as_relative = false
+position = Vector2(-445, -128)
+scale = Vector2(0.28, 0.28)
+texture = ExtResource("4_my202")
+offset = Vector2(0, -128)
+
+[node name="Castle13" type="Sprite2D" parent="." unique_id=1649821982]
+z_index = 62
+z_as_relative = false
+position = Vector2(-305, -128)
+scale = Vector2(0.29, 0.29)
+texture = ExtResource("3_a8cfs")
+offset = Vector2(0, -128)
+
+[node name="Tower14" type="Sprite2D" parent="." unique_id=1089694147]
+z_index = 62
+z_as_relative = false
+position = Vector2(-188, -128)
+scale = Vector2(0.28, 0.28)
+texture = ExtResource("4_my202")
+offset = Vector2(0, -128)
+
+[node name="Tower15" type="Sprite2D" parent="." unique_id=1514632110]
+z_index = 155
+z_as_relative = false
+position = Vector2(550, -35)
+scale = Vector2(0.37, 0.37)
+texture = ExtResource("5_ygdgo")
+offset = Vector2(0, -128)
+
+[node name="Tree116" type="Sprite2D" parent="." unique_id=997127478]
+z_index = 90
+z_as_relative = false
+position = Vector2(-550, -100)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("6_ot1uf")
+offset = Vector2(0, -112.64)
+hframes = 8
+
+[node name="Tree117" type="Sprite2D" parent="." unique_id=1619343203]
+z_index = 67
+z_as_relative = false
+position = Vector2(-370, -123)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("6_ot1uf")
+offset = Vector2(0, -112.64)
+hframes = 8
+
+[node name="Tree118" type="Sprite2D" parent="." unique_id=1489536291]
+z_index = 79
+z_as_relative = false
+position = Vector2(-75, -111)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("6_ot1uf")
+offset = Vector2(0, -112.64)
+hframes = 8
+
+[node name="Tree119" type="Sprite2D" parent="." unique_id=1887977269]
+z_index = 75
+z_as_relative = false
+position = Vector2(120, -115)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("6_ot1uf")
+offset = Vector2(0, -112.64)
+hframes = 8
+
+[node name="Tree120" type="Sprite2D" parent="." unique_id=1104305084]
+z_index = 64
+z_as_relative = false
+position = Vector2(175, -126)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("6_ot1uf")
+offset = Vector2(0, -112.64)
+hframes = 8
+
+[node name="Tree121" type="Sprite2D" parent="." unique_id=1059560570]
+z_index = 102
+z_as_relative = false
+position = Vector2(416, -88)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("6_ot1uf")
+offset = Vector2(0, -112.64)
+hframes = 8
+
+[node name="Tree122" type="Sprite2D" parent="." unique_id=324533146]
+z_index = 273
+z_as_relative = false
+position = Vector2(590, 83)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("6_ot1uf")
+offset = Vector2(0, -112.64)
+hframes = 8
+
+[node name="Bushe123" type="Sprite2D" parent="." unique_id=390436283]
+z_index = 290
+z_as_relative = false
+position = Vector2(-590, 100)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("7_alysj")
+offset = Vector2(0, -12.8)
+hframes = 8
+
+[node name="Bushe124" type="Sprite2D" parent="." unique_id=554499154]
+z_index = 300
+z_as_relative = false
+position = Vector2(-428, 110)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("7_alysj")
+offset = Vector2(0, -12.8)
+hframes = 8
+
+[node name="Bushe125" type="Sprite2D" parent="." unique_id=226744034]
+z_index = 300
+z_as_relative = false
+position = Vector2(-85, 110)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("7_alysj")
+offset = Vector2(0, -12.8)
+hframes = 8
+
+[node name="Bushe126" type="Sprite2D" parent="." unique_id=1550587087]
+z_index = 300
+z_as_relative = false
+position = Vector2(350, 110)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("7_alysj")
+offset = Vector2(0, -12.8)
+hframes = 8
+
+[node name="Bushe127" type="Sprite2D" parent="." unique_id=1022316389]
+z_index = 125
+z_as_relative = false
+position = Vector2(560, -65)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("7_alysj")
+offset = Vector2(0, -12.8)
+hframes = 8
+
+[node name="Rock228" type="Sprite2D" parent="." unique_id=939531522]
+z_index = 300
+z_as_relative = false
+position = Vector2(-450, 110)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("8_aqgve")
+offset = Vector2(0, -32)
+
+[node name="Rock229" type="Sprite2D" parent="." unique_id=1415438971]
+z_index = 300
+z_as_relative = false
+position = Vector2(220, 110)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("8_aqgve")
+offset = Vector2(0, -32)
+
+[node name="Rock230" type="Sprite2D" parent="." unique_id=1750788587]
+z_index = 300
+z_as_relative = false
+position = Vector2(410, 110)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("8_aqgve")
+offset = Vector2(0, -32)
+
+[node name="Sheep_Idle31" type="Sprite2D" parent="." unique_id=1354733312]
+z_index = 300
+z_as_relative = false
+position = Vector2(-335, 110)
+scale = Vector2(0.47, 0.47)
+texture = ExtResource("9_t7ron")
+offset = Vector2(0, -12.8)
+hframes = 6
+
+[node name="Sheep_Idle32" type="Sprite2D" parent="." unique_id=179360477]
+z_index = 300
+z_as_relative = false
+position = Vector2(-287, 110)
+scale = Vector2(0.41, 0.41)
+texture = ExtResource("9_t7ron")
+offset = Vector2(0, -12.8)
+hframes = 6
+
+[node name="RoadBorder" type="Line2D" parent="." unique_id=905301617]
+show_behind_parent = true
+points = PackedVector2Array(-568, 22, -420, 30, -276, 12, -116, 25, 72, 18, 240, 40, 410, 27, 550, 38)
+width = 16.0
+default_color = Color(0.4509804, 0.5921569, 0.3647059, 1)
+
+[node name="Road" type="Line2D" parent="." unique_id=1513059640]
+show_behind_parent = true
+points = PackedVector2Array(-568, 22, -420, 30, -276, 12, -116, 25, 72, 18, 240, 40, 410, 27, 550, 38)
+default_color = Color(0.6901961, 0.68235296, 0.45882353, 1)
+
+[node name="HomePath-445" type="Line2D" parent="." unique_id=209925224]
+show_behind_parent = true
+points = PackedVector2Array(-445, -104, -445, 24)
+width = 8.0
+default_color = Color(0.6901961, 0.68235296, 0.45882353, 1)
+
+[node name="HomePath-305" type="Line2D" parent="." unique_id=2032286144]
+show_behind_parent = true
+points = PackedVector2Array(-305, -104, -305, 24)
+width = 8.0
+default_color = Color(0.6901961, 0.68235296, 0.45882353, 1)
+
+[node name="HomePath-188" type="Line2D" parent="." unique_id=126421344]
+show_behind_parent = true
+points = PackedVector2Array(-188, -104, -188, 24)
+width = 8.0
+default_color = Color(0.6901961, 0.68235296, 0.45882353, 1)
+
+[node name="Step0" type="Line2D" parent="." unique_id=1988043176]
+show_behind_parent = true
+points = PackedVector2Array(-314, -126, -296, -126)
+width = 3.0
+default_color = Color(0.7019608, 0.75686276, 0.65882355, 1)
+
+[node name="Step1" type="Line2D" parent="." unique_id=1279521126]
+show_behind_parent = true
+points = PackedVector2Array(-314, -121, -296, -121)
+width = 3.0
+default_color = Color(0.7019608, 0.75686276, 0.65882355, 1)
+
+[node name="Step2" type="Line2D" parent="." unique_id=1241971243]
+show_behind_parent = true
+points = PackedVector2Array(-314, -116, -296, -116)
+width = 3.0
+default_color = Color(0.7019608, 0.75686276, 0.65882355, 1)
+
+[node name="Step3" type="Line2D" parent="." unique_id=1869041888]
+show_behind_parent = true
+points = PackedVector2Array(-314, -111, -296, -111)
+width = 3.0
+default_color = Color(0.7019608, 0.75686276, 0.65882355, 1)
+
+[node name="Step4" type="Line2D" parent="." unique_id=1300361662]
+show_behind_parent = true
+points = PackedVector2Array(-314, -106, -296, -106)
+width = 3.0
+default_color = Color(0.7019608, 0.75686276, 0.65882355, 1)
+
+[node name="Step5" type="Line2D" parent="." unique_id=1159336677]
+show_behind_parent = true
+points = PackedVector2Array(-314, -101, -296, -101)
+width = 3.0
+default_color = Color(0.7019608, 0.75686276, 0.65882355, 1)

@@ -1,0 +1,81 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Particle FX/Dust_02.png" id="1_4thin"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gwtbb"]
+atlas = ExtResource("1_4thin")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fegcg"]
+atlas = ExtResource("1_4thin")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_52w7w"]
+atlas = ExtResource("1_4thin")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_y0n2q"]
+atlas = ExtResource("1_4thin")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ibdbw"]
+atlas = ExtResource("1_4thin")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4p6is"]
+atlas = ExtResource("1_4thin")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_o0gec"]
+atlas = ExtResource("1_4thin")
+region = Rect2(384, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8njxr"]
+atlas = ExtResource("1_4thin")
+region = Rect2(448, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4dbul"]
+atlas = ExtResource("1_4thin")
+region = Rect2(512, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8stp8"]
+atlas = ExtResource("1_4thin")
+region = Rect2(576, 0, 64, 64)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gwtbb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fegcg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_52w7w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_y0n2q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ibdbw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4p6is")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_o0gec")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8njxr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4dbul")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8stp8")
+}],
+"loop": false,
+"name": &"dust",
+"speed": 10.0
+}]

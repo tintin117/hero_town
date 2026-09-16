@@ -19,9 +19,8 @@ func _ready() -> void:
 	_popup_font = preload("res://fonts/PeaberryBase.ttf")
 
 func _exit_tree() -> void:
-	# Release cursor and cached sprite resources before RenderingServer shuts down.
+	# Release cursor and popup font before RenderingServer shuts down.
 	Input.set_custom_mouse_cursor(null)
-	Art.clear_frame_cache()
 	_popup_font = null
 
 ## Spawn an effect by name at a global position.

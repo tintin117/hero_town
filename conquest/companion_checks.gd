@@ -22,7 +22,7 @@ func run_checks() -> void:
 	check(terrain.get_child_count() == 5,"editable terrain layers present")
 	check(c.workers.workers.size() == 3,"wood gold and food workers present")
 	check(c.district.position.x == c.DISTRICT_OFFSET and c.formation.get_parent() == c.district,"buildings and army shift together")
-	check(c.trainees[0].get_parent() == c.district,"training remains beside moved barracks")
+	check(c.trainees[0].get_parent() == c.district.get_node("BarracksSite"),"training remains beside moved barracks")
 	c.workers.clock = 0
 	c.workers._process(0)
 	var woodcutter: Dictionary = c.workers.workers[0]
@@ -86,7 +86,7 @@ func run_checks() -> void:
 		root.get_texture().get_image().save_png("res://conquest/companion-training.png")
 	var army_before: int = c.game.s.warriors
 	c.perform("deploy")
-	var seconds_per_step: float = c.Rules.PRESENTATION / c.game.s.battle.timeline.size()
+	var seconds_per_step: float = c.game.s.battle.duration / c.game.s.battle.timeline.size()
 	c.update_combat_presentation(c.game.s.battle, 0, 0.1 / seconds_per_step)
 	check(c.damage_numbers.get_child_count() == 0,"first swing winds up before damage")
 	c.update_combat_presentation(c.game.s.battle, 0, 0.21 / seconds_per_step)

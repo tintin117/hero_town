@@ -1,0 +1,91 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://conquest/town_workers.gd" id="1_rf1fa"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree1.png" id="2_egtwc"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Stump 1.png" id="3_kj31b"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Wood Resource/Wood Resource.png" id="4_u256l"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Gold/Gold Stones/Gold Stone 6.png" id="5_lkcvb"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Gold/Gold Resource/Gold_Resource.png" id="6_yx1sp"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Meat/Sheep/Sheep_Grass.png" id="7_0uhom"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Meat/Meat Resource/Meat Resource.png" id="8_c112j"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Interact Axe.png" id="9_8fgun"]
+[ext_resource type="Script" path="res://conquest/worker_actor.gd" id="10_egtwc"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Run Wood.png" id="10_x55n1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Run Axe.png" id="11_51fvt"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Interact Pickaxe.png" id="12_nyip8"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Run Gold.png" id="13_dnvee"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Run Pickaxe.png" id="14_w0tpo"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Run Meat.png" id="15_id08v"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Interact Knife.png" id="16_pf22w"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Run Knife.png" id="17_yls7p"]
+
+[node name="WorkingHamlet" type="Node2D" unique_id=637630655]
+script = ExtResource("1_rf1fa")
+
+[node name="Tree" type="Sprite2D" parent="." unique_id=473411230]
+position = Vector2(48, 130)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_egtwc")
+hframes = 8
+
+[node name="Stump" type="Sprite2D" parent="." unique_id=2144864587]
+position = Vector2(105, 171)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_kj31b")
+
+[node name="WoodDelivery" type="Sprite2D" parent="." unique_id=2061454258]
+position = Vector2(151, 169)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("4_u256l")
+
+[node name="GoldStone" type="Sprite2D" parent="." unique_id=2082434213]
+position = Vector2(207, 158)
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("5_lkcvb")
+
+[node name="GoldDelivery" type="Sprite2D" parent="." unique_id=1795689635]
+position = Vector2(300, 174)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("6_yx1sp")
+
+[node name="Sheep" type="Sprite2D" parent="." unique_id=1444237974]
+position = Vector2(378, 162)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("7_0uhom")
+hframes = 12
+
+[node name="MeatDelivery" type="Sprite2D" parent="." unique_id=5999302]
+position = Vector2(451, 174)
+scale = Vector2(0.65, 0.65)
+texture = ExtResource("8_c112j")
+
+[node name="Woodcutter" type="Sprite2D" parent="." unique_id=1299609749]
+position = Vector2(77, 163)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("9_8fgun")
+flip_h = true
+hframes = 6
+script = ExtResource("10_egtwc")
+carry_texture = ExtResource("10_x55n1")
+return_texture = ExtResource("11_51fvt")
+
+[node name="Miner" type="Sprite2D" parent="." unique_id=2028888197]
+position = Vector2(238, 163)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("12_nyip8")
+flip_h = true
+hframes = 6
+script = ExtResource("10_egtwc")
+carry_texture = ExtResource("13_dnvee")
+return_texture = ExtResource("14_w0tpo")
+phase_offset = 2.5
+
+[node name="FoodGatherer" type="Sprite2D" parent="." unique_id=800279139]
+position = Vector2(399, 171)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("16_pf22w")
+hframes = 4
+script = ExtResource("10_egtwc")
+carry_texture = ExtResource("15_id08v")
+return_texture = ExtResource("17_yls7p")
+phase_offset = 5.0

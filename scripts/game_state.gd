@@ -364,6 +364,8 @@ func is_test_session() -> bool:
 	for arg in OS.get_cmdline_args():
 		var path: String = arg.replace("\\", "/")
 		if path.begins_with("res://tests/") and path.ends_with(".tscn"): return true
+		# F6 designer previews must bypass this autoload before it reads a save.
+		if path.ends_with("/conquest/companion_preview.tscn") or path == "conquest/companion_preview.tscn": return true
 	return false
 
 func set_reorganizing(value: bool) -> void:

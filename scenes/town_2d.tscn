@@ -1,6 +1,46 @@
-[gd_scene format=3 uid="uid://c13te58sskhho"]
+[gd_scene load_steps=7 format=3 uid="uid://c13te58sskhho"]
 
 [ext_resource type="Script" uid="uid://dewsywlc6ktiu" path="res://scripts/remaster/town.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/remaster/scenery.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/remaster/town_hud.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/remaster/desktop_window.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/remaster/battle_director.gd" id="5"]
+[ext_resource type="AudioStream" path="res://asset/audio/background/Moonlight market.mp3" id="6"]
 
-[node name="Town2D" type="Node2D" unique_id=2128553895]
+[node name="Town2D" type="Node2D" node_paths=PackedStringArray("director", "desktop", "hud", "camera", "music", "buildings_root", "units_root") unique_id=2128553895]
 script = ExtResource("1")
+director = NodePath("BattleDirector")
+desktop = NodePath("DesktopWindow")
+hud = NodePath("CanvasLayer/TownHUD")
+camera = NodePath("Camera2D")
+music = NodePath("Music")
+buildings_root = NodePath("Buildings")
+units_root = NodePath("Units")
+
+[node name="Scenery" parent="." instance=ExtResource("2")]
+
+[node name="Buildings" type="Node2D" parent="."]
+
+[node name="Units" type="Node2D" parent="."]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, 20)
+zoom = Vector2(0.939394, 0.939394)
+
+[node name="DesktopWindow" type="Node" parent="."]
+script = ExtResource("4")
+
+[node name="BattleDirector" type="Node" parent="."]
+script = ExtResource("5")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="TownHUD" parent="CanvasLayer" node_paths=PackedStringArray("town") instance=ExtResource("3")]
+town = NodePath("../..")
+
+[node name="Music" type="AudioStreamPlayer" parent="." groups=["remaster_audio"]]
+stream = ExtResource("6")
+volume_db = -15.0
+autoplay = true
+
+[connection signal="finished" from="Music" to="Music" method="play"]

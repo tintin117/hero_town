@@ -1,15 +1,28 @@
 extends Node2D
-@export var arrow_scene:= preload("res://scenes/arrow.tscn")
-const HUD_SCRIPT = preload("res://scripts/remaster/town_hud.gd")
-const UNIT_VIEW = preload("res://scripts/remaster/unit_view.gd")
-const BUILDING_VIEW = preload("res://scripts/remaster/town_building.gd")
-const WINDOW_SCRIPT = preload("res://scripts/remaster/desktop_window.gd")
-const DIRECTOR_SCRIPT = preload("res://scripts/remaster/battle_director.gd")
+## The scene owns presentation; this controller connects game state to live instances.
+@export_group("Scene Templates")
+@export var arrow_scene: PackedScene = preload("res://scenes/arrow.tscn")
+@export var unit_scene: PackedScene = preload("res://scenes/remaster/unit_view.tscn")
+@export var building_scene: PackedScene = preload("res://scenes/remaster/town_building.tscn")
+@export_group("Scene References")
+@export var director: BattleDirector
+@export var desktop: DesktopWindow
+@export var hud: Control
+@export var camera: Camera2D
+@export var music: AudioStreamPlayer
+@export var buildings_root: Node2D
+@export var units_root: Node2D
+@export_group("Camera Layout")
+## Disable to use the Camera2D position and zoom directly.
+@export var fit_camera_to_window := true
+@export var camera_world_size := Vector2(1320, 390)
+@export var camera_screen_margin := Vector2(40, 54)
+@export var camera_zoom_limits := Vector2(0.35, 2.6)
+@export var camera_center := Vector2(0, -6)
+@export var camera_hud_offset := 25.0
+@export_group("Audio and Background")
+@export var background_color := Color("203f49")
 
-var director: BattleDirector
-var desktop: DesktopWindow
-var hud: Control
-var camera: Camera2D
 var building_views: Dictionary = {}
 var unit_views: Dictionary = {}
 var idle_units: Array[Dictionary] = []
@@ -20,86 +33,40 @@ var selected_id: String = ""
 var _visual_clock: float = 0.0
 var _effect_time: float = 0.0
 var _sound_time: float = 0.0
-var _landscape: int = -1
 
 var _tracked_shots: Array = []
 var _active_arrows: Array = []
 
 func _ready() -> void:
-	RenderingServer.set_default_clear_color(Color("203f49"))
-	_build_terrain()
-	camera = Camera2D.new()
-	add_child(camera)
-	desktop = WINDOW_SCRIPT.new()
-	add_child(desktop)
-	director = DIRECTOR_SCRIPT.new()
-	director.name = "BattleDirector"
-	add_child(director)
-	var canvas := CanvasLayer.new()
-	canvas.name = "CanvasLayer"
-	add_child(canvas)
-	hud = HUD_SCRIPT.new()
-	hud.town = self
-	canvas.add_child(hud)
+	RenderingServer.set_default_clear_color(background_color)
 	director.battle_started.connect(_battle_started)
 	director.preparation_started.connect(_prepare_visuals)
 	director.combat_events.connect(_combat_events)
 	GameState.buildings_changed.connect(_sync_buildings)
 	GameState.research_changed.connect(_research_changed)
-	GameState.settings_changed.connect(_refresh_landscape)
 	get_viewport().size_changed.connect(_fit_camera)
 	_sync_buildings()
 	_fit_camera()
-	var music := AudioStreamPlayer.new()
-	music.stream = preload("res://asset/audio/background/Moonlight market.mp3")
-	music.volume_db = -15
-	music.finished.connect(music.play)
-	add_child(music)
-	music.add_to_group("remaster_audio")
-	if DisplayServer.get_name() != "headless": music.play()
 	if not GameState.offline_summary.is_empty() and GameState.offline_summary.get("gold", 0) > 0:
 		hud.show_offline.call_deferred(GameState.offline_summary.duplicate())
 		GameState.offline_summary.clear()
 
-func _refresh_landscape() -> void:
-	if _landscape == int(GameState.settings.landscape): return
-	var previous := get_node_or_null("Scenery")
-	if previous != null:
-		remove_child(previous)
-		previous.queue_free()
-	_build_terrain()
-
-func _build_terrain() -> void:
-	_landscape = int(GameState.settings.landscape)
-	var scenery := preload("res://scripts/remaster/scenery.gd").new()
-	scenery.name = "Scenery"
-	add_child(scenery)
-
-func _add_prop(texture: Texture2D, at: Vector2, scale_factor: float) -> void:
-	var sprite := Sprite2D.new()
-	sprite.texture = texture
-	sprite.offset.y = -texture.get_height() * 0.5
-	sprite.scale = Vector2.ONE * scale_factor
-	sprite.position = at
-	sprite.z_index = int(at.y) + 190
-	add_child(sprite)
-
 func _fit_camera() -> void:
-	if camera == null: return
+	if camera == null or not fit_camera_to_window: return
 	var viewport_size := get_viewport_rect().size
-	var zoom_value := minf((viewport_size.x - 40) / 1320.0, (viewport_size.y - 54) / 390.0)
-	camera.zoom = Vector2.ONE * maxf(0.35, minf(2.6, zoom_value))
-	camera.position = Vector2(0, -6 + 25.0 / camera.zoom.y)
+	var zoom_value := minf((viewport_size.x - camera_screen_margin.x) / camera_world_size.x, (viewport_size.y - camera_screen_margin.y) / camera_world_size.y)
+	camera.zoom = Vector2.ONE * clampf(zoom_value, camera_zoom_limits.x, camera_zoom_limits.y)
+	camera.position = camera_center + Vector2(0, camera_hud_offset / camera.zoom.y)
 	desktop.update_mouse_region.call_deferred()
 
 func _sync_buildings() -> void:
 	for record in GameState.buildings:
 		var view: ArmyBuildingView = building_views.get(record.id)
 		if not is_instance_valid(view):
-			view = BUILDING_VIEW.new()
+			view = building_scene.instantiate()
 			view.record = record
 			building_views[record.id] = view
-			add_child(view)
+			buildings_root.add_child(view)
 		view.record = record
 		view.refresh()
 	if director.phase != "BATTLE":
@@ -124,11 +91,11 @@ func _prepare_visuals() -> void:
 
 func _spawn_view(unit: Dictionary, key: String) -> void:
 	if unit_views.has(key): return
-	var view := UNIT_VIEW.new()
+	var view := unit_scene.instantiate() as ArmyUnitView
 	view.model = unit
 	if key.begins_with("waiting_"): view.modulate = Color(0.7,0.9,1.0,0.75)
 	unit_views[key] = view
-	add_child(view)
+	units_root.add_child(view)
 
 func _battle_started() -> void:
 	_clear_units()

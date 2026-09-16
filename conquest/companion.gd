@@ -5,17 +5,43 @@ const Presentation = preload("res://scripts/presentation_scale.gd")
 const PACK := "res://asset/Tiny Swords (Free Pack)/"
 const COMPACT_HEIGHT := 220
 const EXPANDED_HEIGHT := 500
+@export_group("Campaign")
+@export var balance: ConquestBalance = preload("res://conquest/default_balance.tres")
 @export var save_path := "user://conquest_companion_v1.json"
 @export var seed_from_full_window := true
+## Disable to play a fresh scene preview without loading or writing a save.
+@export var persistence_enabled := true
+@export_group("Town presentation")
+@export_range(960, 12000, 24) var land_width := 2880.0
+@export_range(1, 1200, 1) var scroll_speed := 420.0
+@export_range(1, 30, 1) var scenery_fps := 8.0
+@export_range(1, 100, 1) var visible_warrior_limit := 30
+@export_range(1, 20, 1) var warrior_columns := 5
+@export var warrior_spacing := Vector2(27, 14)
+@export_range(1, 20, 1) var enemy_columns := 4
+@export var enemy_spacing := Vector2(25, 20)
+@export_group("Combat art")
+@export var warrior_attack: Texture2D = preload(PACK + "Units/Blue Units/Warrior/Warrior_Attack1.png")
+@export var mage_cast: Texture2D = preload(PACK + "Units/Blue Units/Monk/Heal.png")
+@export var healing_effect: Texture2D = preload(PACK + "Units/Blue Units/Monk/Heal_Effect.png")
+@export var combat_number_scene: PackedScene = preload("res://conquest/combat_number.tscn")
+@export var enemy_damage_color := Color("ffdc70")
+@export var ally_damage_color := Color("ff8a7c")
+@export var healing_color := Color("89f4aa")
+@export_group("Management panel")
+@export var popup_top_margin := 12.0
+@export var popup_edge_margin := 8.0
 var game = Rules.new()
-var settlement: Node2D
-var formation: Node2D
-var popup: Panel
-var popup_body: Label
+@onready var settlement: Node2D = $Settlement
+@onready var district: Node2D = $Settlement/TownDistrict
+@onready var formation: Node2D = $Settlement/TownDistrict/Formation
+@onready var templates: Node2D = $Settlement/TownDistrict/ActorTemplates
+@onready var popup: Panel = $ManagementPanel
+@onready var popup_body: Label = $ManagementPanel/Body
 var popup_kind := ""
 var popup_anchor := 480.0
-var gold: Button
-var frontier: Button
+@onready var gold: Button = $HUD/Gold
+@onready var frontier: Button = $HUD/Frontier
 var activity: Dictionary = {}
 var animations: Array[Sprite2D] = []
 var flash: Dictionary = {}
@@ -23,27 +49,26 @@ var clock := 0.0
 var save_clock := 0.0
 var stamp := ""
 var summary := ""
-var toast: Label
+@onready var toast: Label = $HUD/Toast
 var toast_until := 0.0
 var scale_factor := 1.0
 var previous_position := Vector2i.ZERO
 var dragging := false
 var drag_offset := Vector2i.ZERO
-var paper: StyleBoxTexture
-var blue: StyleBoxTexture
 var fire: Sprite2D
-var damage_numbers: Node2D
+@onready var damage_numbers: Node2D = $Settlement/TownDistrict/DamageNumbers
 var last_damage_step := -1
 var last_counter_step := -1
 
 
 var panel_buttons: Array[Button] = []
 var trainees: Array[AnimatedSprite2D] = []
-var hud: Node2D
+@onready var hud: Node2D = $HUD
 var view_width := 960.0
-var land_width := 2880.0
 var scroll_offset := 0.0
 var right_controls: Array[Control] = []
+var right_offsets: Dictionary = {}
+var trainee_alpha: Dictionary = {}
 var taskbar_mode := false
 var taskbar_screen := 0
 var taskbar_pointer_down := false
@@ -51,37 +76,17 @@ var taskbar_dragged := false
 var taskbar_press_position := Vector2i.ZERO
 var taskbar_window_position := Vector2i.ZERO
 var taskbar_positions: Dictionary = {}
-var sparring: Node2D
-var district: Node2D
-var workers: Node2D
+@onready var sparring: Node2D = $TaskbarSparring
+@onready var workers: Node2D = $Settlement/WorkingHamlet
 const DISTRICT_OFFSET := 480.0
 func _ready() -> void:
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	paper = style("Papers/RegularPaper.png",16)
-	blue = style("Buttons/BigBlueButton_Regular.png",10)
-	settlement = Node2D.new()
-	add_child(settlement)
-	district = Node2D.new()
-	district.name = "TownDistrict"
-	district.position.x = DISTRICT_OFFSET
-	settlement.add_child(district)
-	formation = Node2D.new()
-	district.add_child(formation)
-	damage_numbers = Node2D.new()
-	damage_numbers.name = "DamageNumbers"
-	damage_numbers.z_index = 20
-	district.add_child(damage_numbers)
-	make_town()
-	hud = Node2D.new()
-	add_child(hud)
-	make_controls()
-	make_training_drill()
-	sparring = preload("res://conquest/taskbar_sparring.gd").new()
-	sparring.hide()
-	add_child(sparring)
+	if game.balance != balance: game = Rules.new(balance)
+	bind_presentation()
 	sparring.restore_requested.connect(restore_town)
 	sparring.drag_started.connect(func(): begin_taskbar_drag(DisplayServer.mouse_get_position()))
-	if seed_from_full_window and not FileAccess.file_exists(save_path):
+	if not persistence_enabled:
+		summary = "Scene preview • saving disabled"
+	elif seed_from_full_window and not FileAccess.file_exists(save_path):
 		summary = game.load_game(Rules.SAVE)
 		persist()
 	else: summary = game.load_game(save_path)
@@ -90,150 +95,51 @@ func _ready() -> void:
 	configure_window()
 	show_toast(summary.get_slice("\n",0).replace("While you were away: ","Welcome back: "),9)
 	refresh()
-func style(path: String, margin: int) -> StyleBoxTexture:
-	var sheet: Texture2D = load(PACK + "UI Elements/UI Elements/" + path)
-	var joined := Image.create(192,192,false,Image.FORMAT_RGBA8)
-	for x in 3:
-		for y in 3: joined.blit_rect(sheet.get_image(),Rect2i(x*128,y*128,64,64),Vector2i(x*64,y*64))
-	joined.resize(margin*3,margin*3,Image.INTERPOLATE_NEAREST)
-	var result := StyleBoxTexture.new()
-	result.texture = ImageTexture.create_from_image(joined)
-	for side in [SIDE_LEFT,SIDE_TOP,SIDE_RIGHT,SIDE_BOTTOM]: result.set_texture_margin(side,margin)
-	return result
-func label(parent: Node, text: String, at: Vector2, width: float, font_size := 16, dark := false) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.position = at
-	l.size.x = width
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.add_theme_font_size_override("font_size",font_size)
-	l.add_theme_color_override("font_color",Color("423e34") if dark else Color("fff2cc"))
-	if not dark:
-		l.add_theme_color_override("font_shadow_color",Color("243f3f"))
-		l.add_theme_constant_override("shadow_offset_x",1)
-		l.add_theme_constant_override("shadow_offset_y",1)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(l)
-	return l
-func button(parent: Node, text: String, at: Vector2, dimensions: Vector2, action: Callable, tooltip := "") -> Button:
-	var b := Button.new()
-	b.text = text
-	b.position = at
-	b.size = dimensions
-	b.tooltip_text = tooltip
-	b.add_theme_stylebox_override("normal",blue)
-	b.add_theme_stylebox_override("hover",blue)
-	b.add_theme_stylebox_override("pressed",blue)
-	b.add_theme_font_size_override("font_size",16)
-	b.pressed.connect(action)
-	parent.add_child(b)
-	return b
-func sprite(parent: Node, path: String, at: Vector2, factor: float, frames := 1) -> Sprite2D:
-	var p := Sprite2D.new()
-	p.texture = load(PACK+path)
-	p.position = at
-	p.scale = Vector2.ONE*factor
-	p.hframes = p.texture.get_width()/192 if path.begins_with("Units/") else frames
-	parent.add_child(p)
-	if p.hframes>1: animations.append(p)
-	return p
-func make_town() -> void:
-	# Authored TileMap layers stay paintable in the editor and move with popups.
-	$Terrain.reparent(settlement)
-	for terrace in ["CastleTerrace", "VillageTerrace", "FrontierTerrace"]:
-		settlement.get_node("Terrain/" + terrace).position.x += DISTRICT_OFFSET
-	workers = preload("res://conquest/town_workers.gd").new()
-	workers.name = "WorkingHamlet"
-	settlement.add_child(workers)
-	# Extend the paintable terrain into a continuous district for future buildings.
-	for layer_name in ["Ground", "Cliff"]:
-		var layer: TileMapLayer = settlement.get_node("Terrain/" + layer_name)
-		var cells: Array[Vector2i] = []
-		for x in ceili(land_width / 24.0):
-			for y in (2 if layer_name == "Ground" else 1): cells.append(Vector2i(x, y))
-		layer.set_cells_terrain_connect(cells, 0, 0 if layer_name == "Ground" else 1, false)
-	for x in [1540, 1820, 2200, 2670]:
-		sprite(settlement,"Terrain/Resources/Wood/Trees/Tree1.png",Vector2(x,132),0.45,8)
-		sprite(settlement,"Terrain/Decorations/Rocks/Rock2.png",Vector2(x+64,171),0.48)
-	for at in [Vector2(28,130),Vector2(200,133),Vector2(461,132),Vector2(923,128)]: sprite(district,"Terrain/Resources/Wood/Trees/Tree1.png",at,0.45,8)
-	sprite(district,"Buildings/Blue Buildings/Castle.png",Vector2(120,109),0.44)
-	sprite(district,"Buildings/Blue Buildings/Barracks.png",Vector2(284,124),0.5)
-	sprite(district,"Buildings/Red Buildings/Tower.png",Vector2(874,126),0.45)
-	sprite(district,"Buildings/Blue Buildings/House1.png",Vector2(52,168),0.23)
-	sprite(district,"Units/Blue Units/Pawn/Pawn_Interact Axe.png",Vector2(37,159),0.55,6)
-	sprite(district,"Units/Blue Units/Pawn/Pawn_Interact Pickaxe.png",Vector2(448,164),0.5,6)
-	sprite(district,"Terrain/Decorations/Rocks/Rock2.png",Vector2(467,171),0.48)
-	sprite(district,"Terrain/Resources/Meat/Sheep/Sheep_Idle.png",Vector2(199,179),0.5,6)
-func make_controls() -> void:
-	for entry in [["home",80,40,110,134],["barracks",230,70,110,105],["academy",350,56,108,124],["army",500,85,305,97],["frontier",828,63,90,121]]:
-		var kind: String = entry[0]
-		var hit := button(district,"",Vector2(entry[1],entry[2]),Vector2(entry[3],entry[4]),func(): open_panel(kind),kind.capitalize())
-		for state in ["normal","hover","pressed"]: hit.add_theme_stylebox_override(state,StyleBoxEmpty.new())
-	activity.barracks = label(district,"",Vector2(246,51),120)
-	activity.academy = label(district,"",Vector2(364,37),125)
-	activity.frontier = label(district,"",Vector2(832,38),120)
-	gold = button(settlement,"",Vector2(16,184),Vector2(151,30),func(): open_panel("ledger"),"Gold • income • return summary")
-	frontier = button(settlement,">",Vector2(778,184),Vector2(34,30),func(): open_panel("frontier"),"Frontier • preview reward and deploy")
-	var grip := button(settlement,"::",Vector2(818,184),Vector2(30,30),func(): pass,"Drag settlement")
-	grip.gui_input.connect(func(event):
+
+func bind_presentation() -> void:
+	# Scene nodes own layout and art. Code binds actions and current campaign state.
+	for child in settlement.find_children("*", "Sprite2D", true, false):
+		if child.hframes > 1 and not templates.is_ancestor_of(child) and not workers.is_ancestor_of(child): animations.append(child)
+	for hit in district.find_children("*", "Button", true, false):
+		if hit is Button and hit.has_meta("panel"):
+			var kind: String = hit.get_meta("panel")
+			hit.pressed.connect(func(): open_panel(kind))
+	for kind in ["barracks", "academy", "frontier"]:
+		activity[kind] = district.get_node(kind.capitalize() + "Site/Activity")
+	gold.pressed.connect(func(): open_panel("ledger"))
+	frontier.pressed.connect(func(): open_panel("frontier"))
+	$HUD/Drag.gui_input.connect(func(event):
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 			dragging = event.pressed
 			if dragging: drag_offset = Vector2i(event.global_position*scale_factor))
-	button(settlement,"v",Vector2(852,184),Vector2(30,30),dock,"Dock above taskbar")
-	button(settlement,"-",Vector2(886,184),Vector2(30,30),minimize_to_sparring,"Minimize town • watch taskbar sparring")
-	button(settlement,"x",Vector2(920,184),Vector2(30,30),func(): persist(); get_tree().quit(),"Save and close")
-	toast = label(settlement,"",Vector2(480,12),456,15)
-	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	popup = Panel.new()
-	popup.size = Vector2(430,260)
-	popup.add_theme_stylebox_override("panel",paper)
-	add_child(popup)
+	$HUD/Dock.pressed.connect(dock)
+	$HUD/Minimize.pressed.connect(minimize_to_sparring)
+	$HUD/Close.pressed.connect(func(): persist(); get_tree().quit())
+	$ManagementPanel/Close.pressed.connect(close_panel)
+	for action in $ManagementPanel/Actions.get_children():
+		var key: String = action.get_meta("action")
+		action.pressed.connect(func(): perform(key))
+	right_controls.assign([frontier, $HUD/Drag, $HUD/Dock, $HUD/Minimize, $HUD/Close, toast])
+	for control in right_controls: right_offsets[control] = control.position.x - view_width
+	trainees.assign([$Settlement/TownDistrict/BarracksSite/Trainee1, $Settlement/TownDistrict/BarracksSite/Trainee2])
+	for trainee in trainees: trainee_alpha[trainee] = trainee.modulate.a
 	popup.hide()
-	# Keep navigation and window controls reachable while the town scrolls.
-	for control in [gold, frontier, toast]: control.reparent(hud)
-	for control in settlement.get_children():
-		if control is Button and control.text in ["::", "v", "-", "x"]:
-			control.reparent(hud)
-			right_controls.append(control)
-	right_controls.push_front(frontier)
+	sparring.hide()
 
 func scroll_town(value: float) -> void:
 	scroll_offset = clampf(value, 0.0, maxf(0.0, land_width - view_width))
 	settlement.position.x = -scroll_offset
 
 func layout_navigation() -> void:
-	for i in right_controls.size(): right_controls[i].position.x = view_width - 182 + i * 35
-	toast.position.x = maxf(0, view_width - 480)
+	for control in right_controls: control.position.x = maxf(0, view_width + right_offsets[control])
 	scroll_town(scroll_offset)
-func make_training_drill() -> void:
-	var clips := SpriteFrames.new()
-	clips.add_animation("practice")
-	clips.set_animation_speed("practice", 8.0)
-	for clip in ["Attack1", "Guard", "Attack2", "Idle"]:
-		var sheet: Texture2D = load(PACK + "Units/Blue Units/Warrior/Warrior_" + clip + ".png")
-		for frame_index in int(sheet.get_width() / 192):
-			var frame := AtlasTexture.new()
-			frame.atlas = sheet
-			frame.region = Rect2(frame_index * 192, 0, 192, 192)
-			clips.add_frame("practice", frame)
-	for i in 2:
-		var trainee := AnimatedSprite2D.new()
-		trainee.sprite_frames = clips
-		trainee.position = Vector2(224 + i * 44, 166)
-		trainee.scale = Vector2.ONE * 0.45
-		trainee.flip_h = i == 1
-		trainee.animation = "practice"
-		trainee.frame = i * 8
-		district.add_child(trainee)
-		trainees.append(trainee)
-	update_training_drill()
 
 func update_training_drill() -> void:
 	var training: bool = game.s.projects.has("barracks")
 	var paused: bool = not game.s.battle.is_empty()
 	for trainee in trainees:
 		trainee.visible = training
-		trainee.modulate.a = 0.55 if paused else 1.0
+		trainee.modulate.a = trainee_alpha[trainee] * (0.55 if paused else 1.0)
 		if training and not paused: trainee.play("practice")
 		else: trainee.pause()
 
@@ -252,13 +158,8 @@ func configure_window() -> void:
 	scale_factor = Presentation.window_width(w) / 960.0
 	if DisplayServer.get_name() != "headless":
 		view_width = floorf(DisplayServer.screen_get_usable_rect(w.current_screen).size.x / scale_factor)
-	land_width = maxf(2880, view_width + 960)
-	for layer_name in ["Ground", "Cliff"]:
-		var layer: TileMapLayer = settlement.get_node("Terrain/" + layer_name)
-		var cells: Array[Vector2i] = []
-		for x in range(120, ceili(land_width / 24.0)):
-			for y in (2 if layer_name == "Ground" else 1): cells.append(Vector2i(x, y))
-		if not cells.is_empty(): layer.set_cells_terrain_connect(cells, 0, 0 if layer_name == "Ground" else 1, false)
+	# Map extent and painted cells belong to the scene, including intentional gaps.
+	view_width = minf(view_width, land_width)
 	layout_navigation()
 	set_height(COMPACT_HEIGHT)
 	dock()
@@ -361,9 +262,10 @@ func update_mouse_region() -> void:
 		Vector2(0, settlement.position.y + 220) * scale_factor])
 func open_panel(kind: String) -> void:
 	popup_kind = kind
-	popup_anchor = {"home":130,"barracks":285,"academy":400,"army":610,"frontier":760,"ledger":240}.get(kind,480)
-	if kind != "ledger": popup_anchor += DISTRICT_OFFSET
-	popup.position = Vector2(clampf(popup_anchor-scroll_offset-215,8,view_width-438),12)
+	var anchor: Node2D = district.get_node_or_null({"home":"CastleSite", "barracks":"BarracksSite", "academy":"AcademySite", "frontier":"FrontierSite", "army":"ActorTemplates/Warrior"}.get(kind, "")) if kind != "ledger" else null
+	popup_anchor = anchor.global_position.x if anchor != null else gold.global_position.x + gold.size.x * 0.5
+	var panel_x := popup_anchor - popup.size.x * 0.5
+	popup.position = Vector2(clampf(panel_x, popup_edge_margin, maxf(popup_edge_margin, view_width-popup.size.x-popup_edge_margin)), popup_top_margin)
 	popup.show()
 	set_height(EXPANDED_HEIGHT)
 	rebuild_panel()
@@ -372,34 +274,33 @@ func close_panel() -> void:
 	popup_kind = ""
 	set_height(COMPACT_HEIGHT)
 func rebuild_panel() -> void:
-	for child in popup.get_children(): child.queue_free()
+	for child in $ManagementPanel/Actions.get_children(): child.hide()
 	panel_buttons.clear()
-	label(popup,popup_kind.capitalize(),Vector2(18,14),350,20,true)
-	button(popup,"x",Vector2(380,10),Vector2(32,30),close_panel,"Close • Escape")
-	popup_body = label(popup,"",Vector2(18,47),394,16,true)
+	$ManagementPanel/Title.text = popup_kind.capitalize()
 	var busy: bool = not game.s.battle.is_empty()
 	match popup_kind:
-		"home": add_action("Develop  •  60 gold",Vector2(18,191),Vector2(394,42),"develop")
+		"home": add_action("Develop  •  %d gold" % game.balance.development_cost,"develop")
 		"barracks":
 			var p: Dictionary = game.project("warriors")
-			add_action("+2 warriors  •  %d gold  •  %s" % [p.cost,timer(p.duration)],Vector2(18,191),Vector2(394,42),"warriors")
+			add_action("+2 warriors  •  %d gold  •  %s" % [p.cost,timer(p.duration)],"warriors")
 		"academy":
-			if not game.s.academy: add_action("Build  •  60 gold + 1 plot",Vector2(18,191),Vector2(394,42),"build")
-			elif game.s.mages == 0: add_action("First mage  •  30 gold  •  1:00",Vector2(18,191),Vector2(394,42),"mage")
+			if not game.s.academy: add_action("Build  •  %d gold + 1 plot" % game.balance.academy_cost,"build")
+			elif game.s.mages == 0: add_action("First mage  •  %d gold  •  %s" % [game.balance.mage_cost,timer(game.balance.mage_seconds)],"mage")
 			else:
-				if not game.s.healing: add_action("Learn Healing  •  60 gold  •  5:00",Vector2(18,145),Vector2(394,38),"healing")
-				add_action("Fireball",Vector2(18,199),Vector2(190,38),"equip_fireball")
-				if game.s.healing: add_action("Healing",Vector2(220,199),Vector2(190,38),"equip_healing")
+				if not game.s.healing: add_action("Learn Healing  •  %d gold  •  %s" % [game.balance.healing_cost,timer(game.balance.healing_seconds)],"healing")
+				add_action("Fireball","equip_fireball")
+				if game.s.healing: add_action("Healing","equip_healing")
 		"army":
 			if game.s.mages>0:
-				add_action("Fireball",Vector2(18,199),Vector2(190,38),"equip_fireball")
-				if game.s.healing: add_action("Healing",Vector2(220,199),Vector2(190,38),"equip_healing")
-		"frontier": add_action("Skip presentation" if busy else "Deploy",Vector2(18,199),Vector2(394,38),"deploy")
+				add_action("Fireball","equip_fireball")
+				if game.s.healing: add_action("Healing","equip_healing")
+		"frontier": add_action("Skip presentation" if busy else "Deploy","deploy")
 		"ledger": pass
 	update_panel()
-func add_action(text: String, at: Vector2, dimensions: Vector2, key: String) -> void:
-	var b := button(popup,text,at,dimensions,func(): perform(key))
-	b.set_meta("action",key)
+func add_action(text: String, key: String) -> void:
+	var b: Button = $ManagementPanel/Actions.get_node(key)
+	b.text = text
+	b.show()
 	panel_buttons.append(b)
 func perform(key: String) -> void:
 	var ok := false
@@ -423,16 +324,16 @@ func update_panel() -> void:
 	var in_battle: bool = not game.s.battle.is_empty()
 	var text := ""
 	match popup_kind:
-		"home": text = "+5 gold/min permanently\n60 gold • instant • no plot needed\nCurrent income: %d/min" % game.income()
+		"home": text = "+%d gold/min permanently\n%d gold • instant • no plot needed\nCurrent income: %d/min" % [game.balance.development_income,game.balance.development_cost,game.income()]
 		"barracks": text = "%d warriors ready\nOne project at a time. Troops join automatically." % game.s.warriors
-		"academy": text = "60 gold + 1 conquered plot\nUnlocks your mage and spells.\nFree plots: %d" % game.s.plots if not game.s.academy else ("Train a mage to unlock Fireball." if game.s.mages==0 else "Equipped: %s\nFireball: damages the whole enemy group\nHealing: restores frontline health\nSpells cast automatically." % str(game.s.spell).capitalize())
-		"army": text = "%d warriors • %d mage\nFrontline: %d HP\nSpell: %s\nLearned spells equip instantly, free." % [game.s.warriors,game.s.mages,game.s.warriors*40,str(game.s.spell).capitalize() if game.s.mages>0 else "none"]
+		"academy": text = "%d gold + 1 conquered plot\nUnlocks your mage and spells.\nFree plots: %d" % [game.balance.academy_cost,game.s.plots] if not game.s.academy else ("Train a mage to unlock Fireball." if game.s.mages==0 else "Equipped: %s\nFireball: damages the whole enemy group\nHealing: restores frontline health\nSpells cast automatically." % str(game.s.spell).capitalize())
+		"army": text = "%d warriors • %d mage\nFrontline: %d HP\nSpell: %s\nLearned spells equip instantly, free." % [game.s.warriors,game.s.mages,game.s.warriors*game.balance.warrior_hp,str(game.s.spell).capitalize() if game.s.mages>0 else "none"]
 		"frontier":
-			if in_battle: text = "Expedition in progress\n%s\nTraining paused • income continues\nYour army and land are safe." % Rules.LANDS[int(game.s.battle.index)].name
-			elif game.s.owned<3:
-				var land: Dictionary = Rules.LANDS[int(game.s.owned)]
+			if in_battle: text = "Expedition in progress\n%s\nTraining paused • income continues\nYour army and land are safe." % game.s.battle.land_name
+			elif game.s.owned<game.lands.size():
+				var land: Resource = game.lands[int(game.s.owned)]
 				text = "%s\nREWARD  +%d gold/min • %d plots\n%s\n%s" % [land.name,land.income,land.plots,land.hint,"Ready to march" if game.s.recovery<=0 else "Recovery: "+timer(game.s.recovery)]
-			else: text = "Valley conquered\nAll three lands are yours.\nDevelop your estate or grow your army."
+			else: text = "Valley conquered\nAll %d lands are yours.\nDevelop your estate or grow your army." % game.lands.size()
 		"ledger": text = "%d gold • +%d/min • %d free plots\n%s" % [game.s.gold,game.income(),game.s.plots,summary]
 	if game.s.projects.has(popup_kind):
 		var p: Dictionary = game.s.projects[popup_kind]
@@ -442,13 +343,13 @@ func update_panel() -> void:
 		var key: String = b.get_meta("action")
 		b.disabled = in_battle
 		match key:
-			"develop": b.disabled = in_battle or game.s.gold<60
-			"build": b.disabled = in_battle or game.s.gold<60 or game.s.plots<1
+			"develop": b.disabled = in_battle or game.s.gold<game.balance.development_cost
+			"build": b.disabled = in_battle or game.s.gold<game.balance.academy_cost or game.s.plots<1
 			"warriors","mage","healing":
 				var p: Dictionary = game.project(key)
 				b.disabled = in_battle or game.s.projects.has(p.building) or game.s.gold<p.cost
 			"deploy":
-				b.disabled = not in_battle and (game.s.recovery>0 or game.s.owned>=3)
+				b.disabled = not in_battle and (game.s.recovery>0 or game.s.owned>=game.lands.size())
 				b.text = "Skip presentation" if in_battle else ("Recovery • "+timer(game.s.recovery) if game.s.recovery>0 else "Deploy")
 			"equip_fireball","equip_healing":
 				b.text = ("[ " if game.s.spell==key.trim_prefix("equip_") else "") + key.trim_prefix("equip_").capitalize() + (" ]" if game.s.spell==key.trim_prefix("equip_") else "")
@@ -460,6 +361,7 @@ func show_toast(text: String, duration := 5.0) -> void:
 	toast.show()
 	update_mouse_region()
 func persist() -> void:
+	if not persistence_enabled: return
 	if not game.save_game(save_path): summary = "Save failed. Check disk space."; if is_instance_valid(toast): show_toast(summary,20)
 func refresh() -> void:
 	gold.text = "%d gold" % game.s.gold
@@ -476,34 +378,41 @@ func refresh() -> void:
 func rebuild_formation() -> void:
 	for child in formation.get_children(): child.queue_free()
 	var battling: bool = not game.s.battle.is_empty()
-	if game.s.academy: sprite(formation,"Buildings/Blue Buildings/Monastery.png",Vector2(399,113),0.48)
-	else:
-		var plot := sprite(formation,"Buildings/Black Buildings/Monastery.png",Vector2(399,113),0.48)
-		plot.modulate = Color(1,1,1,0.3)
-	for i in mini(int(game.s.warriors),30):
-		var p := sprite(formation,"Units/Blue Units/Warrior/Warrior_Attack1.png" if battling else "Units/Blue Units/Warrior/Warrior_Idle.png",Vector2(543+(i%5)*27,143+(i/5)*14),0.55,1)
+	$Settlement/TownDistrict/AcademySite/Built.visible = game.s.academy
+	$Settlement/TownDistrict/AcademySite/Plot.visible = not game.s.academy
+	for i in mini(int(game.s.warriors),visible_warrior_limit):
+		var p := make_actor("Warrior",Vector2(i%warrior_columns,i/warrior_columns)*warrior_spacing,warrior_attack if battling else null)
 		p.set_meta("ally",i)
 	if game.s.mages>0:
-		var caster := sprite(formation,"Units/Blue Units/Monk/Heal.png" if battling else "Units/Blue Units/Monk/Idle.png",Vector2(499,157),0.57,1)
+		var caster := make_actor("Mage",Vector2.ZERO,mage_cast if battling else null)
 		caster.set_meta("caster", true)
 	if battling:
-		for i in Rules.LANDS[int(game.s.battle.index)].count:
-			var p := sprite(formation,"Units/Red Units/Warrior/Warrior_Attack1.png",Vector2(707+(i%4)*25,143+(i/4)*20),0.55,1)
-			p.flip_h = true
+		for i in int(game.s.battle.enemy_count):
+			var p := make_actor("Enemy",Vector2(i%enemy_columns,i/enemy_columns)*enemy_spacing)
 			p.set_meta("enemy",i)
-		fire = sprite(formation,"Particle FX/Explosion_01.png",Vector2(745,151),0.8,8)
+		fire = make_actor("SpellEffect")
 	else: fire = null
+
+func make_actor(template_name: String, offset := Vector2.ZERO, clip: Texture2D = null) -> Sprite2D:
+	var source: Sprite2D = templates.get_node(template_name)
+	var actor := source.duplicate() as Sprite2D
+	actor.transform = templates.transform * source.transform
+	actor.position += offset
+	if clip != null:
+		var frame_width := source.texture.get_width() / source.hframes
+		actor.frame = 0
+		actor.texture = clip
+		actor.hframes = maxi(1,clip.get_width()/frame_width)
+	formation.add_child(actor)
+	if actor.hframes > 1: animations.append(actor)
+	return actor
 
 func show_combat_number(amount: float, at: Vector2, tint: Color, healing := false) -> void:
 	if amount <= 0 or taskbar_mode: return
-	var number := Label.new()
+	var number := combat_number_scene.instantiate() as Label
 	number.text = ("+" if healing else "-") + str(roundi(amount))
 	number.position = at
-	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	number.add_theme_font_size_override("font_size", 18)
 	number.add_theme_color_override("font_color", tint)
-	number.add_theme_color_override("font_outline_color", Color("18282e"))
-	number.add_theme_constant_override("outline_size", 5)
 	number.set_meta("amount", amount)
 	damage_numbers.add_child(number)
 	var tween := number.create_tween().set_parallel(true)
@@ -521,7 +430,8 @@ func emit_damage_packets(amount: int, at: Vector2, tint: Color, healing := false
 		packet += 1
 
 func update_combat_presentation(battle: Dictionary, index: int, phase: float) -> void:
-	var elapsed: float = (index + phase) * Rules.PRESENTATION / battle.timeline.size()
+	var duration: float = battle.get("duration",game.balance.presentation_seconds)
+	var elapsed: float = (index + phase) * duration / battle.timeline.size()
 	var totals := Vector3.ZERO
 	var previous_hp: float = battle.max_hp
 	var previous_enemy: float = battle.enemy_max
@@ -534,41 +444,42 @@ func update_combat_presentation(battle: Dictionary, index: int, phase: float) ->
 	# Four-frame swings always play at 10 FPS, independent of simulation tick count.
 	var attack_beat := floori((elapsed - 0.2) / 0.4)
 	var counter_beat := floori((elapsed - 0.3) / 0.4)
-	var beats := 35.0
+	var beats := maxf(1,ceilf((duration-0.2)/0.4))
 	if attack_beat > last_damage_step:
 		var before := maxf(0, last_damage_step + 1) / beats
 		var after := minf(1, (attack_beat + 1) / beats)
-		emit_damage_packets(roundi(totals.x*after)-roundi(totals.x*before), Vector2(731,105), Color("ffdc70"))
-		emit_damage_packets(roundi(totals.z*after)-roundi(totals.z*before), Vector2(515,82), Color("89f4aa"), true)
+		emit_damage_packets(roundi(totals.x*after)-roundi(totals.x*before), $Settlement/TownDistrict/EnemyDamagePosition.position, enemy_damage_color)
+		emit_damage_packets(roundi(totals.z*after)-roundi(totals.z*before), $Settlement/TownDistrict/HealingDamagePosition.position, healing_color, true)
 		last_damage_step = attack_beat
 	if counter_beat > last_counter_step:
 		var before := maxf(0, last_counter_step + 1) / beats
 		var after := minf(1, (counter_beat + 1) / beats)
-		emit_damage_packets(roundi(totals.y*after)-roundi(totals.y*before), Vector2(555,103), Color("ff8a7c"))
+		emit_damage_packets(roundi(totals.y*after)-roundi(totals.y*before), $Settlement/TownDistrict/AllyDamagePosition.position, ally_damage_color)
 		last_counter_step = counter_beat
 	var step: Dictionary = battle.timeline[index]
 	for actor in formation.get_children():
 		if actor.has_meta("ally"):
 			actor.frame = int(elapsed * 10) % actor.hframes
-			actor.modulate.a = 1.0 if actor.get_meta("ally") < ceilf(float(step.hp)/40) else 0.15
+			actor.modulate.a = templates.get_node("Warrior").modulate.a * (1.0 if actor.get_meta("ally") < ceilf(float(step.hp)/float(battle.get("warrior_hp",game.balance.warrior_hp))) else 0.15)
 		elif actor.has_meta("enemy"):
 			actor.frame = int(maxf(0, elapsed-0.1) * 10) % actor.hframes
-			actor.modulate.a = 1.0 if actor.get_meta("enemy") < step.alive else 0.15
+			actor.modulate.a = templates.get_node("Enemy").modulate.a * (1.0 if actor.get_meta("enemy") < step.alive else 0.15)
 		elif actor.has_meta("caster"):
 			actor.frame = int(elapsed * 10) % actor.hframes
 	if is_instance_valid(fire):
 		var pulse := fposmod(elapsed - 0.2, 0.4)
 		fire.visible = step.effect != "" and elapsed >= 0.2 and pulse < 0.22
 		fire.frame = 0
-		fire.texture = load(PACK + ("Units/Blue Units/Monk/Heal_Effect.png" if step.effect == "healing" else "Particle FX/Explosion_01.png"))
-		fire.hframes = 11 if step.effect == "healing" else 8
+		var effect_template: Sprite2D = templates.get_node("SpellEffect")
+		fire.texture = healing_effect if step.effect == "healing" else effect_template.texture
+		fire.hframes = maxi(1,healing_effect.get_width()/healing_effect.get_height()) if step.effect == "healing" else effect_template.hframes
 		fire.frame = mini(fire.hframes-1, floori(pulse / 0.22 * fire.hframes))
-		fire.position.x = 578 if step.effect == "healing" else 746
+		fire.position = $Settlement/TownDistrict/HealingPosition.position if step.effect == "healing" else templates.transform * effect_template.position
 
 func _process(delta: float) -> void:
 	if not popup.visible and not taskbar_mode:
 		var direction := Input.get_axis("ui_left", "ui_right")
-		if direction != 0: scroll_town(scroll_offset + direction * 420.0 * delta)
+		if direction != 0: scroll_town(scroll_offset + direction * scroll_speed * delta)
 	clock += delta
 	save_clock += delta
 	if dragging:
@@ -591,11 +502,11 @@ func _process(delta: float) -> void:
 	for p in animations:
 		if is_instance_valid(p):
 			if not game.s.battle.is_empty() and (p.has_meta("ally") or p.has_meta("enemy") or p.has_meta("caster") or p == fire): continue
-			p.frame=int(clock*8)%p.hframes
+			p.frame=int(clock*scenery_fps)%p.hframes
 	if animations.size()>100: animations=animations.filter(func(p): return is_instance_valid(p))
 	if not game.s.battle.is_empty():
 		var b: Dictionary = game.s.battle
-		var progress: float = (1-float(b.remaining)/Rules.PRESENTATION)*b.timeline.size()
+		var progress: float = (1-float(b.remaining)/float(b.get("duration",game.balance.presentation_seconds)))*b.timeline.size()
 		var step_index := mini(int(progress), b.timeline.size()-1)
 		update_combat_presentation(b, step_index, progress-step_index)
 	else:

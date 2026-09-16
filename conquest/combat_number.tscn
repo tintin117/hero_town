@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[node name="CombatNumber" type="Label"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.8627451, 0.4392157, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.15686275, 0.18039216, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 18
+text = "-2"

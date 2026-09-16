@@ -1,9 +1,699 @@
 [gd_scene format=3 uid="uid://c43mlsgtljbyj"]
 
-[ext_resource type="Script" uid="uid://bcf4yir651yyo" path="res://conquest/companion.gd" id="1"]
+[ext_resource type="Script" path="res://conquest/companion.gd" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree1.png" id="2_jt1fr"]
 [ext_resource type="PackedScene" path="res://conquest/terrain.tscn" id="2_terrain"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Castle.png" id="3_pejtj"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Barracks.png" id="4_pqot7"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Red Buildings/Tower.png" id="5_xngbw"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/House1.png" id="6_k47jb"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Interact Axe.png" id="7_iexgy"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Interact Pickaxe.png" id="8_3qb6q"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Decorations/Rocks/Rock2.png" id="9_o0euk"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Meat/Sheep/Sheep_Idle.png" id="10_bef3j"]
+[ext_resource type="Theme" path="res://conquest/companion_theme.tres" id="11_guwqq"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Attack1.png" id="12_vnnpy"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Guard.png" id="13_jnkmg"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Attack2.png" id="14_145ty"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Warrior/Warrior_Idle.png" id="15_rifyu"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Monastery.png" id="16_tmi5k"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Black Buildings/Monastery.png" id="17_ftmue"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Monk/Idle.png" id="18_xebay"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Red Units/Warrior/Warrior_Attack1.png" id="19_qw2gb"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Particle FX/Explosion_01.png" id="20_lomnw"]
+[ext_resource type="PackedScene" path="res://conquest/town_workers.tscn" id="22_qtu7t"]
+[ext_resource type="PackedScene" path="res://conquest/taskbar_sparring.tscn" id="24_4ci7k"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_jmlog"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_m8mep"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_21lgr"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_08l3l"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_kdakf"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_57t27"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_rgd5s"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_yjynb"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_tnemv"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pfpw6"]
+atlas = ExtResource("12_vnnpy")
+region = Rect2(0, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4mdt2"]
+atlas = ExtResource("12_vnnpy")
+region = Rect2(192, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vggos"]
+atlas = ExtResource("12_vnnpy")
+region = Rect2(384, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6qsm8"]
+atlas = ExtResource("12_vnnpy")
+region = Rect2(576, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jtqfe"]
+atlas = ExtResource("13_jnkmg")
+region = Rect2(0, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e5ekl"]
+atlas = ExtResource("13_jnkmg")
+region = Rect2(192, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2mk0p"]
+atlas = ExtResource("13_jnkmg")
+region = Rect2(384, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cqcq3"]
+atlas = ExtResource("13_jnkmg")
+region = Rect2(576, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u2157"]
+atlas = ExtResource("13_jnkmg")
+region = Rect2(768, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rsubo"]
+atlas = ExtResource("13_jnkmg")
+region = Rect2(960, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_evr8v"]
+atlas = ExtResource("14_145ty")
+region = Rect2(0, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qc5lv"]
+atlas = ExtResource("14_145ty")
+region = Rect2(192, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2q7nr"]
+atlas = ExtResource("14_145ty")
+region = Rect2(384, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gbxfs"]
+atlas = ExtResource("14_145ty")
+region = Rect2(576, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_32pnw"]
+atlas = ExtResource("15_rifyu")
+region = Rect2(0, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uh0nm"]
+atlas = ExtResource("15_rifyu")
+region = Rect2(192, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qipim"]
+atlas = ExtResource("15_rifyu")
+region = Rect2(384, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bmpai"]
+atlas = ExtResource("15_rifyu")
+region = Rect2(576, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a74g7"]
+atlas = ExtResource("15_rifyu")
+region = Rect2(768, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1n3lo"]
+atlas = ExtResource("15_rifyu")
+region = Rect2(960, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dwpm5"]
+atlas = ExtResource("15_rifyu")
+region = Rect2(1152, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8ngb4"]
+atlas = ExtResource("15_rifyu")
+region = Rect2(1344, 0, 192, 192)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_cxbe8"]
+animations = [{
+"frames": [],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pfpw6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4mdt2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vggos")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6qsm8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jtqfe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e5ekl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2mk0p")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cqcq3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u2157")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rsubo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_evr8v")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qc5lv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2q7nr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gbxfs")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_32pnw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_uh0nm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qipim")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bmpai")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a74g7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1n3lo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dwpm5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8ngb4")
+}],
+"loop": true,
+"name": &"practice",
+"speed": 8.0
+}]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_u2d7u"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_kujye"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_somm4"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5am14"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_qgba1"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_lgihn"]
 
 [node name="GrowingBannerCompanion" type="Node2D" unique_id=613875653]
+texture_filter = 1
 script = ExtResource("1")
 
-[node name="Terrain" parent="." unique_id=821653279 instance=ExtResource("2_terrain")]
+[node name="Settlement" type="Node2D" parent="." unique_id=1464030494]
+
+[node name="TownDistrict" type="Node2D" parent="Settlement" unique_id=2138418148]
+position = Vector2(480, 0)
+
+[node name="Formation" type="Node2D" parent="Settlement/TownDistrict" unique_id=1036734387]
+
+[node name="DamageNumbers" type="Node2D" parent="Settlement/TownDistrict" unique_id=180677488]
+z_index = 20
+
+[node name="WestTree" type="Sprite2D" parent="Settlement/TownDistrict" unique_id=1959282162]
+position = Vector2(28, 130)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_jt1fr")
+hframes = 8
+
+[node name="BarracksTree" type="Sprite2D" parent="Settlement/TownDistrict" unique_id=633824959]
+position = Vector2(200, 133)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_jt1fr")
+hframes = 8
+
+[node name="AcademyTree" type="Sprite2D" parent="Settlement/TownDistrict" unique_id=1148001997]
+position = Vector2(461, 132)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_jt1fr")
+hframes = 8
+
+[node name="FrontierTree" type="Sprite2D" parent="Settlement/TownDistrict" unique_id=105561919]
+position = Vector2(923, 128)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_jt1fr")
+hframes = 8
+
+[node name="Cottage" type="Sprite2D" parent="Settlement/TownDistrict" unique_id=1991683712]
+position = Vector2(52, 168)
+scale = Vector2(0.23, 0.23)
+texture = ExtResource("6_k47jb")
+
+[node name="Woodcutter" type="Sprite2D" parent="Settlement/TownDistrict" unique_id=1280693914]
+position = Vector2(37, 159)
+scale = Vector2(0.55, 0.55)
+texture = ExtResource("7_iexgy")
+hframes = 6
+
+[node name="Miner" type="Sprite2D" parent="Settlement/TownDistrict" unique_id=345558644]
+position = Vector2(448, 164)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("8_3qb6q")
+hframes = 6
+
+[node name="Rock" type="Sprite2D" parent="Settlement/TownDistrict" unique_id=1150058340]
+position = Vector2(467, 171)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("9_o0euk")
+
+[node name="Sheep" type="Sprite2D" parent="Settlement/TownDistrict" unique_id=678747352]
+position = Vector2(199, 179)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("10_bef3j")
+hframes = 6
+
+[node name="ArmyHitTarget" type="Button" parent="Settlement/TownDistrict" unique_id=2047498860]
+offset_left = 500.0
+offset_top = 85.0
+offset_right = 805.0
+offset_bottom = 182.0
+tooltip_text = "Army"
+theme = ExtResource("11_guwqq")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_jmlog")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_m8mep")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_21lgr")
+metadata/panel = "army"
+
+[node name="ActorTemplates" type="Node2D" parent="Settlement/TownDistrict" unique_id=2108521828]
+visible = false
+
+[node name="Warrior" type="Sprite2D" parent="Settlement/TownDistrict/ActorTemplates" unique_id=1737191539]
+position = Vector2(543, 143)
+scale = Vector2(0.55, 0.55)
+texture = ExtResource("15_rifyu")
+hframes = 8
+
+[node name="Mage" type="Sprite2D" parent="Settlement/TownDistrict/ActorTemplates" unique_id=865473364]
+position = Vector2(499, 157)
+scale = Vector2(0.57, 0.57)
+texture = ExtResource("18_xebay")
+hframes = 6
+
+[node name="Enemy" type="Sprite2D" parent="Settlement/TownDistrict/ActorTemplates" unique_id=900473231]
+position = Vector2(707, 143)
+scale = Vector2(0.55, 0.55)
+texture = ExtResource("19_qw2gb")
+flip_h = true
+hframes = 4
+
+[node name="SpellEffect" type="Sprite2D" parent="Settlement/TownDistrict/ActorTemplates" unique_id=1001076624]
+position = Vector2(745, 151)
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("20_lomnw")
+hframes = 8
+
+[node name="HealingPosition" type="Marker2D" parent="Settlement/TownDistrict" unique_id=757833121]
+position = Vector2(578, 151)
+
+[node name="CastleSite" type="Node2D" parent="Settlement/TownDistrict" unique_id=2096298814]
+position = Vector2(120, 109)
+
+[node name="Sprite" type="Sprite2D" parent="Settlement/TownDistrict/CastleSite" unique_id=1545071654]
+scale = Vector2(0.44, 0.44)
+texture = ExtResource("3_pejtj")
+
+[node name="HitTarget" type="Button" parent="Settlement/TownDistrict/CastleSite" unique_id=1081621202]
+offset_left = -40.0
+offset_top = -69.0
+offset_right = 70.0
+offset_bottom = 65.0
+tooltip_text = "Home"
+theme = ExtResource("11_guwqq")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_08l3l")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_kdakf")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_57t27")
+metadata/panel = "home"
+
+[node name="BarracksSite" type="Node2D" parent="Settlement/TownDistrict" unique_id=1553600390]
+position = Vector2(284, 124)
+
+[node name="Sprite" type="Sprite2D" parent="Settlement/TownDistrict/BarracksSite" unique_id=1706554699]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("4_pqot7")
+
+[node name="HitTarget" type="Button" parent="Settlement/TownDistrict/BarracksSite" unique_id=1517097556]
+offset_left = -54.0
+offset_top = -54.0
+offset_right = 56.0
+offset_bottom = 51.0
+tooltip_text = "Barracks"
+theme = ExtResource("11_guwqq")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_rgd5s")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_yjynb")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_tnemv")
+metadata/panel = "barracks"
+
+[node name="Activity" type="Label" parent="Settlement/TownDistrict/BarracksSite" unique_id=1478754188]
+offset_left = -38.0
+offset_top = -73.0
+offset_right = 82.0
+offset_bottom = -57.0
+theme = ExtResource("11_guwqq")
+autowrap_mode = 3
+
+[node name="Trainee1" type="AnimatedSprite2D" parent="Settlement/TownDistrict/BarracksSite" unique_id=790602873]
+position = Vector2(-60, 42)
+scale = Vector2(0.45, 0.45)
+sprite_frames = SubResource("SpriteFrames_cxbe8")
+animation = &"practice"
+
+[node name="Trainee2" type="AnimatedSprite2D" parent="Settlement/TownDistrict/BarracksSite" unique_id=1275131306]
+position = Vector2(-16, 42)
+scale = Vector2(0.45, 0.45)
+sprite_frames = SubResource("SpriteFrames_cxbe8")
+animation = &"practice"
+frame = 8
+flip_h = true
+
+[node name="AcademySite" type="Node2D" parent="Settlement/TownDistrict" unique_id=837356869]
+position = Vector2(399, 113)
+
+[node name="Built" type="Sprite2D" parent="Settlement/TownDistrict/AcademySite" unique_id=694740484]
+visible = false
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("16_tmi5k")
+
+[node name="Plot" type="Sprite2D" parent="Settlement/TownDistrict/AcademySite" unique_id=2035045933]
+modulate = Color(1, 1, 1, 0.3)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("17_ftmue")
+
+[node name="HitTarget" type="Button" parent="Settlement/TownDistrict/AcademySite" unique_id=1904009196]
+offset_left = -49.0
+offset_top = -57.0
+offset_right = 59.0
+offset_bottom = 67.0
+tooltip_text = "Academy"
+theme = ExtResource("11_guwqq")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_u2d7u")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_kujye")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_somm4")
+metadata/panel = "academy"
+
+[node name="Activity" type="Label" parent="Settlement/TownDistrict/AcademySite" unique_id=1962182166]
+offset_left = -35.0
+offset_top = -76.0
+offset_right = 90.0
+offset_bottom = -60.0
+theme = ExtResource("11_guwqq")
+autowrap_mode = 3
+
+[node name="FrontierSite" type="Node2D" parent="Settlement/TownDistrict" unique_id=1300556877]
+position = Vector2(874, 126)
+
+[node name="Sprite" type="Sprite2D" parent="Settlement/TownDistrict/FrontierSite" unique_id=1567941377]
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("5_xngbw")
+
+[node name="HitTarget" type="Button" parent="Settlement/TownDistrict/FrontierSite" unique_id=447477218]
+offset_left = -46.0
+offset_top = -63.0
+offset_right = 44.0
+offset_bottom = 58.0
+tooltip_text = "Frontier"
+theme = ExtResource("11_guwqq")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_5am14")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_qgba1")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_lgihn")
+metadata/panel = "frontier"
+
+[node name="Activity" type="Label" parent="Settlement/TownDistrict/FrontierSite" unique_id=1504095673]
+offset_left = -42.0
+offset_top = -88.0
+offset_right = 78.0
+offset_bottom = -72.0
+theme = ExtResource("11_guwqq")
+autowrap_mode = 3
+
+[node name="EnemyDamagePosition" type="Marker2D" parent="Settlement/TownDistrict" unique_id=1415917280]
+position = Vector2(731, 105)
+
+[node name="AllyDamagePosition" type="Marker2D" parent="Settlement/TownDistrict" unique_id=209678521]
+position = Vector2(555, 103)
+
+[node name="HealingDamagePosition" type="Marker2D" parent="Settlement/TownDistrict" unique_id=1219257962]
+position = Vector2(515, 82)
+
+[node name="Terrain" type="Node2D" parent="Settlement" unique_id=821653279 instance=ExtResource("2_terrain")]
+
+[node name="EastTree1" type="Sprite2D" parent="Settlement" unique_id=726501527]
+position = Vector2(1540, 132)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_jt1fr")
+hframes = 8
+
+[node name="EastRock1" type="Sprite2D" parent="Settlement" unique_id=1219506593]
+position = Vector2(1604, 171)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("9_o0euk")
+
+[node name="EastTree2" type="Sprite2D" parent="Settlement" unique_id=1078144369]
+position = Vector2(1820, 132)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_jt1fr")
+hframes = 8
+
+[node name="EastRock2" type="Sprite2D" parent="Settlement" unique_id=607472080]
+position = Vector2(1884, 171)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("9_o0euk")
+
+[node name="EastTree3" type="Sprite2D" parent="Settlement" unique_id=1598236097]
+position = Vector2(2200, 132)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_jt1fr")
+hframes = 8
+
+[node name="EastRock3" type="Sprite2D" parent="Settlement" unique_id=1527214395]
+position = Vector2(2264, 171)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("9_o0euk")
+
+[node name="EastTree4" type="Sprite2D" parent="Settlement" unique_id=1477763244]
+position = Vector2(2670, 132)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_jt1fr")
+hframes = 8
+
+[node name="EastRock4" type="Sprite2D" parent="Settlement" unique_id=70496165]
+position = Vector2(2734, 171)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("9_o0euk")
+
+[node name="WorkingHamlet" type="Node2D" parent="Settlement" unique_id=637630655 instance=ExtResource("22_qtu7t")]
+
+[node name="HUD" type="Node2D" parent="." unique_id=593369841]
+
+[node name="Gold" type="Button" parent="HUD" unique_id=1749334450]
+offset_left = 16.0
+offset_top = 184.0
+offset_right = 167.0
+offset_bottom = 214.0
+tooltip_text = "+10 gold/min • click for return summary"
+theme = ExtResource("11_guwqq")
+text = "200 gold"
+
+[node name="Frontier" type="Button" parent="HUD" unique_id=1429386278]
+offset_left = 778.0
+offset_top = 184.0
+offset_right = 812.0
+offset_bottom = 220.0
+tooltip_text = "Frontier • preview reward and deploy"
+theme = ExtResource("11_guwqq")
+text = ">"
+
+[node name="Toast" type="Label" parent="HUD" unique_id=1563006483]
+offset_left = 480.0
+offset_top = 12.0
+offset_right = 936.0
+offset_bottom = 28.0
+theme = ExtResource("11_guwqq")
+theme_override_font_sizes/font_size = 15
+text = "Town notices appear here"
+horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="Drag" type="Button" parent="HUD" unique_id=1753785155]
+offset_left = 813.0
+offset_top = 184.0
+offset_right = 845.0
+offset_bottom = 220.0
+tooltip_text = "Drag settlement"
+theme = ExtResource("11_guwqq")
+text = "::"
+
+[node name="Dock" type="Button" parent="HUD" unique_id=425287578]
+offset_left = 848.0
+offset_top = 184.0
+offset_right = 878.0
+offset_bottom = 220.0
+tooltip_text = "Dock above taskbar"
+theme = ExtResource("11_guwqq")
+text = "v"
+
+[node name="Minimize" type="Button" parent="HUD" unique_id=1808486614]
+offset_left = 883.0
+offset_top = 184.0
+offset_right = 913.0
+offset_bottom = 220.0
+tooltip_text = "Minimize town • watch taskbar sparring"
+theme = ExtResource("11_guwqq")
+text = "-"
+
+[node name="Close" type="Button" parent="HUD" unique_id=149552695]
+offset_left = 918.0
+offset_top = 184.0
+offset_right = 948.0
+offset_bottom = 220.0
+tooltip_text = "Save and close"
+theme = ExtResource("11_guwqq")
+text = "x"
+
+[node name="ManagementPanel" type="Panel" parent="." unique_id=2004042942]
+offset_left = 240.0
+offset_top = -272.0
+offset_right = 670.0
+offset_bottom = -12.0
+theme = ExtResource("11_guwqq")
+
+[node name="Body" type="Label" parent="ManagementPanel" unique_id=316529053]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 47.0
+offset_right = 412.0
+offset_bottom = 63.0
+theme = ExtResource("11_guwqq")
+theme_type_variation = &"DarkLabel"
+text = "Panel details are filled from game state."
+autowrap_mode = 3
+
+[node name="Title" type="Label" parent="ManagementPanel" unique_id=1301650076]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 14.0
+offset_right = 368.0
+offset_bottom = 30.0
+theme = ExtResource("11_guwqq")
+theme_type_variation = &"DarkLabel"
+theme_override_font_sizes/font_size = 20
+text = "Building"
+autowrap_mode = 3
+
+[node name="Close" type="Button" parent="ManagementPanel" unique_id=986177003]
+layout_mode = 0
+offset_left = 380.0
+offset_top = 10.0
+offset_right = 412.0
+offset_bottom = 40.0
+tooltip_text = "Close • Escape"
+theme = ExtResource("11_guwqq")
+text = "x"
+
+[node name="Actions" type="Node2D" parent="ManagementPanel" unique_id=585779749]
+
+[node name="develop" type="Button" parent="ManagementPanel/Actions" unique_id=104422156]
+offset_left = 18.0
+offset_top = 191.0
+offset_right = 412.0
+offset_bottom = 233.0
+theme = ExtResource("11_guwqq")
+text = "Develop"
+metadata/action = "develop"
+
+[node name="warriors" type="Button" parent="ManagementPanel/Actions" unique_id=1011630569]
+visible = false
+offset_left = 18.0
+offset_top = 191.0
+offset_right = 412.0
+offset_bottom = 233.0
+theme = ExtResource("11_guwqq")
+text = "Train warriors"
+metadata/action = "warriors"
+
+[node name="build" type="Button" parent="ManagementPanel/Actions" unique_id=1300693341]
+visible = false
+offset_left = 18.0
+offset_top = 191.0
+offset_right = 412.0
+offset_bottom = 233.0
+theme = ExtResource("11_guwqq")
+text = "Build academy"
+metadata/action = "build"
+
+[node name="mage" type="Button" parent="ManagementPanel/Actions" unique_id=1329585708]
+visible = false
+offset_left = 18.0
+offset_top = 191.0
+offset_right = 412.0
+offset_bottom = 233.0
+theme = ExtResource("11_guwqq")
+text = "Train first mage"
+metadata/action = "mage"
+
+[node name="healing" type="Button" parent="ManagementPanel/Actions" unique_id=2018666538]
+visible = false
+offset_left = 18.0
+offset_top = 145.0
+offset_right = 412.0
+offset_bottom = 183.0
+theme = ExtResource("11_guwqq")
+text = "Learn Healing"
+metadata/action = "healing"
+
+[node name="equip_fireball" type="Button" parent="ManagementPanel/Actions" unique_id=1178367724]
+visible = false
+offset_left = 18.0
+offset_top = 199.0
+offset_right = 208.0
+offset_bottom = 237.0
+theme = ExtResource("11_guwqq")
+text = "Fireball"
+metadata/action = "equip_fireball"
+
+[node name="equip_healing" type="Button" parent="ManagementPanel/Actions" unique_id=1493359748]
+visible = false
+offset_left = 220.0
+offset_top = 199.0
+offset_right = 410.0
+offset_bottom = 237.0
+theme = ExtResource("11_guwqq")
+text = "Healing"
+metadata/action = "equip_healing"
+
+[node name="deploy" type="Button" parent="ManagementPanel/Actions" unique_id=307439565]
+visible = false
+offset_left = 18.0
+offset_top = 199.0
+offset_right = 412.0
+offset_bottom = 237.0
+theme = ExtResource("11_guwqq")
+text = "Deploy"
+metadata/action = "deploy"
+
+[node name="TaskbarSparring" type="Node2D" parent="." unique_id=2024440249 instance=ExtResource("24_4ci7k")]
+visible = false
