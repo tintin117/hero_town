@@ -43,6 +43,8 @@ func _ready() -> void:
 	for index in 5:
 		GameState.place_building(TownRules.ARMY_TYPES[index % 4], Vector2i(2 + index / 3, index % 3))
 	town = preload("res://game/town/town.tscn").instantiate()
+	# This suite verifies UI/combat; avoid retaining an MP3 decoder at headless exit.
+	if DisplayServer.get_name() == "headless": town.music.autoplay = false
 	get_tree().root.add_child.call_deferred(town)
 	await frames()
 	get_tree().current_scene = town

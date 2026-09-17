@@ -1,0 +1,436 @@
+[gd_scene format=3]
+[ext_resource type="Script" path="res://game/companion/skill_tree.gd" id="Script"]
+[ext_resource type="Theme" path="res://resources/ui/farm_theme.tres" id="Theme"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_09.png" id="Root"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_05.png" id="power"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_06.png" id="health"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_10.png" id="spawn"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Human Avatars/Avatars_01.png" id="warrior"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Human Avatars/Avatars_04.png" id="monk"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Human Avatars/Avatars_02.png" id="archer"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Human Avatars/Avatars_03.png" id="lancer"]
+
+[node name="Research" type="Control"]
+offset_right = 864.0
+offset_bottom = 310.0
+theme = ExtResource("Theme")
+script = ExtResource("Script")
+
+[node name="Graph" type="Panel" parent="."]
+offset_right = 590.0
+offset_bottom = 310.0
+theme_type_variation = &"WoodPanel"
+mouse_filter = 2
+
+[node name="Connections" type="Control" parent="Graph"]
+mouse_filter = 2
+
+[node name="Root" type="TextureRect" parent="Graph"]
+offset_left = 275.0
+offset_top = 130.0
+offset_right = 315.0
+offset_bottom = 170.0
+texture = ExtResource("Root")
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Warrior" type="Control" parent="Graph"]
+mouse_filter = 2
+
+[node name="Unlock" type="Button" parent="Graph/Warrior"]
+offset_left = 158.0
+offset_top = 73.0
+offset_right = 202.0
+offset_bottom = 117.0
+icon = ExtResource("warrior")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "warrior"
+metadata/skill = "unlock"
+
+[node name="Rank" type="Label" parent="Graph/Warrior/Unlock"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "Warrior"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Power" type="Button" parent="Graph/Warrior"]
+offset_left = 33.0
+offset_top = 21.0
+offset_right = 77.0
+offset_bottom = 65.0
+icon = ExtResource("power")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "warrior"
+metadata/skill = "power"
+
+[node name="Rank" type="Label" parent="Graph/Warrior/Power"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Health" type="Button" parent="Graph/Warrior"]
+offset_left = 113.0
+offset_top = 8.0
+offset_right = 157.0
+offset_bottom = 52.0
+icon = ExtResource("health")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "warrior"
+metadata/skill = "health"
+
+[node name="Rank" type="Label" parent="Graph/Warrior/Health"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Spawn" type="Button" parent="Graph/Warrior"]
+offset_left = 28.0
+offset_top = 101.0
+offset_right = 72.0
+offset_bottom = 145.0
+icon = ExtResource("spawn")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "warrior"
+metadata/skill = "spawn"
+
+[node name="Rank" type="Label" parent="Graph/Warrior/Spawn"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Monk" type="Control" parent="Graph"]
+mouse_filter = 2
+
+[node name="Unlock" type="Button" parent="Graph/Monk"]
+offset_left = 158.0
+offset_top = 188.0
+offset_right = 202.0
+offset_bottom = 232.0
+icon = ExtResource("monk")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "monk"
+metadata/skill = "unlock"
+
+[node name="Rank" type="Label" parent="Graph/Monk/Unlock"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "Monk"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Power" type="Button" parent="Graph/Monk"]
+offset_left = 28.0
+offset_top = 200.0
+offset_right = 72.0
+offset_bottom = 244.0
+icon = ExtResource("power")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "monk"
+metadata/skill = "power"
+
+[node name="Rank" type="Label" parent="Graph/Monk/Power"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Health" type="Button" parent="Graph/Monk"]
+offset_left = 103.0
+offset_top = 250.0
+offset_right = 147.0
+offset_bottom = 294.0
+icon = ExtResource("health")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "monk"
+metadata/skill = "health"
+
+[node name="Rank" type="Label" parent="Graph/Monk/Health"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Spawn" type="Button" parent="Graph/Monk"]
+offset_left = 198.0
+offset_top = 251.0
+offset_right = 242.0
+offset_bottom = 295.0
+icon = ExtResource("spawn")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "monk"
+metadata/skill = "spawn"
+
+[node name="Rank" type="Label" parent="Graph/Monk/Spawn"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Archer" type="Control" parent="Graph"]
+mouse_filter = 2
+
+[node name="Unlock" type="Button" parent="Graph/Archer"]
+offset_left = 388.0
+offset_top = 73.0
+offset_right = 432.0
+offset_bottom = 117.0
+icon = ExtResource("archer")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "archer"
+metadata/skill = "unlock"
+
+[node name="Rank" type="Label" parent="Graph/Archer/Unlock"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "Archer"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Power" type="Button" parent="Graph/Archer"]
+offset_left = 433.0
+offset_top = 8.0
+offset_right = 477.0
+offset_bottom = 52.0
+icon = ExtResource("power")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "archer"
+metadata/skill = "power"
+
+[node name="Rank" type="Label" parent="Graph/Archer/Power"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Health" type="Button" parent="Graph/Archer"]
+offset_left = 513.0
+offset_top = 21.0
+offset_right = 557.0
+offset_bottom = 65.0
+icon = ExtResource("health")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "archer"
+metadata/skill = "health"
+
+[node name="Rank" type="Label" parent="Graph/Archer/Health"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Spawn" type="Button" parent="Graph/Archer"]
+offset_left = 518.0
+offset_top = 101.0
+offset_right = 562.0
+offset_bottom = 145.0
+icon = ExtResource("spawn")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "archer"
+metadata/skill = "spawn"
+
+[node name="Rank" type="Label" parent="Graph/Archer/Spawn"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Lancer" type="Control" parent="Graph"]
+mouse_filter = 2
+
+[node name="Unlock" type="Button" parent="Graph/Lancer"]
+offset_left = 388.0
+offset_top = 188.0
+offset_right = 432.0
+offset_bottom = 232.0
+icon = ExtResource("lancer")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "lancer"
+metadata/skill = "unlock"
+
+[node name="Rank" type="Label" parent="Graph/Lancer/Unlock"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "Lancer"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Power" type="Button" parent="Graph/Lancer"]
+offset_left = 518.0
+offset_top = 200.0
+offset_right = 562.0
+offset_bottom = 244.0
+icon = ExtResource("power")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "lancer"
+metadata/skill = "power"
+
+[node name="Rank" type="Label" parent="Graph/Lancer/Power"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Health" type="Button" parent="Graph/Lancer"]
+offset_left = 443.0
+offset_top = 250.0
+offset_right = 487.0
+offset_bottom = 294.0
+icon = ExtResource("health")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "lancer"
+metadata/skill = "health"
+
+[node name="Rank" type="Label" parent="Graph/Lancer/Health"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Spawn" type="Button" parent="Graph/Lancer"]
+offset_left = 348.0
+offset_top = 251.0
+offset_right = 392.0
+offset_bottom = 295.0
+icon = ExtResource("spawn")
+expand_icon = true
+theme_override_constants/icon_max_width = 30
+metadata/class = "lancer"
+metadata/skill = "spawn"
+
+[node name="Rank" type="Label" parent="Graph/Lancer/Spawn"]
+offset_left = -15.0
+offset_top = 43.0
+offset_right = 60.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Detail" type="Control" parent="."]
+offset_left = 610.0
+offset_top = 8.0
+offset_right = 862.0
+offset_bottom = 310.0
+
+[node name="Title" type="Label" parent="Detail"]
+offset_right = 252.0
+offset_bottom = 28.0
+theme_type_variation = &"DarkLabel"
+theme_override_font_sizes/font_size = 20
+text = "Warrior"
+
+[node name="Level" type="Label" parent="Detail"]
+offset_top = 34.0
+offset_right = 252.0
+offset_bottom = 58.0
+theme_type_variation = &"DarkLabel"
+text = "Starting branch"
+
+[node name="Effect" type="Label" parent="Detail"]
+offset_top = 72.0
+offset_right = 248.0
+offset_bottom = 114.0
+theme_type_variation = &"DarkLabel"
+theme_override_font_sizes/font_size = 17
+text = "Unlock the Warrior tower"
+autowrap_mode = 3
+
+[node name="Description" type="Label" parent="Detail"]
+offset_top = 122.0
+offset_right = 248.0
+offset_bottom = 200.0
+theme_type_variation = &"DarkLabel"
+text = "Select an icon to see its effect and cost."
+autowrap_mode = 3
+
+[node name="Buy" type="Button" parent="Detail"]
+offset_top = 216.0
+offset_right = 248.0
+offset_bottom = 258.0
+text = "Research"
+
+[node name="Hint" type="Label" parent="Detail"]
+offset_top = 267.0
+offset_right = 248.0
+offset_bottom = 302.0
+theme_type_variation = &"DarkLabel"
+theme_override_font_sizes/font_size = 12
+text = "Choose a branch. Upgrades affect every hero of that class."
+autowrap_mode = 3

@@ -1,31 +1,57 @@
-# Desktop companion
+# Farm and Fight desktop companion
 
-Press **F5** for the main menu, then **Resume** or **New Game**. Disable Godot’s **Embed Game on Play** so the game can position its native transparent window. For scene and balance changes, see the [editor workflow](EDITOR_WORKFLOW.md); for a fresh run without player saves, use `game/previews/companion_preview.tscn` with **F6**.
+Press **F5**, then **New Game** or **Resume**. Disable Godot's **Embed Game on Play** so the transparent window can dock above the taskbar. The new campaign uses its own save; the previous expedition campaign is retained on disk.
 
-## Controls
+## Play the loop
 
-The town sits above the Windows taskbar and spans the current monitor’s usable width. Roll the mouse wheel or use arrow keys to scroll across the authored 2880-pixel landscape. Gold and window controls stay fixed. Scrolling pauses while a management panel is open.
+1. Click **Farm** or a gold/wood spot. Assign the four starting farmers: two to gold and two to wood is a useful opening.
+2. A Warrior and its barracks are ready from the start. The opening view shows their first skirmish; the clickable guide introduces farming, your first upgrade, hiring, and conquest.
+3. The barracks produces a Warrior every 20 seconds, while matched enemy waves keep the opening contested. Gold can buy an immediate extra hero, with a separate 20-second cooldown per tower.
+4. Open **Research**, select an icon in the connected skill tree, then use the detail card to buy an upgrade or unlock Monk, Archer, or Lancer. A newly unlocked class still needs its tower built.
+5. Destroy the enemy tower to capture its land. Your towers relocate automatically, survivors retain their health, and the next frontier starts.
+6. Open the new farmland and assign workers to its richer spots. Older assignments keep producing.
 
-Click the castle, barracks, academy, army, or frontier tower to manage it. The frontier panel previews expedition rewards. Gold opens the retained return/battle report. Close a panel with its x or Escape. Panels expand the same window upward. Empty space outside the native input polygon passes through to the desktop.
+There is no deployment button, battle timeout, recovery phase, or loss of owned land. Enemies reaching the rear defense are removed. Farming and management remain available during combat.
 
-The lower-right controls open the frontier, drag the window, dock it, fold it into taskbar sparring, and save/close. In sparring mode, click the characters to restore town; drag them horizontally to reposition along the current monitor’s taskbar edge. Sparring and worker loops are cosmetic. Income, training, recovery, and expeditions continue while the game remains open.
+## Farmers and resources
 
-Yellow combat numbers show damage to enemies, red numbers damage to your army, and green numbers healing. Building indicators show activity without exposing internal project names. The visible troop count is capped for readability; all trained troops participate in combat calculations.
+Gold and wood spots are renewable and initially hold five workers each. Assign/remove one worker using the spot panel; removing a worker returns them to the shared idle pool. Hiring costs gold. Efficiency upgrades cost gold and wood and affect every farmer.
 
-## Editing
+Each captured land adds one richer gold outcrop and one richer forest grove. Workers have separate work positions around the deposits and carry materials to a nearby camp. Use the farm panel's land number, Previous/Next, or Latest farmland to manage earlier territory. Workers stay assigned until moved; collection is automatic.
 
-`game/companion/companion.tscn` owns static composition, HUD, building groups, actor templates, and the window’s exported presentation settings. `terrain.tscn` contains paintable TileMapLayers. Keep the root’s **Land Width** and painted terrain consistent when extending the map. Terrain decoration does not alter campaign rules or plots.
+Towers and spawn-rate upgrades use gold and wood. Class unlocks, power/health upgrades, and immediate reinforcements use gold. Enemy kills do not award resources.
 
-`town_workers.tscn` and `taskbar_sparring.tscn` expose their own animation and timing settings. `data/companion/default_balance.tres` holds economy, training, combat, pacing, and expedition values. Preview overrides are suitable for experiments; edit the base scene or shared balance to affect normal gameplay.
+## Heroes and research
 
-## Saves
+| Class | Role |
+| --- | --- |
+| Warrior | Melee defender; periodically protects nearby allies |
+| Monk | Heals injured allies; attacks when no healing is needed |
+| Archer | Ranged damage and volleys |
+| Lancer | Melee reach and attacks that pierce multiple enemies |
 
-The companion uses `user://conquest_companion_v1.json`. New Game preserves the previous companion save in a `.previous` backup. On its first launch, a normal companion can seed from `user://conquest_v1.json`, the full-window prototype’s save; later progress remains independent. The **Seed From Full Window** and **Persistence Enabled** Inspector fields control this behavior.
+Warrior's root starts unlocked. All four branches can eventually be purchased; there are no exclusive choices. The graph connects its central root to four class unlocks and their repeatable power, health, and spawn-rate improvements. Select any node, including a locked node, to inspect its current/next effect, level, cost, and requirement. Green nodes have been purchased; dim nodes require their class unlock.
 
-Closing completely pauses training, battles, recovery, and gold income. Reopening resumes saved remaining time without offline catch-up. A deployed battle’s result and presentation are saved together to prevent duplicate rewards.
+There is one tower per class, built at its marked slot; new games include the Warrior barracks. Passive spawning is free. Paid reinforcements cost 55/80/65/70 gold for Warrior/Monk/Archer/Lancer and require that class's tower. The button displays its cooldown after purchase. A dead hero is lost; future spawns replace losses.
 
-The old full-window scene remains at `prototypes/full_window_conquest/conquest.tscn`. It shares campaign rules and balance while retaining its procedural UI.
+Each class initially supports twelve living heroes. At capacity, its tower holds one ready spawn, and buying another hero is disabled. Spawn upgrades preserve timer progress. Hero upgrades affect existing and future heroes; health upgrades preserve current health percentage.
 
-## Verification
+## Desktop controls
 
-Use the companion, return, menu, and editor workflow checks listed in [tests/README.md](../tests/README.md). Native window checks require Windows; they cannot establish behavior on every DPI/driver combination. Captures and test saves are generated under `.godot/`, outside the authored project folders.
+Mouse wheel or arrow keys scroll the landscape. **Farm** returns to the selected farmland and opens worker management; **Fight** closes the panel and jumps to the active frontier; **Research** opens the tree. Panels expand upward and do not pause progress. Close them with x or Escape.
+
+The compact HUD shows both resources, production rates, idle farmers, and the current frontier. When already viewing the frontier, conquest follows the army forward. While inspecting farms, the camera stays in place and a conquest notice appears.
+
+Drag, dock, fold, and close controls remain on the right. Folding shows the retained cosmetic taskbar sparring scene while the real economy and battle keep running. Click the sparring characters to restore; drag them along the taskbar to reposition.
+
+Yellow numbers show damage to enemies, red numbers damage to allies, and green numbers healing. Projectiles and health bars reflect the active simulation.
+
+## Saves and previews
+
+Farm and Fight uses `user://farm_fight_v1.json`, with atomic writes and a `.bak` recovery copy. New Game keeps the previous Farm and Fight save as `.previous`. It does not convert or overwrite the old `conquest_companion_v1.json`, `conquest_v1.json`, or army-town save.
+
+Closing pauses everything. Resume restores resources, workers, research, towers and timers, active troops, projectiles, and enemy-tower health, without offline catch-up. An unreadable primary save falls back to its backup; if neither is valid, the original files are retained and the game reports the problem.
+
+Earlier Farm and Fight saves still load; their existing troops, buildings and tower health are preserved. Use **New Game** to experience the new starting Warrior, barracks and low-resource opening. New Game backs up the previous campaign.
+
+Run `game/previews/companion_preview.tscn` with F6 for a fresh campaign with saving disabled. See [editor workflow](EDITOR_WORKFLOW.md) for editable scenes/resources and [checks](../tests/README.md) for verification.

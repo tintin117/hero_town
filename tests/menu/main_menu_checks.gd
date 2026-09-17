@@ -14,16 +14,17 @@ func run_checks() -> void:
 	assert(sizing.width_for_area(Vector2i(1920, 1040)) == 1280)
 	assert(sizing.width_for_area(Vector2i(1024, 600)) <= 992)
 	assert(sizing.width_for_area(Vector2i(800, 480)) * 9.0 / 16.0 <= 448)
-	var rules = load("res://game/companion/conquest_state.gd").new()
-	rules.s.warriors = 17
+	var rules = load("res://game/companion/farm_fight_state.gd").new()
+	rules.s.farmers = 17
 	rules.s.owned = 2
 	assert(rules.save_game(menu.companion_save_path))
 	assert(menu.create_fresh_save())
-	var fresh = load("res://game/companion/conquest_state.gd").new()
+	var fresh = load("res://game/companion/farm_fight_state.gd").new()
 	fresh.load_game(menu.companion_save_path)
-	assert(fresh.s.warriors == 3 and fresh.s.owned == 0 and fresh.s.projects.is_empty())
+	assert(fresh.s.farmers == 4 and fresh.s.owned == 0 and fresh.s.towers.has("warrior"))
+	assert(fresh.simulation.living_class("warrior") == 1)
 	var previous = JSON.parse_string(FileAccess.get_file_as_string(menu.companion_save_path + ".previous"))
-	assert(previous.warriors == 17 and previous.owned == 2)
+	assert(previous.campaign.farmers == 17 and previous.campaign.owned == 2)
 	assert(root.transparent and root.transparent_bg and root.borderless)
 	assert(not menu.get_node("MainMenuScene/water").visible)
 	assert(not menu.get_node("MainMenuScene/foam_water").visible)
@@ -33,7 +34,6 @@ func run_checks() -> void:
 		await RenderingServer.frame_post_draw
 		var capture := root.get_texture().get_image()
 		assert(capture.get_pixel(0, 0).a == 0.0)
-		capture.save_png("res://.godot/menu-transparent.png")
 	DirAccess.remove_absolute(menu.companion_save_path)
 	DirAccess.remove_absolute(menu.companion_save_path + ".previous")
 	menu.queue_free()

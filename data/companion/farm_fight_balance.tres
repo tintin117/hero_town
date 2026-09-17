@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="FarmFightBalance" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://data/companion/farm_fight_balance.gd" id="1"]
+[ext_resource type="Script" path="res://data/companion/farm_hero_data.gd" id="2"]
+
+[sub_resource type="Resource" id="Warrior"]
+script = ExtResource("2")
+
+[sub_resource type="Resource" id="Monk"]
+script = ExtResource("2")
+id = "monk"
+title = "Monk"
+description = "Heals injured allies; attacks when no healing is needed."
+combat_class = 3
+ability = ""
+health = 70.0
+power = 6.0
+attack_seconds = 2.0
+attack_range = 225.0
+spawn_seconds = 30.0
+unlock_gold = 180.0
+tower_gold = 100.0
+tower_wood = 90.0
+recruit_gold = 80.0
+
+[sub_resource type="Resource" id="Archer"]
+script = ExtResource("2")
+id = "archer"
+title = "Archer"
+description = "Ranged attacks and a three-arrow volley."
+combat_class = 2
+ability = "volley"
+health = 65.0
+power = 10.0
+attack_seconds = 1.5
+attack_range = 245.0
+spawn_seconds = 24.0
+unlock_gold = 160.0
+tower_gold = 90.0
+tower_wood = 80.0
+recruit_gold = 65.0
+
+[sub_resource type="Resource" id="Lancer"]
+script = ExtResource("2")
+id = "lancer"
+title = "Lancer"
+description = "Long melee reach and piercing attacks through a line."
+combat_class = 1
+ability = "pierce"
+health = 90.0
+power = 12.0
+attack_seconds = 1.6
+attack_range = 78.0
+spawn_seconds = 26.0
+unlock_gold = 200.0
+tower_gold = 110.0
+tower_wood = 80.0
+recruit_gold = 70.0
+
+[resource]
+script = ExtResource("1")
+heroes = Array[ExtResource("2")]([SubResource("Warrior"), SubResource("Monk"), SubResource("Archer"), SubResource("Lancer")])

@@ -1,8 +1,8 @@
 extends Control
 
-const Rules = preload("res://game/companion/conquest_state.gd")
+const Rules = preload("res://game/companion/farm_fight_state.gd")
 const Presentation = preload("res://game/shared/presentation_scale.gd")
-@export var companion_save_path := "user://conquest_companion_v1.json"
+@export var companion_save_path := "user://farm_fight_v1.json"
 @export var companion_scene: PackedScene = preload("res://game/companion/companion.tscn")
 @onready var status: Label = $front_ui/Layout/Status
 
@@ -20,7 +20,7 @@ func _ready() -> void:
 		var usable := DisplayServer.screen_get_usable_rect(window.current_screen)
 		window.position = usable.position + (usable.size - window.size) / 2
 	RenderingServer.set_default_clear_color(Color(0, 0, 0, 0))
-	$front_ui/Layout/PlayButton.disabled = not (FileAccess.file_exists(companion_save_path) or FileAccess.file_exists(Rules.SAVE))
+	$front_ui/Layout/PlayButton.disabled = not FileAccess.file_exists(companion_save_path)
 
 
 func _on_play_button_pressed() -> void:
@@ -38,6 +38,9 @@ func _on_compact_button_pressed() -> void:
 
 func _on_quit_button_pressed() -> void:
 	get_tree().quit()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST: get_tree().quit()
 
 func _open_companion() -> void:
 	var companion := companion_scene.instantiate()

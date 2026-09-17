@@ -1,5 +1,7 @@
 # Editing Hero Town
 
+For a visual overview and a first-session walkthrough, start with the [game structure and onboarding map](GAME_MAP.md).
+
 Open `project.godot` in Godot 4.6. The normal **F5** route is `game/menu/main_menu.tscn` → `game/companion/companion.tscn`. The larger remaster town is a separate scene, `game/town/town.tscn`. Use the scenes in `game/previews/` with **F6** for experiments without loading or changing player saves. See the [folder map](../README.md) for all entry points.
 
 The editor owns the things you can see and tune: scene composition, textures, animation frames, terrain, themes, and authored balance resources. Scripts own saved progress, purchases, battle simulation, spawning the current army, animation playback, and adapting the desktop window. Editing a saved scene or resource changes the next run; runtime changes in Godot's **Remote** scene tree are temporary.
@@ -8,37 +10,46 @@ The editor owns the things you can see and tune: scene composition, textures, an
 
 Open `game/menu/main_menu.tscn`. Change the menu artwork under `MainMenuScene` and button artwork, labels, spacing, and font overrides under `front_ui/Layout`. The buttons keep their existing signal connections. The root's companion save path selects the campaign used by New Game/Resume.
 
-## Companion town
+## Farm and Fight companion
 
-Open `game/companion/companion.tscn`. Static town content is present in the Scene tree before running, so artists can position it in the 2D viewport. Open an instanced scene directly to edit every use of that scene; use **Editable Children** or **Make Local** when an individual instance needs an override.
-
-For a fresh visual or balance preview, open `game/previews/companion_preview.tscn` and press **F6**. This inherits the editable companion, starts from the selected balance, and disables both campaign persistence and the legacy GameState save system. Edit the base `companion.tscn` for shared artwork, or use overrides on the preview scene for experiments. To keep a separate playtest campaign, run a companion scene with **Persistence Enabled** on, **Save Path** set to `user://companion_design_preview.json`, and **Seed From Full Window** off. Existing campaign saves retain their accumulated progress; changing starting values does not reset them.
+Open `game/companion/companion.tscn`. The companion owns its FarmFightState; legacy expedition logic remains available to the retained full-window prototype. Use `game/previews/companion_preview.tscn` for F6 editing without player saves. Normal gameplay uses `user://farm_fight_v1.json`; there is no legacy-save seeding.
 
 ### Art and layout
 
-Paint the native `TileMapLayer` nodes in `game/companion/terrain.tscn`. Painted cells, erased cells, and layer transforms are saved in the scene and retained when the game starts. Terrain is visual: painting a tile does not change campaign plots, income, or battle rules.
-
-The companion's static sprites, building interaction areas, training anchors, HUD controls, and taskbar sparring are authored scenes. Select the relevant node to change its position, scale, texture, and native theme overrides. Keep gameplay-linked node names and assigned references intact. When moving a building, move its complete group so its interaction area and activity indicators stay aligned.
-
-| Task | Select/open | Change |
+| Task | Scene or node | Editable controls |
 | --- | --- | --- |
-| Move a complete building | `Settlement/TownDistrict/CastleSite`, `BarracksSite`, `AcademySite`, `FrontierSite` | The group position; children include the sprite, hit target, and activity label. `BarracksSite` also contains training sprites. |
-| Dress the town | Sprite2D props under `Settlement` and `TownDistrict` | Texture, transform, Hframes/Vframes, and tint. |
-| Change the army's visual layout | `TownDistrict/ActorTemplates` and the companion root | Warrior/Mage/Enemy/SpellEffect templates, Warrior/Enemy Columns and Spacing; the saved state determines how many appear. |
-| Adjust worker loops | `game/companion/town_workers.tscn` | Root Cycle Seconds, Work Seconds, Delivery Distance, Animation FPS. Select a worker to set its work Texture, Carry Texture, Return Texture, Frame Width, and Phase Offset. Its scene position is its home. |
-| Change taskbar sparring | `game/companion/taskbar_sparring.tscn` | Sprite transforms/textures; root Duel Seconds, Animation FPS, Lunge Distance, Fireball Arc Height, attack and guard textures. |
-| Restyle controls and panels | `HUD`, `ManagementPanel`, `resources/ui/companion_theme.tres` | Native fonts, theme styles, button dimensions, panel text area, and action locations. State-dependent text and visibility still update during play. |
-| Change combat feedback | `game/companion/combat_number.tscn` and companion root Combat Art | Number font/appearance, effect textures, and damage/healing colors. |
+| Home farmland | `farm_land.tscn` | Gold/wood spot positions, land title, terrain instance |
+| Repeating land variants | `farm_quarry.tscn`, `farm_river.tscn` | Inherited spot positions and decorative props |
+| Ground and cliffs | `farm_terrain.tscn` | Native painted TileMapLayers; the default land span is 1440 pixels |
+| Resource visuals and workers | `gold_spot.tscn`, `wood_spot.tscn` | Resource sprite, worker template scale/textures, interaction target, worker spacing |
+| Hero buildings | Companion → `Settlement/TownDistrict/Towers` | Each class group, sprite, status label, hit target, and Spawn marker |
+| Enemy tower and rear defense | Companion → `Settlement/TownDistrict/Enemy`, `RearDefense` | Artwork, labels, and health-bar layout |
+| Soldiers | `game/town/unit_view.tscn`, `resources/art/unit_library.tres` | Shared class animations and unit presentation; companion Unit Scene can override |
+| HUD and panels | Companion → `HUD/Bar`, `ManagementPanel` | Theme, layout, typography, Farm/Tower/Research controls |
+| Skill graph | `skill_tree.tscn` → `Graph`, `Detail` | Class icons, node positions, connections, selected-node card; upgrades stay repeatable |
+| Pack UI theme | `resources/ui/farm_theme.tres` | Original Tiny Swords buttons/icons; parchment and wood nine-slice tiles assembled from the original pack into `farm_paper.png` / `farm_wood.png` |
+| Folded view | `taskbar_sparring.tscn` | Cosmetic duel poses and timing |
+| Combat feedback | Companion Presentation exports and `combat_number.tscn` | Damage/healing colors and floating-number appearance |
 
-`Land Width` controls the scroll extent. If extending it, also paint the added ground and cliff cells in `terrain.tscn`; startup no longer fills terrain for you.
+Only visible and adjacent land scenes are instantiated. Worker counts come from assignments, and soldiers from combat state; edit their templates rather than adding duplicate runtime actors. Land templates must retain Title, GoldSpot, and WoodSpot. The companion's Land Scene is home farmland; Land Variants cycle over conquered/frontier indices. Keep terrain width and Land Span consistent.
 
-Worker loops and taskbar sparring are cosmetic. Their scene assets and Inspector controls change presentation, without changing resource income, project duration, or combat damage.
+The moving TownDistrict positions the active battlefield. Within it, tower groups remain authored; Spawn markers determine new hero spawn positions. Preserve the Formation and tower contracts when changing the composition. Worker animation uses the assigned count but does not determine income.
 
-### Campaign balance
+Panels use native controls and anchors. Runtime text shows current values; static styling and scene overrides remain editable. The companion adapts panel width and native window size to the monitor. The popup expands to a 640-pixel logical window, with gameplay continuing underneath; display scale also fits that height on smaller monitors.
 
-Select `data/companion/default_balance.tres` in FileSystem. Its Inspector groups expose **New Game** starting gold/warriors, **Economy** income and costs, **Training** prices and durations, **Combat** health/damage/healing, and **Pacing** recovery and battle presentation seconds. Expand **Expeditions → Lands** to edit each expedition's name, hint, rewards, enemy count, health, and attack. Order determines conquest order. Append expeditions to extend an existing campaign; use a fresh preview campaign when reordering or removing them because saved progress is an owned-land count.
+### Balance and rules
 
-To try another balance without changing the shared defaults, duplicate this resource and assign it to the companion root's **Balance** field. The menu's **Companion Scene** selects which companion scene supplies New Game balance. Starting-state changes apply to fresh campaigns; purchases and encounters use the selected balance. An already running project keeps the duration saved when purchased, and an already deployed battle keeps its saved outcome and presentation snapshot.
+Select `data/companion/farm_fight_balance.tres`. Inspector groups cover starting resources/workers, spot capacity, income, farmer costs, efficiency, cost growth, hero capacity, stat/spawn scaling, enemy waves, tower health, land names and strength curves.
+
+Expand Heroes to edit the four class resources: stable ID, display description, combat role, stats, attack range, spawn timer, and gold/wood prices. Use IDs `warrior`, `monk`, `archer`, and `lancer`. The default opening has four idle farmers, 25 gold, 20 wood, one Warrior and its barracks. Starting Warriors and Starting Tower are editable. A small enemy wave starts nearby immediately; later waves enter from the enemy tower. Reinforcement purchases use the global Recruit Seconds cooldown, separately per tower.
+
+Gold/wood scenes contain eight deposit sprites, five `WorkPlaces` markers, a `Dropoff` marker, and the editable worker template. Assigned workers harvest at those positions and carry resources to camp. Move markers and scenery directly in the editor. The four-step opening guide follows real progress and never pauses the fight.
+
+Costs grow from authored base prices using the cost exponent. Farmer and hero stat bonuses are additive per purchased rank; tower spawn intervals shorten toward the configured minimum. Land yield and enemy strength grow with territory number. New-game values apply to fresh campaigns; existing progress remains saved.
+
+Duplicate the balance resource and assign the companion's Balance field for experiments. The menu's selected Companion Scene supplies its New Game balance. Preview disables both the campaign save and the unrelated town autoload's persistence.
+
+The older `default_balance.tres`, `conquest_state.gd`, `terrain.tscn`, and `town_workers.tscn` remain for the full-window expedition prototype/reference. They no longer tune the active Farm and Fight campaign.
 
 ## Remaster town
 
@@ -67,14 +78,14 @@ Keep the `idle`, `run`, `attack`, and any existing `guard` animation names. The 
 ## Where code is still needed
 
 - Adding a new purchase type, ability, campaign action, or save field changes game rules and needs code.
-- Current army size, combatants, damage numbers, project countdowns, and contextual action lists come from the running state. Edit their source scenes/resources instead of adding a second runtime copy by hand.
+- Current army size, combatants, damage numbers, spawn countdowns, and contextual action lists come from the running state. Edit their source scenes/resources instead of adding a second runtime copy by hand.
 - Keep resource IDs, required animation names, and gameplay-linked node references stable. Rename display labels freely; coordinate schema or ID changes with a programmer.
 - Cosmetic terrain does not move legal placement cells or battle formations. Changing the tactical grid remains a rules change.
-- `prototypes/full_window_conquest/conquest.tscn` is the older full-window conquest prototype. It shares the balance resource but retains its procedural interface; use the companion and remaster scenes above for the new editing workflow.
+- `prototypes/full_window_conquest/conquest.tscn` is the older full-window conquest prototype. It retains its own legacy balance and procedural interface; use the companion and remaster scenes above for the new editing workflow.
 
 ## Verify a change
 
-Save the scene/resource, stop the running game, and start it again. Check the altered object in the same mode where players will see it, including compact town and an expanded management panel. For battle art, deploy once so idle, movement, attack, and death poses are exercised.
+Save the scene/resource, stop the running game, and start it again. Check the altered object in the same mode where players will see it, including compact town and an expanded management panel. For battle art, build a tower and observe automatic waves so idle, movement, attack, and death poses are exercised.
 
 The automated scene/resource edit checks run with:
 

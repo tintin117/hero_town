@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/companion/farm_land.tscn" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Decorations/Rocks/Rock2.png" id="2"]
+
+[node name="AmberQuarry" instance=ExtResource("1")]
+
+[node name="GoldSpot" parent="." index="2"]
+position = Vector2(460, 0)
+
+[node name="WoodSpot" parent="." index="3"]
+position = Vector2(960, 0)
+
+[node name="Rock" type="Sprite2D" parent="."]
+position = Vector2(740, 163)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("2")

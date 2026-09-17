@@ -36,9 +36,9 @@ var pinned_goal: Dictionary = {}
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
-	get_tree().root.close_requested.connect(func(): request_quit())
-	persistence_enabled = not is_test_session()
+	persistence_enabled = not is_test_session() and uses_town_save()
 	if persistence_enabled:
+		get_tree().root.close_requested.connect(func(): request_quit())
 		load_game()
 
 func _process(delta: float) -> void:
@@ -367,6 +367,12 @@ func is_test_session() -> bool:
 		# F6 designer previews must bypass this autoload before it reads a save.
 		if path.ends_with("game/previews/companion_preview.tscn") or path.ends_with("game/previews/town_preview.tscn"): return true
 	return false
+
+func uses_town_save() -> bool:
+	# Autoloads also run in the menu/companion; only army town owns this save.
+	for arg in OS.get_cmdline_args():
+		if arg.replace("\\", "/").ends_with("game/town/town.tscn"): return true
+	return str(ProjectSettings.get_setting("application/run/main_scene", "")).ends_with("game/town/town.tscn")
 
 func set_reorganizing(value: bool) -> void:
 	reorganizing = value

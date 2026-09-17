@@ -2,15 +2,19 @@
 
 Open `project.godot` in **Godot 4.6.3**. **F5** starts the main menu and desktop companion. Disable **Embed Game on Play** to let the companion position its own desktop window.
 
+The desktop companion now runs **Farm and Fight**: assign farmers to gold and wood, build hero towers, invest in four research branches, and push through continuous waves to an endless frontier. Old expedition saves remain separate.
+
 ## Start editing
+
+New designers and artists: start with the [game structure and onboarding map](docs/GAME_MAP.md) for mode diagrams, scene trees, editing locations, and a first 10-minute walkthrough.
 
 | Work | Open in Godot |
 | --- | --- |
 | Menu layout and artwork | `game/menu/main_menu.tscn` |
 | Companion town and buildings | `game/companion/companion.tscn` |
-| Companion ground and cliffs | `game/companion/terrain.tscn` |
-| Workers and minimized sparring | `game/companion/town_workers.tscn`, `taskbar_sparring.tscn` |
-| Companion costs, timers, and expeditions | `data/companion/default_balance.tres` |
+| Companion ground and land layouts | `game/companion/farm_terrain.tscn`, `farm_land.tscn`, `farm_quarry.tscn`, `farm_river.tscn` |
+| Farming spots and minimized sparring | `game/companion/gold_spot.tscn`, `wood_spot.tscn`, `taskbar_sparring.tscn` |
+| Farm and Fight economy, heroes, waves, and land scaling | `data/companion/farm_fight_balance.tres` |
 | Town mode, HUD, and landscapes | `game/town/town.tscn` and neighboring scenes |
 | Town balance | `data/town/` |
 | Shared soldier animations and UI theme | `resources/art/`, `resources/ui/` |

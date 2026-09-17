@@ -1,0 +1,131 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/companion/farm_spot.gd" id="Script"]
+[ext_resource type="Script" path="res://game/companion/worker_actor.gd" id="Actor"]
+[ext_resource type="Theme" path="res://resources/ui/farm_theme.tres" id="Theme"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree1.png" id="Resource0"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree2.png" id="Resource1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree3.png" id="Resource2"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Trees/Tree4.png" id="Resource3"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Interact Axe.png" id="Work"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Run Wood.png" id="Carry"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Run Axe.png" id="Return"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/House1.png" id="Camp"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Terrain/Resources/Wood/Wood Resource/Wood Resource.png" id="Pile"]
+
+[sub_resource type="StyleBoxEmpty" id="Empty"]
+
+[node name="WoodSpot" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("Script")
+resource_kind = "wood"
+
+[node name="Resource" type="Sprite2D" parent="."]
+position = Vector2(-70, 102)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("Resource0")
+hframes = 8
+
+[node name="Deposit1" type="Sprite2D" parent="."]
+position = Vector2(-34, 88)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("Resource1")
+hframes = 8
+
+[node name="Deposit2" type="Sprite2D" parent="."]
+position = Vector2(12, 94)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("Resource2")
+hframes = 8
+
+[node name="Deposit3" type="Sprite2D" parent="."]
+position = Vector2(52, 108)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("Resource3")
+hframes = 8
+
+[node name="Deposit4" type="Sprite2D" parent="."]
+position = Vector2(86, 94)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("Resource0")
+hframes = 8
+
+[node name="Deposit5" type="Sprite2D" parent="."]
+position = Vector2(-47, 125)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("Resource1")
+hframes = 8
+
+[node name="Deposit6" type="Sprite2D" parent="."]
+position = Vector2(2, 120)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("Resource2")
+hframes = 8
+
+[node name="Deposit7" type="Sprite2D" parent="."]
+position = Vector2(64, 135)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("Resource3")
+hframes = 8
+
+[node name="Camp" type="Sprite2D" parent="."]
+position = Vector2(150, 140)
+scale = Vector2(0.34, 0.34)
+texture = ExtResource("Camp")
+
+[node name="Pile" type="Sprite2D" parent="."]
+position = Vector2(120, 163)
+scale = Vector2(0.42, 0.42)
+texture = ExtResource("Pile")
+
+[node name="Dropoff" type="Marker2D" parent="."]
+position = Vector2(128, 165)
+
+[node name="WorkPlaces" type="Node2D" parent="."]
+
+[node name="Worker1" type="Marker2D" parent="WorkPlaces"]
+position = Vector2(-90, 145)
+
+[node name="Worker2" type="Marker2D" parent="WorkPlaces"]
+position = Vector2(-50, 153)
+
+[node name="Worker3" type="Marker2D" parent="WorkPlaces"]
+position = Vector2(-10, 154)
+
+[node name="Worker4" type="Marker2D" parent="WorkPlaces"]
+position = Vector2(30, 166)
+
+[node name="Worker5" type="Marker2D" parent="WorkPlaces"]
+position = Vector2(78, 158)
+
+[node name="WorkerTemplate" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, 0)
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("Work")
+hframes = 6
+script = ExtResource("Actor")
+carry_texture = ExtResource("Carry")
+return_texture = ExtResource("Return")
+
+[node name="Count" type="Label" parent="."]
+z_index = 2
+offset_left = -90.0
+offset_top = 46.0
+offset_right = 210.0
+offset_bottom = 66.0
+theme = ExtResource("Theme")
+theme_override_font_sizes/font_size = 13
+text = "Resource workers"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="HitTarget" type="Button" parent="."]
+offset_left = -120.0
+offset_top = 65.0
+offset_right = 205.0
+offset_bottom = 180.0
+theme_override_styles/normal = SubResource("Empty")
+theme_override_styles/hover = SubResource("Empty")
+theme_override_styles/pressed = SubResource("Empty")
+theme_override_styles/focus = SubResource("Empty")

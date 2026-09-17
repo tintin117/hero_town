@@ -3,5 +3,4 @@
 [ext_resource type="PackedScene" path="res://game/companion/companion.tscn" id="1"]
 
 [node name="CompanionPreview" instance=ExtResource("1")]
-seed_from_full_window = false
 persistence_enabled = false

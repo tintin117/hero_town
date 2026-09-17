@@ -13,6 +13,10 @@ var elapsed: float = 0.0
 var limit: float = 60.0
 var outcome: int = -1 # -1 ongoing, 0 defeat (including mutual defeat), 1 victory
 var _next_id: int = 0
+var continuous := false
+var bounds := Rect2(-570, -80, 1130, 170)
+var enemy_cap := TownRules.MAX_ENEMIES
+var _unit_by_id: Dictionary = {}
 
 static func army_units(records: Array) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -33,6 +37,10 @@ static func army_units(records: Array) -> Array[Dictionary]:
 	return result
 
 func setup(records: Array, stage: StageData) -> void:
+	continuous = false
+	bounds = Rect2(-570, -80, 1130, 170)
+	enemy_cap = TownRules.MAX_ENEMIES
+	_unit_by_id.clear()
 	units.clear()
 	projectiles.clear()
 	warnings.clear()
@@ -63,10 +71,11 @@ func _append_unit(unit: Dictionary) -> void:
 	unit.skill_count = 0
 	unit.facing_right = unit.side == 0
 	units.append(unit)
+	_unit_by_id[unit.id] = unit
 	events.append({"kind": "spawn", "unit": unit.id})
 
 func spawn_enemy(data: Dictionary, pos: Vector2) -> bool:
-	if alive_count(1) >= TownRules.MAX_ENEMIES: return false
+	if alive_count(1) >= enemy_cap: return false
 	var visual: String = data.get("unit", "warrior")
 	_append_unit({"army": "", "class": -1, "visual": visual, "rarity": 0,
 		"position": pos, "home": pos, "hp": float(data.hp), "max_hp": float(data.hp),
@@ -78,12 +87,64 @@ func spawn_enemy(data: Dictionary, pos: Vector2) -> bool:
 func alive_count(side: int) -> int:
 	var count := 0
 	for unit in units:
-		if unit.side == side and unit.hp > 0: count += 1
+		if unit.side == side and unit.hp > 0 and not unit.get("objective", false): count += 1
 	return count
 
 func find_unit(id: int) -> Dictionary:
-	# IDs are indices: bodies stay in the simulation until the round ends.
-	return units[id] if id >= 0 and id < units.size() else {}
+	return _unit_by_id.get(id, {})
+
+func start_frontier(hp: float, cap: int) -> void:
+	continuous = true
+	bounds = Rect2(-570, -30, 1130, 58)
+	enemy_cap = cap
+	outcome = -1
+	projectiles.clear()
+	warnings.clear()
+	events.clear()
+	units = units.filter(func(u: Dictionary): return u.side == 0 and u.hp > 0)
+	_unit_by_id.clear()
+	for unit in units:
+		unit.position = unit.home
+		unit.target = -1
+		_unit_by_id[unit.id] = unit
+	_append_unit({"army": "", "class": -1, "visual": "tower", "rarity": 0,
+		"position": Vector2(520, 0), "home": Vector2(520, 0), "hp": hp, "max_hp": hp,
+		"damage": 0.0, "interval": 1.0, "range": 0.0, "specialty": 1.0,
+		"ability": "", "side": 1, "objective": true})
+
+func tower() -> Dictionary:
+	for unit in units:
+		if unit.get("objective", false): return unit
+	return {}
+
+func spawn_hero(data: Dictionary) -> void:
+	_append_unit(data)
+
+func living_class(id: String) -> int:
+	var count := 0
+	for unit in units:
+		if unit.side == 0 and unit.hp > 0 and unit.army == id: count += 1
+	return count
+
+func restore_frontier(data: Dictionary) -> void:
+	continuous = true
+	elapsed = data.elapsed
+	_next_id = int(data.next_id)
+	units.assign(data.units)
+	projectiles.assign(data.projectiles)
+	warnings.assign(data.warnings)
+	events.clear()
+	_unit_by_id.clear()
+	for unit in units:
+		for key in ["id", "side", "class", "rarity", "target", "skill_count"]: unit[key] = int(unit[key])
+		_unit_by_id[unit.id] = unit
+	for shot in projectiles:
+		for key in ["source", "target", "side"]: shot[key] = int(shot[key])
+		shot.source_data.side = int(shot.source_data.side)
+
+func frontier_snapshot() -> Dictionary:
+	return {"elapsed": elapsed, "next_id": _next_id, "units": units.duplicate(true),
+		"projectiles": projectiles.duplicate(true), "warnings": warnings.duplicate(true)}
 
 func step(delta: float = STEP) -> void:
 	events.clear()
@@ -95,6 +156,11 @@ func step(delta: float = STEP) -> void:
 	for unit in units:
 		unit.moving = false
 		if unit.hp <= 0: continue
+		if unit.get("objective", false): continue
+		if continuous and unit.side == 1 and unit.position.x <= bounds.position.x + 12:
+			unit.hp = 0
+			events.append({"kind": "death", "unit": unit.id, "position": unit.position})
+			continue
 		unit.guard_time = maxf(0.0, unit.guard_time - delta)
 		unit.cooldown -= delta
 		unit.ability_timer -= delta
@@ -112,7 +178,9 @@ func step(delta: float = STEP) -> void:
 			target = nearest_opponent(unit)
 			unit.target = target.get("id", -1)
 			unit.think = 0.25
-		if target.is_empty(): continue
+		if target.is_empty():
+			if continuous and unit.side == 1: _move(unit, {"position": Vector2(bounds.position.x, unit.position.y)}, delta)
+			continue
 		if absf(target.position.x - unit.position.x) > 1.0:
 			unit.facing_right = target.position.x > unit.position.x
 		var distance: float = unit.position.distance_to(target.position)
@@ -129,7 +197,14 @@ func step(delta: float = STEP) -> void:
 				shoot(unit, target, unit.damage)
 			else:
 				damage(target, unit.damage, unit)
-	if alive_count(0) == 0:
+	if continuous:
+		# Continuous sessions cannot retain a growing list of corpses like short rounds.
+		for index in range(units.size() - 1, -1, -1):
+			var unit := units[index]
+			if unit.hp <= 0 and not unit.get("objective", false):
+				_unit_by_id.erase(int(unit.id))
+				units.remove_at(index)
+	elif alive_count(0) == 0:
 		outcome = 0
 	elif alive_count(1) == 0:
 		outcome = 1
@@ -170,16 +245,16 @@ func _move(unit: Dictionary, target: Dictionary, delta: float) -> void:
 			separation += offset / dist * (1.0 - dist / 22.0)
 	var speed := 62.0 if unit.side == 1 else 82.0
 	unit.position += (seek + separation * 0.7).normalized() * speed * delta
-	unit.position = unit.position.clamp(Vector2(-570, -80), Vector2(560, 90))
+	unit.position = unit.position.clamp(bounds.position, bounds.end)
 	unit.moving = true
 
 func damage(target: Dictionary, amount: float, source: Dictionary) -> float:
-	if target.is_empty() or target.hp <= 0 or target.side == source.side: return 0.0
+	if source.is_empty() or target.is_empty() or target.hp <= 0 or target.side == source.side: return 0.0
 	var reduction: float = target.guard if target.guard_time > 0 else 0.0
 	var applied := minf(target.hp, maxf(0, amount * (1.0 - reduction)))
 	target.hp -= applied
 	if source.side == 0 and reports.has(source.army): reports[source.army].damage += applied
-	events.append({"kind": "hit", "unit": target.id, "amount": applied, "position": target.position})
+	events.append({"kind": "hit", "unit": target.id, "amount": applied, "position": target.position, "side": target.side})
 	if target.hp <= 0:
 		if target.side == 0 and reports.has(target.army): reports[target.army].casualties += 1
 		events.append({"kind": "death", "unit": target.id, "position": target.position})
@@ -195,7 +270,8 @@ func heal(target: Dictionary, amount: float, source: Dictionary) -> float:
 
 func shoot(source: Dictionary, target: Dictionary, amount: float) -> void:
 	projectiles.append({"source": source.id, "target": target.id, "position": source.position,
-		"damage": amount, "life": 2.5, "side": source.side})
+		"damage": amount, "life": 2.5, "side": source.side,
+		"source_data": {"side": source.side, "army": source.army}})
 
 func _update_projectiles(delta: float) -> void:
 	for index in range(projectiles.size() - 1, -1, -1):
@@ -207,7 +283,7 @@ func _update_projectiles(delta: float) -> void:
 			continue
 		var offset: Vector2 = target.position - shot.position
 		if offset.length() <= 420.0 * delta:
-			damage(target, shot.damage, find_unit(int(shot.source)))
+			damage(target, shot.damage, shot.get("source_data", find_unit(int(shot.source))))
 			projectiles.remove_at(index)
 		else:
 			shot.position += offset.normalized() * 420.0 * delta

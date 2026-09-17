@@ -12,7 +12,20 @@ New-Item -ItemType Directory -Force $env:APPDATA | Out-Null
 & $godot --headless --editor --import --path . --quit -- --test
 ```
 
-## Logic and scene checks
+## Farm and Fight
+
+```powershell
+& $godot --headless --path . res://tests/companion/farm_fight_checks.tscn -- --test
+& $godot --headless --path . res://tests/companion/farm_fight_ui.tscn -- --test
+& $godot --headless --path . res://tests/companion/farm_fight_balance.tscn -- --test
+& $godot --headless --path . res://tests/companion/farm_fight_endurance.tscn -- --test --duration=1800
+```
+
+Rules checks cover transactions, recruitment cooldowns, assignments, class roles, continuous combat, conquest, caps, exact progress to JSON precision, earlier saves, and corrupt-save recovery. UI checks use real mouse clicks on skill nodes and the detail card, verify non-overlapping graph controls, pack theme states, worker delivery routes, the opening guide, and bounded land loading. The balance check verifies that the unattended first three minutes stay contested, limits 1,200 rapid recruit clicks to three purchases in a minute, and follows a two-gold/two-wood opening through a Warrior upgrade, hiring, and further upgrades; first conquest must take 180–360 seconds. Endurance simulates thirty minutes across multiple conquests and checks bounded combat storage.
+
+The native companion check below routes into the same UI suite, adding real Windows window checks. Tests do not write player saves.
+
+## Legacy prototype, army-town, and editor checks
 
 ```powershell
 & $godot --headless --path . --script res://tests/companion/rules_checks.gd -- --test
@@ -23,7 +36,7 @@ New-Item -ItemType Directory -Force $env:APPDATA | Out-Null
 & $godot --headless --path . res://tests/editor/editor_workflow_checks.tscn -- --test
 ```
 
-The editor workflow checks modify temporary copies of authored scenes/resources, reload them, and verify that their edits survive startup. `fixtures/return_departure.json` is input data; generated JSON and captures go under `.godot/`.
+The legacy companion rules/return scripts above exercise the retained expedition prototype. The editor workflow checks modify temporary copies of authored scenes/resources, reload them, and verify that their edits survive startup. `fixtures/return_departure.json` is input data; generated JSON and captures go under `.godot/`.
 
 ## Native windows
 

@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/companion/farm_land.tscn" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/House1.png" id="2"]
+
+[node name="RiverWatch" instance=ExtResource("1")]
+
+[node name="GoldSpot" parent="." index="2"]
+position = Vector2(820, 0)
+
+[node name="WoodSpot" parent="." index="3"]
+position = Vector2(360, 0)
+
+[node name="Cottage" type="Sprite2D" parent="."]
+position = Vector2(1080, 145)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("2")

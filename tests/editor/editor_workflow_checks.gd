@@ -24,12 +24,13 @@ func _ready() -> void:
 
 func _run() -> void:
 	_balance_edits()
+	_farm_balance_edits()
 	await _menu_edits()
 	await _companion_edits()
 	await _worker_edits()
 	await _sparring_edits()
 	await _remaster_edits()
-	check(completed_sections.size() == 6, "all six workflow sections completed without script errors")
+	check(completed_sections.size() == 7, "all seven workflow sections completed without script errors")
 	for path in temporary_files:
 		if FileAccess.file_exists(path): DirAccess.remove_absolute(path)
 	print("EDITOR WORKFLOW CHECKS: %d checks, %d failures" % [checks, failures])
@@ -94,6 +95,37 @@ func _make_local(node: Node, scene_root: Node) -> void:
 	if node != scene_root: node.owner = scene_root
 	for child in node.get_children(): _make_local(child, scene_root)
 
+func _farm_balance_edits() -> void:
+	var edited: FarmFightBalance = load("res://data/companion/farm_fight_balance.tres").duplicate(true)
+	edited.starting_gold = 321.0
+	edited.starting_wood = 123.0
+	edited.starting_farmers = 6
+	edited.starting_tower = false
+	edited.starting_warriors = 0
+	edited.production_per_second = 0.8
+	edited.heroes[0].spawn_seconds = 2.0
+	edited.heroes[0].tower_gold = 7.0
+	edited.heroes[0].tower_wood = 3.0
+	edited.heroes[0].health = 333.0
+	edited.wave_seconds = 1.0
+	edited.wave_size = 4
+	edited.enemy_health = 22.0
+	edited.tower_health = 900.0
+	var path := SCRATCH + "farm-balance.tres"
+	check(ResourceSaver.save(edited, path) == OK, "farm balance writes to resource")
+	temporary_files.append(path)
+	var balance = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)
+	var game := FarmFightState.new(balance)
+	check(game.s.gold == 321 and game.s.wood == 123 and game.s.farmers == 6, "authored new-game economy")
+	check(game.build_tower("warrior") and game.s.gold == 314 and game.s.wood == 120, "authored tower transaction")
+	game.assign_farmer(0, "gold", 1)
+	game.advance(2.05)
+	check(is_equal_approx(game.s.gold, 314 + 0.8 * 2.05), "authored farming rate")
+	var heroes := game.simulation.units.filter(func(unit): return unit.side == 0)
+	check(heroes.size() == 1 and heroes[0].max_hp == 333, "authored spawn time and hero health")
+	check(game.simulation.alive_count(1) == 12 and game.simulation.tower().max_hp == 900, "authored opening wave, repeating waves and tower health")
+	completed_sections.append("farm_balance")
+
 func _save_scene(edited: Node, name: String) -> PackedScene:
 	_make_local(edited, edited)
 	var packed := PackedScene.new()
@@ -116,7 +148,7 @@ func _menu_edits() -> void:
 	var companion_template = load("res://game/companion/companion.tscn").instantiate()
 	companion_template.balance = companion_template.balance.duplicate(true)
 	companion_template.balance.starting_gold = 777.0
-	companion_template.balance.starting_warriors = 6
+	companion_template.balance.starting_farmers = 6
 	var edited = load("res://game/menu/main_menu.tscn").instantiate()
 	edited.companion_scene = _save_scene(companion_template, "menu_companion")
 	edited.companion_save_path = SCRATCH + "menu-save.json"
@@ -145,44 +177,52 @@ func _menu_edits() -> void:
 	tree.current_scene = self
 	companion.set_process(false)
 	check(companion.save_path == SCRATCH + "menu-save.json", "menu routes its custom save path into the launched companion")
-	check(companion.game.s.gold == 777.0 and companion.game.s.warriors == 6, "menu New Game loads the selected scene balance into play")
+	check(companion.game.s.gold == 777.0 and companion.game.s.farmers == 6, "menu New Game loads the selected scene balance into play")
 	await _remove(companion)
 	completed_sections.append("menu")
 
 func _companion_edits() -> void:
 	var edited = load("res://game/companion/companion.tscn").instantiate()
 	edited.save_path = SCRATCH + "companion-save.json"
-	edited.seed_from_full_window = false
 	edited.persistence_enabled = false
 	temporary_files.append(edited.save_path)
-	var tree: Sprite2D = edited.get_node("Settlement/TownDistrict/WestTree")
-	tree.position = Vector2(49, 117)
-	tree.scale = Vector2(0.6, 0.6)
-	var barracks: Node2D = edited.get_node("Settlement/TownDistrict/BarracksSite")
-	barracks.position += Vector2(35, -12)
-	var barracks_position := barracks.position
-	var training_position: Vector2 = barracks.position + barracks.get_node("Trainee1").position
-	edited.get_node("Settlement/TownDistrict/ActorTemplates/Warrior").scale = Vector2(0.72, 0.72)
-	var ground: TileMapLayer = edited.get_node("Settlement/Terrain/Ground")
-	var erased_cell: Vector2i = ground.get_used_cells()[0]
-	ground.erase_cell(erased_cell)
-	var worker_child_count: int = edited.get_node("Settlement/WorkingHamlet").get_child_count()
-	edited.get_node("HUD/Close").tooltip_text = "Artist-authored close hint"
+	var warrior: Node2D = edited.get_node("Settlement/TownDistrict/Towers/Warrior")
+	warrior.position += Vector2(15, -4)
+	var tower_position := warrior.position
+	warrior.get_node("Sprite").scale = Vector2(0.42, 0.42)
+	edited.get_node("HUD/Bar/Close").tooltip_text = "Artist-authored close hint"
+	var land_template = load("res://game/companion/farm_land.tscn").instantiate()
+	var ground: TileMapLayer = land_template.get_node("Terrain/Ground")
+	var cell: Vector2i = ground.get_used_cells()[0]
+	ground.erase_cell(cell)
+	land_template.get_node("GoldSpot").position.x += 25
+	var gold_x: float = land_template.get_node("GoldSpot").position.x
+	edited.land_scene = _save_scene(land_template, "farm-land")
+	var unit_template = load("res://game/town/unit_view.tscn").instantiate()
+	unit_template.get_node("Sprite").scale = Vector2(0.61, 0.61)
+	edited.unit_scene = _save_scene(unit_template, "companion-unit")
 	var companion = _save_scene(edited, "companion").instantiate()
 	get_tree().root.add_child(companion)
 	companion.set_process(false)
 	await get_tree().process_frame
-	tree = companion.get_node("Settlement/TownDistrict/WestTree")
-	ground = companion.get_node("Settlement/Terrain/Ground")
-	check(tree.position == Vector2(49, 117) and tree.scale == Vector2(0.6, 0.6), "companion scenery transforms survive startup")
-	check(ground.get_cell_source_id(erased_cell) == -1, "companion erased terrain cell is not repainted at startup")
-	check(companion.get_node("HUD/Close").tooltip_text == "Artist-authored close hint", "companion static control edit survives startup")
-	check(companion.workers.get_child_count() == worker_child_count, "companion uses authored workers without duplicate generated sprites")
-	check(companion.get_node("Settlement/TownDistrict/BarracksSite").position == barracks_position, "building group movement survives startup")
-	check(companion.district.to_local(companion.trainees[0].global_position).is_equal_approx(training_position), "training remains aligned with an edited building group")
-	check(companion.formation.get_child(0).scale == Vector2(0.72, 0.72), "companion formation uses the edited warrior template")
+	check(companion.get_node("Settlement/TownDistrict/Towers/Warrior").position == tower_position, "tower authored position survives startup")
+	check(companion.get_node("Settlement/TownDistrict/Towers/Warrior/Sprite").scale == Vector2(0.42, 0.42), "tower authored scale survives state refresh")
+	check(companion.get_node("HUD/Bar/Close").tooltip_text == "Artist-authored close hint", "HUD static tooltip survives startup")
+	var land = companion.land_views[0]
+	check(land.get_node("Terrain/Ground").get_cell_source_id(cell) == -1, "authored terrain is not repainted at startup")
+	check(land.get_node("GoldSpot").position.x == gold_x, "resource spot position survives startup")
+	companion.game.build_tower("warrior")
+	companion.game.buy_reinforcement("warrior")
+	companion.sync_units(0.0)
+	var unit = companion.unit_views.values()[0]
+	check(unit.sprite.scale == Vector2(0.61, 0.61), "companion uses edited unit template")
+	var spawn: Vector2 = companion.formation.to_local(companion.get_node("Settlement/TownDistrict/Towers/Warrior/Spawn").global_position)
+	check(unit.model.home.is_equal_approx(spawn), "spawn follows authored tower marker")
+	companion.game.assign_farmer(0, "gold", 1)
+	companion.refresh()
+	check(land.get_node("GoldSpot").workers.size() == 1, "assignment instantiates authored worker template")
 	companion.persist()
-	check(not FileAccess.file_exists(companion.save_path), "persistence-disabled scene preview creates no campaign save")
+	check(not FileAccess.file_exists(companion.save_path), "disabled preview never writes campaign")
 	await _remove(companion)
 	completed_sections.append("companion")
 

@@ -1,7 +1,7 @@
 # The Growing Banner
 
 Open `res://prototypes/full_window_conquest/conquest.tscn` and press **F6** (Run Current Scene).
-This optional prototype retains its procedural full-window UI. It shares `game/companion/conquest_state.gd` and `data/companion/default_balance.tres` with the companion; the existing Tiny Swords package supplies the art. The normal F5 entry remains the companion menu.
+This optional prototype retains its procedural full-window UI. It retains `game/companion/conquest_state.gd` and `data/companion/default_balance.tres` independently of the Farm and Fight companion; the existing Tiny Swords package supplies the art. The normal F5 entry remains the companion menu.
 
 Click the home, barracks or academy artwork/buttons to prepare. Launch an expedition on the right. Projects cost gold once, finish automatically and pause during battle. Gold and all timers advance only while the game is running. Closing pauses progress; reopening resumes the saved remaining time. Each result starts a tunable 120-second recovery, during which preparation continues. Skip only shortens the presentation; the result was already calculated and saved.
 
