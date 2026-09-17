@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://data/town/schemas/hero_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "H008"
+display_name = "Uncommon Cleric"
+rarity = 1
+hero_class = 3
+unit_type = 1
+base_power = 15.30
+base_hp = 187.00
+atk_speed = 1.6
+visual_unit = "monk"
+ability = "heal"
+ability_interval = 1.6

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://data/town/schemas/hero_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "H011"
+display_name = "Rare Lancer"
+rarity = 2
+hero_class = 1
+unit_type = 0
+base_power = 40.60
+base_hp = 319.00
+atk_speed = 1.4
+visual_unit = "lancer"
+ability = "pierce"
+ability_interval = 7.0

@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://lo102n04ypql"]
-
-[ext_resource type="Script" uid="uid://daebiopk04x24" path="res://scenes/hero_town_camera.gd" id="1_g1ld8"]
-
-[node name="HeroTownCamera" type="Camera2D"]
-script = ExtResource("1_g1ld8")

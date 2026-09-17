@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="StageData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://data/town/schemas/stage_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+number = 16
+title = "Meadow patrol"
+gold = 474
+first_clear_gold = 239
+boss = ""
+time_limit = 60.0
+enemies = Array[Dictionary]([{"unit":"lancer","hp":1060,"damage":46,"interval":1.8,"ability":"charge"},
+{"unit":"warrior","hp":1060,"damage":46,"interval":1.8,"ability":""},
+{"unit":"archer","hp":1060,"damage":46,"interval":1.8,"ability":""},
+{"unit":"lancer","hp":1060,"damage":46,"interval":1.8,"ability":""},
+{"unit":"warrior","hp":1060,"damage":46,"interval":1.8,"ability":""},
+{"unit":"archer","hp":1060,"damage":46,"interval":1.8,"ability":""},
+{"unit":"warrior","hp":1060,"damage":46,"interval":1.8,"ability":""},
+{"unit":"lancer","hp":1060,"damage":46,"interval":1.8,"ability":""},
+{"unit":"archer","hp":1060,"damage":46,"interval":1.8,"ability":""},
+{"unit":"warrior","hp":1060,"damage":46,"interval":1.8,"ability":""}])

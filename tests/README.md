@@ -1,0 +1,47 @@
+# Running checks
+
+Run commands from the project root with Godot 4.6.3. Set `$godot` to your console executable. Always pass `-- --test` to checks: the town autoload then skips the player's save. Companion checks use separate test save paths.
+
+For complete isolation, put Godot's user-data directory inside the ignored project cache for this shell session:
+
+```powershell
+$godot = '<absolute path to Godot console executable>'
+$env:APPDATA = Join-Path $PWD '.godot/test_userdata'
+$env:LOCALAPPDATA = $env:APPDATA
+New-Item -ItemType Directory -Force $env:APPDATA | Out-Null
+& $godot --headless --editor --import --path . --quit -- --test
+```
+
+## Logic and scene checks
+
+```powershell
+& $godot --headless --path . --script res://tests/companion/rules_checks.gd -- --test
+& $godot --headless --path . --script res://tests/companion/return_checks.gd -- --test
+& $godot --headless --path . res://tests/town/rules_checks.tscn -- --test
+& $godot --headless --path . res://tests/town/ui_checks.tscn -- --test
+& $godot --headless --path . res://tests/town/progression_checks.tscn -- --test
+& $godot --headless --path . res://tests/editor/editor_workflow_checks.tscn -- --test
+```
+
+The editor workflow checks modify temporary copies of authored scenes/resources, reload them, and verify that their edits survive startup. `fixtures/return_departure.json` is input data; generated JSON and captures go under `.godot/`.
+
+## Native windows
+
+These require a Windows desktop; headless runs cannot validate window size, transparency, or taskbar placement.
+
+```powershell
+& $godot --path . --script res://tests/companion/companion_checks.gd -- --test
+& $godot --path . --script res://tests/menu/main_menu_checks.gd -- --test
+& $godot --path . res://tests/town/desktop_checks.tscn -- --test
+```
+
+## Balance and endurance
+
+```powershell
+& $godot --headless --path . res://tests/town/balance_checks.tscn -- --test
+& $godot --headless --path . res://tests/town/endurance_smoke.tscn -- --test --duration=10
+```
+
+Endurance defaults to 1,800 seconds if no duration is supplied. Balance checks simulate purchasing policies; they do not replace human playtesting. Inspect both the check summary and engine errors, since a script error can occur even when the process exits with code zero.
+
+The scenes in `game/previews/` are manual F6 previews, not automated checks. They disable persistence without requiring `--test`.

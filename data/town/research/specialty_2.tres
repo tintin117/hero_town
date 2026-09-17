@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResearchNodeData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://data/town/schemas/research_node_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "specialty_2"
+branch = "specialty"
+rank = 2
+title = "Class mastery 2"
+description = "Strengthen guard, volleys, piercing strikes, or healing."
+cost = 400
+required_stage = 0
+prerequisite = "specialty_1"
+value = 0.25

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://data/town/schemas/hero_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "H002"
+display_name = "Common Ranger"
+rarity = 0
+hero_class = 2
+unit_type = 1
+base_power = 15.00
+base_hp = 90.00
+atk_speed = 1.5
+visual_unit = "archer"
+ability = "volley"
+ability_interval = 7.0

@@ -1,7 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="PackedScene" path="res://conquest/companion.tscn" id="1"]
-
-[node name="CompanionPreview" instance=ExtResource("1")]
-seed_from_full_window = false
-persistence_enabled = false

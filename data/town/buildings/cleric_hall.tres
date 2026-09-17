@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
+[ext_resource type="Script" path="res://data/town/schemas/building_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://asset/Tiny Swords (Free Pack)/Buildings/Blue Buildings/Monastery.png" id="2"]
+[resource]
+script = ExtResource("1")
+id = "cleric_hall"
+display_name = "Cleric Sanctuary"
+is_hero_building = true
+build_cost = 300
+unlock_stage = 4
+starting_crew = 1
+hero_class = 3
+visual_unit = "monk"
+specialty = "Heal the most injured ally"
+thumbnail = ExtResource("2")
+sprite_texture = ExtResource("2")
+levels = Array[Dictionary]([{"cost":0}, {"cost":180}, {"cost":700}, {"cost":2400}, {"cost":7000}])

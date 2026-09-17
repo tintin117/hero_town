@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StageData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://data/town/schemas/stage_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+number = 20
+title = "Warlord"
+gold = 1050
+first_clear_gold = 3250
+boss = "warlord"
+time_limit = 90.0
+enemies = Array[Dictionary]([{"unit":"warrior","hp":60000,"damage":260,"interval":2.1,"boss":"warlord","ability":"warlord"},
+{"unit":"warrior","hp":1417,"damage":84,"interval":1.8,"ability":""},
+{"unit":"archer","hp":1417,"damage":84,"interval":1.8,"ability":""},
+{"unit":"warrior","hp":1417,"damage":84,"interval":1.8,"ability":""},
+{"unit":"archer","hp":1417,"damage":84,"interval":1.8,"ability":""}])

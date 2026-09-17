@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResearchNodeData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://data/town/schemas/research_node_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "rarity_4"
+branch = "rarity"
+rank = 4
+title = "Legendary"
+description = "Promote every soldier to Legendary. All training is retained."
+cost = 7000
+required_stage = 15
+prerequisite = "rarity_3"
+value = 0

@@ -1,0 +1,168 @@
+[gd_scene format=3 uid="uid://b7tuy7w5mmnch"]
+
+[ext_resource type="Script" uid="uid://c5w28bu4rqdaa" path="res://game/menu/main_menu.gd" id="1_l6cm7"]
+[ext_resource type="Texture2D" uid="uid://d18fvsr262k2r" path="res://asset/hand_draw/ui/main_menu_bg.png" id="2_ekxnf"]
+[ext_resource type="Texture2D" uid="uid://clrfkwrvwt5qo" path="res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Buttons/Button_Blue_3Slides.png" id="3_rtw2f"]
+[ext_resource type="Texture2D" uid="uid://cevisbm4gjb35" path="res://asset/Tiny Swords (Free Pack)/UI Elements/UI Elements/Buttons/Button_Blue_3Slides_Pressed.png" id="4_oa1go"]
+[ext_resource type="Script" uid="uid://dkvtaffew3mga" path="res://game/menu/animation_button.gd" id="4_rtw2f"]
+[ext_resource type="AudioStream" uid="uid://cn2d8j8lb1r5c" path="res://asset/audio/background/Cursed dagger.mp3" id="7_oa1go"]
+[ext_resource type="PackedScene" uid="uid://ie6us5wnigg0" path="res://game/menu/backdrop.tscn" id="7_tbmy8"]
+
+[node name="MainMenu" type="Control" unique_id=1262482873]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_l6cm7")
+
+[node name="back_ui" type="CanvasLayer" parent="." unique_id=1300629797]
+visible = false
+
+[node name="TextureRect" type="TextureRect" parent="back_ui" unique_id=1679519519]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_ekxnf")
+expand_mode = 1
+
+[node name="front_ui" type="CanvasLayer" parent="." unique_id=902930593]
+
+[node name="Layout" type="VBoxContainer" parent="front_ui" unique_id=238661280]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -246.0
+offset_right = 150.0
+offset_bottom = 246.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Spacer" type="Control" parent="front_ui/Layout" unique_id=1703712353]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="PlayButton" type="TextureButton" parent="front_ui/Layout" unique_id=1286041213]
+custom_minimum_size = Vector2(500, 150)
+layout_mode = 2
+texture_normal = ExtResource("3_rtw2f")
+texture_pressed = ExtResource("4_oa1go")
+ignore_texture_size = true
+stretch_mode = 0
+script = ExtResource("4_rtw2f")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="front_ui/Layout/PlayButton" unique_id=1680525267]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -36.214996
+offset_bottom = -41.769997
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/normal_font_size = 64
+text = "Resume"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CompactButton" type="TextureButton" parent="front_ui/Layout" unique_id=136422543]
+custom_minimum_size = Vector2(300, 150)
+layout_mode = 2
+texture_normal = ExtResource("3_rtw2f")
+texture_pressed = ExtResource("4_oa1go")
+ignore_texture_size = true
+stretch_mode = 0
+script = ExtResource("4_rtw2f")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="front_ui/Layout/CompactButton" unique_id=1043046199]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 19.115
+offset_top = 8.8
+offset_right = -17.88501
+offset_bottom = -33.199997
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.95815676, 0.95815676, 0.95815676, 1)
+theme_override_font_sizes/normal_font_size = 64
+text = "New Game"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacer2" type="Control" parent="front_ui/Layout" unique_id=1294702630]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="QuitButton" type="TextureButton" parent="front_ui/Layout" unique_id=967166884]
+custom_minimum_size = Vector2(300, 150)
+layout_mode = 2
+texture_normal = ExtResource("3_rtw2f")
+texture_pressed = ExtResource("4_oa1go")
+ignore_texture_size = true
+stretch_mode = 0
+script = ExtResource("4_rtw2f")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="front_ui/Layout/QuitButton" unique_id=636667109]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1.665
+offset_top = 11.675
+offset_right = -38.66501
+offset_bottom = -30.324997
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.95596343, 0.9559633, 0.95596343, 1)
+theme_override_font_sizes/normal_font_size = 64
+text = "Quit"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Status" type="Label" parent="front_ui/Layout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.682353, 0.564706, 1)
+autowrap_mode = 3
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1470023270]
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer" unique_id=287382569]
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 120.0
+offset_bottom = 286.00006
+grow_horizontal = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="CanvasLayer/VBoxContainer" unique_id=1660414197]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.9081298, 0.955697, 0.9899588, 1)
+theme_override_font_sizes/font_size = 128
+text = "Tiny Hero"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1519177256]
+stream = ExtResource("7_oa1go")
+volume_db = 11.0
+autoplay = true
+
+[node name="MainMenuScene" parent="." unique_id=1747995355 instance=ExtResource("7_tbmy8")]
+
+[connection signal="pressed" from="front_ui/Layout/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="front_ui/Layout/CompactButton" to="." method="_on_compact_button_pressed"]
+[connection signal="pressed" from="front_ui/Layout/QuitButton" to="." method="_on_quit_button_pressed"]

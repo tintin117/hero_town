@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="UnitArtLibrary" load_steps=10 format=3]
 
-[ext_resource type="Script" path="res://scripts/resources/unit_art_library.gd" id="1"]
+[ext_resource type="Script" path="res://resources/art/unit_art_library.gd" id="1"]
 [ext_resource type="SpriteFrames" path="res://resources/art/warrior_blue.tres" id="2"]
 [ext_resource type="SpriteFrames" path="res://resources/art/lancer_blue.tres" id="3"]
 [ext_resource type="SpriteFrames" path="res://resources/art/archer_blue.tres" id="4"]

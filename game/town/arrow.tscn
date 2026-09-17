@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://dndhrfvhnoyeu"]
+
+[ext_resource type="Script" uid="uid://dbhst0iub7au0" path="res://game/town/arrow.gd" id="1_umosx"]
+[ext_resource type="Texture2D" uid="uid://co5hj6y6twhgf" path="res://asset/Tiny Swords (Free Pack)/Units/Black Units/Archer/Arrow.png" id="2_23jat"]
+
+[node name="Arrow" type="Node2D" unique_id=1957748048]
+script = ExtResource("1_umosx")
+flight_time = 0.5
+arc_height = 30.0
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1583142520]
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("2_23jat")

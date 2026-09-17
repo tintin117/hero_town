@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResearchNodeData" load_steps=2 format=3]
+[ext_resource type="Script" path="res://data/town/schemas/research_node_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "rarity_3"
+branch = "rarity"
+rank = 3
+title = "Epic"
+description = "Promote every soldier to Epic. All training is retained."
+cost = 2400
+required_stage = 10
+prerequisite = "rarity_2"
+value = 0

@@ -1,96 +1,23 @@
-# Hero Town — Claude Code Context
+# Hero Town — project context
 
-## Current remaster (2026-09-08)
+Read [README.md](README.md) for the folder map and [docs/EDITOR_WORKFLOW.md](docs/EDITOR_WORKFLOW.md) for the designer workflow.
 
-The active project is Godot **4.6.2**, 2D Tiny Swords, with a 20-stage idle army demo. Read `docs/REMASTER.md` first. `scenes/main_menu.tscn` and `scenes/town_2d.tscn` now use scripts in `scripts/remaster/`; the former scene/combat/research scripts described below are retained prototype references. Research is real, every placed army has an independent tree, and `GameState` persists gold, buildings, campaign progress, settings, and offline income. Use `-- --test` for all test scenes so the player's save is never loaded. The old 3D art proposal is superseded. Preserve third-party addons and existing assets.
+## Current project
 
-## Project Identity
+Godot 4.6.3, GDScript, 2D Tiny Swords pixel art, Forward Plus / D3D12 on Windows. F5 starts `game/menu/main_menu.tscn`, then `game/companion/companion.tscn`. The separate 20-stage army town is `game/town/town.tscn`. The earlier full-window conquest prototype is under `prototypes/full_window_conquest/`.
 
-A Steam demo inspired by **Crusaders Quest: Hero Town** (idle RPG town builder) in Godot 4.5.
-- Steam page: https://store.steampowered.com/app/4126220/Crusaders_Quest__Hero_Town/
-- Genre: Idle RPG + Town Building, pixel art style
-- Core appeal: heroes auto-fight enemies while the player manages a small town
+Scenes and their scripts are colocated by feature in `game/`. Authored balance lives in `data/companion/` and `data/town/`; shared animation, theme, and effect resources live in `resources/`. The town uses GameData and GameState autoloads; the companion owns its ConquestState and separate save. Keep existing save paths, resource IDs, class names, and node contracts stable.
 
-## GDD Location
+## Working rules
 
-Full design specs live in: `D:\Optics Team\Godot\[Optics] Hero_Town_GDD\`
+- Preserve third-party `addons/`, original `asset/` packs, and `fonts/`.
+- Prefer native scenes, Inspector exports, and resources for art/layout/balance. Keep simulation, transactions, and persistence in code. Do not overwrite authored scene values during startup.
+- Implement the requested scope with existing native features; avoid speculative abstractions and features.
+- Keep script `.uid` files when moving scripts, and update resource paths, autoloads, and relevant checks.
+- Use `game/previews/` for F6 experiments without player saves. For automated checks, follow [tests/README.md](tests/README.md), use isolated user data and `-- --test`. Generated outputs belong in `.godot/`.
+- Keep Embed Game on Play disabled for native desktop checks. Run relevant checks after code changes; only take screenshots when the user explicitly asks.
+- `docs/archive/` contains historical context, not current architecture instructions.
 
-Key files:
-- `Overview.html` — product shape, hard cuts, demo end condition
-- `Current Plan.html` — build targets (B1 / B2 / B3) with acceptance criteria
-- `Detail Planning.html` — task-level breakdown per build
-- `Hero.html` — all 15 hero configs (stats, rarity, unlock gates)
-- `Enemy.html` — all 10 enemy configs (tiers, drops, boss flag)
-- `Building.html` — Town Hall, Portal, Shrine, Tavern, Blacksmith level tables
-- `Economy.html` — currency rules, drop scaling, milestone rewards
-- `Progression.html` — TH gate → hero cap → portal tier mapping
-- `Portal_Combat.html` — combat formulas, respawn, crit timing
-- `Shrine.html` — gacha odds per shrine level, duplicate conversion
-- `UI_UX.html` — screen priorities per build
+## Design references
 
-## Tech Stack
-
-- Godot 4.5, Forward Plus renderer, Jolt Physics, D3D12 (Windows)
-- GDScript only
-- Godot AI MCP plugin (`addons/godot_ai`) — enables Claude Code to read/write scenes and scripts directly via the editor
-
-## 2D Pixel Art (Tiny Swords)
-
-The project is built as a `Node2D` world using the Tiny Swords (Free Pack) CC0 asset pack
-(`asset/Tiny Swords (Free Pack)/`). The `run/main_scene` is `scenes/main_menu.tscn`; its Play/Compact
-buttons load `scenes/town_2d.tscn`, the active game scene.
-
-## File Structure
-
-```
-scenes/
-  main_menu.tscn          — main menu screen (Control, entry point)
-  town_2d.tscn             — active 2D game scene
-  board_2d.gd              — 2D board setup
-  grid_system.gd            — grid/slot logic
-  layer.gd                  — slot-based world layer (occupied_slots, place_building)
-  placement_controller.gd   — drag-ghost placement
-  building_base.tscn/.gd    — building base (Area2D click/hover + Sprite2D)
-  hero_town_camera.tscn/.gd — camera
-  day_night.gd               — day/night grading
-  hero.tscn / enemy.tscn     — hero/enemy scenes
-  build_menu_popup.tscn      — UI popup (Control)
-  building_popup.tscn        — UI popup (Control)
-  shrine_popup.tscn           — UI popup (Control)
-scripts/
-  game_data.gd             — static data: HEROES, ENEMIES, BUILDINGS dicts
-  character.gd / hero.gd / enemy.gd — combat/movement logic
-  main_menu.gd              — main menu: start / compact / quit
-  build_menu_popup.gd
-  building_popup.gd
-  shrine_popup.gd
-addons/godot_ai/            — MCP plugin, do not modify
-```
-
-## Development Philosophy
-
-- **Build in phases** — only implement what's asked for right now. Re-establish scope with the
-  user as the 2D build progresses.
-- **No premature abstraction** — three similar lines beats a helper no one needs yet
-- **No speculative features** — hard cuts: no manual combat, no decorations, no dialogue trees
-
-## Working with the Godot AI MCP Plugin
-
-The plugin runs an MCP server inside the Godot editor. Claude Code connects to it to:
-- Read/write `.tscn` and `.gd` files via `filesystem_manage`
-- Inspect and modify scene nodes via `scene_manage`, `node_create`, `node_set_property`
-- Attach scripts via `script_attach`
-- Save scenes via `scene_save`
-- Run the project via `project_run`
-- Read editor/game logs via `logs_read`
-
-**Setup on a new machine:**
-1. Open the project in Godot 4.5
-2. Enable the `godot_ai` plugin under Project → Project Settings → Plugins
-3. The plugin will start the MCP server automatically
-4. Open Claude Code in this directory — it will connect via `.claude/settings.json` permissions
-
-## Behavior Notes
-
-- Do not take editor or game screenshots to verify changes — the user tests the game directly and reports what to change. Only screenshot if explicitly asked.
-- After code changes, rely on `project_run` or tell the user to run it; skip screenshot verification.
+The broader GDD is at `D:\Optics Team\Godot\[Optics] Hero_Town_GDD\`. Its Overview, Current Plan, Detail Planning, Hero, Enemy, Building, Economy, Progression, Portal_Combat, Shrine, and UI_UX HTML files describe product plans; some features are outside the current playable scope.
