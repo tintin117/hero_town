@@ -6,26 +6,73 @@ const GOLD := Color("f2c771")
 const MUTED := Color("a5b2c3")
 const INTERMISSION := 3.0
 const GROUND_DEPTH := 0.32
+const SPECTATOR := preload("res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Idle.png")
 
 var fight := FightRules.new()
 var selected: Array[int] = [0, 1, 2]
 var auto_fight := false
 var cards: Array[Button] = []
 var card_records: Array[Label] = []
+var card_details: Array[Dictionary] = []
 var fighters: Dictionary = {}
 var coin_pulse: Tween
+var excitement_pulse: Tween
+var displayed_tier := 0
 var effects: Array[Dictionary] = []
+var cheer := 0.0
+var crowd_clock := 0.0
+var crowd_tick := 0.0
 
 
 func _ready() -> void:
+	# Runtime-only window layout; leave the user's project/editor settings intact.
+	if get_tree().current_scene == self:
+		get_window().content_scale_size = Vector2i.ZERO
+		get_window().min_size = Vector2i(960, 420)
+		get_window().size = Vector2i(1280, 420)
 	_apply_theme()
 	_build_roster()
+	%HeroesButton.pressed.connect(_toggle_drawer.bind(%HeroesDrawer))
+	%ArenaButton.pressed.connect(_toggle_drawer.bind(%ArenaDrawer))
+	for button in [%CloseHeroes, %CloseArena, %Dismiss]:
+		button.pressed.connect(_close_drawers)
 	%Start.pressed.connect(_toggle_running)
+	%Expand.pressed.connect(_expand_arena)
 	%Tick.timeout.connect(_intermission_finished)
 	%Stage.draw.connect(_draw_ring)
 	%Stage.resized.connect(_layout_fighters)
+	%Excitement.draw.connect(_draw_excitement_markers)
 	_show_fighters(selected)
 	_refresh()
+
+
+func _toggle_drawer(drawer: Control) -> void:
+	var opening := not drawer.visible
+	_close_drawers()
+	drawer.visible = opening
+	%Dismiss.visible = opening
+	%HeroesButton.set_pressed_no_signal(%HeroesDrawer.visible)
+	%ArenaButton.set_pressed_no_signal(%ArenaDrawer.visible)
+	if opening:
+		(%CloseHeroes if drawer == %HeroesDrawer else %CloseArena).grab_focus()
+
+
+func _close_drawers() -> void:
+	var button: Button = %HeroesButton if %HeroesDrawer.visible else %ArenaButton
+	var was_open: bool = %HeroesDrawer.visible or %ArenaDrawer.visible
+	%HeroesDrawer.hide()
+	%ArenaDrawer.hide()
+	%Dismiss.hide()
+	%HeroesButton.set_pressed_no_signal(false)
+	%ArenaButton.set_pressed_no_signal(false)
+	if was_open:
+		button.grab_focus()
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel") and %Dismiss.visible:
+		_close_drawers()
+		get_viewport().set_input_as_handled()
 
 
 func _panel(color: Color, border: Color, width: int = 1) -> StyleBoxFlat:
@@ -33,17 +80,17 @@ func _panel(color: Color, border: Color, width: int = 1) -> StyleBoxFlat:
 	style.bg_color = color
 	style.border_color = border
 	style.set_border_width_all(width)
-	style.set_corner_radius_all(10)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 14
-	style.content_margin_bottom = 14
+	style.set_corner_radius_all(5)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
 	return style
 
 
 func _apply_theme() -> void:
 	theme = Theme.new()
-	theme.default_font_size = 16
+	theme.default_font_size = 14
 	theme.set_color("font_color", "Label", MUTED)
 	theme.set_color("font_color", "Button", Color("edf1f7"))
 	theme.set_color("font_disabled_color", "Button", MUTED)
@@ -53,11 +100,25 @@ func _apply_theme() -> void:
 	theme.set_stylebox("disabled", "Button", _panel(Color("131b25"), Color("293444")))
 	var focus := _panel(Color.TRANSPARENT, Color("ffffff"), 2)
 	theme.set_stylebox("focus", "Button", focus)
-	%Arena.add_theme_stylebox_override("panel", _panel(Color("121d29"), Color("344355")))
+	for panel in [%Bank, %Earnings, %ExcitementMeter, %Footer, %HeroesDrawer, %ArenaDrawer]:
+		panel.add_theme_stylebox_override("panel", _panel(Color("172937f5"), Color("6e7c7c")))
+	for drawer in [%HeroesDrawer, %ArenaDrawer]:
+		drawer.get_theme_stylebox("panel").bg_color = Color("172937")
+	for label in [%Coins, %FightIncome, %Multiplier, %Income, %Capacity, %Status]:
+		label.add_theme_color_override("font_color", GOLD)
+	%Tips.add_theme_color_override("font_color", Color("acd5bd"))
+	for state in ["normal", "hover", "pressed", "focus"]:
+		%Dismiss.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 	%Start.add_theme_color_override("font_color", Color("171e29"))
 	%Start.add_theme_stylebox_override("normal", _panel(GOLD, GOLD))
 	%Start.add_theme_stylebox_override("hover", _panel(Color("ffda93"), GOLD))
 	%Start.add_theme_stylebox_override("pressed", _panel(Color("d8ab55"), GOLD))
+	for part in ["background", "fill"]:
+		var color := Color("c8ad72") if part == "fill" else Color("0b1119")
+		var style := _panel(color, color, 0)
+		style.set_content_margin_all(0)
+		style.set_corner_radius_all(4)
+		%Excitement.add_theme_stylebox_override(part, style)
 
 
 func _label(text: String, font_size: int, color: Color = MUTED) -> Label:
@@ -66,6 +127,7 @@ func _label(text: String, font_size: int, color: Color = MUTED) -> Label:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
 
@@ -74,35 +136,65 @@ func _build_roster() -> void:
 		var hero := fight.heroes[id]
 		var card := Button.new()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.custom_minimum_size.y = 43
 		card.toggle_mode = true
-		card.tooltip_text = "%s: %d stars, %d HP, %d ATK\nTargets the nearest opponent. %s\n%s: %s\nMana: +25 on normal hits, +15 when surviving a normal hit.\nAt 100 mana: cast when in range, reset to 0, earn 10 coins.\nSkills generate no mana. Career victories add 5 coins per fight." % [hero.name, hero.stars, hero.health, hero.attack, "Keeps 110-160 units of distance." if hero.ranged else "Chases into melee range (45 units).", hero.skill.name, hero.skill.description]
 		card.pressed.connect(_select_hero.bind(id))
 		%Roster.add_child(card)
 		cards.append(card)
-		var content := VBoxContainer.new()
-		content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		content.offset_top = 8
-		content.offset_bottom = -8
-		content.add_theme_constant_override("separation", 1)
-		content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.add_child(content)
+		var row := HBoxContainer.new()
+		row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		row.offset_left = 8
+		row.offset_right = -8
+		row.offset_top = 2
+		row.offset_bottom = -2
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.add_child(row)
 		var portrait := TextureRect.new()
 		var crop := AtlasTexture.new()
 		crop.atlas = ART.frames(hero.unit, hero.red).get_frame_texture("idle", 0)
-		crop.region = Rect2(crop.atlas.get_size() * 0.5 - Vector2(48, 48), Vector2(96, 96))
+		crop.region = Rect2(crop.atlas.get_size() * 0.5 - Vector2(40, 40), Vector2(80, 80))
 		portrait.texture = crop
-		portrait.custom_minimum_size.y = 30
+		portrait.custom_minimum_size.x = 44
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		content.add_child(portrait)
-		content.add_child(_label(hero.name, 18, Color("edf1f7")))
-		content.add_child(_label("%d STAR  /  %s" % [hero.stars, hero.unit.to_upper()], 12, GOLD))
-		content.add_child(_label("%d HP   /   %d ATK" % [hero.health, hero.attack], 13))
-		content.add_child(_label(hero.skill.name, 13, Color("a7bfff")))
-		var record := _label("", 13, Color("a5ddc4"))
-		content.add_child(record)
+		row.add_child(portrait)
+		var content := VBoxContainer.new()
+		content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		content.add_theme_constant_override("separation", 0)
+		content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(content)
+		var heading := HBoxContainer.new()
+		heading.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		content.add_child(heading)
+		var nameplate := _label(hero.name, 14, Color("edf1f7"))
+		nameplate.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		nameplate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		heading.add_child(nameplate)
+		var details := {"level": _label("", 11, GOLD), "stats": _label("", 11),
+			"skill": _label("", 11, Color("b2c9e7")), "xp": ProgressBar.new()}
+		heading.add_child(details.level)
+		var info := HBoxContainer.new()
+		info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		content.add_child(info)
+		details.skill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		details.skill.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		info.add_child(details.skill)
+		info.add_child(details.stats)
+		var record := _label("", 11, Color("a5ddc4"))
+		info.add_child(record)
 		card_records.append(record)
+		details.xp.show_percentage = false
+		details.xp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		details.xp.custom_minimum_size = Vector2(0, 3)
+		details.xp.add_theme_font_size_override("font_size", 1)
+		for part in ["background", "fill"]:
+			var color := GOLD if part == "fill" else Color("0b1119")
+			var style := _panel(color, color, 0)
+			style.set_content_margin_all(0)
+			details.xp.add_theme_stylebox_override(part, style)
+		content.add_child(details.xp)
+		card_details.append(details)
 
 
 func _select_hero(id: int) -> void:
@@ -114,7 +206,8 @@ func _select_hero(id: int) -> void:
 		selected.append(id)
 	_show_fighters(selected)
 	%Status.text = "The arena is ready" if selected.size() == 3 else "Choose three heroes"
-	%Commentary.text = "Book your trio below, then open the arena."
+	%Commentary.text = "Book three heroes, then open the arena."
+	%Commentary.tooltip_text = %Commentary.text
 	_refresh()
 
 
@@ -125,22 +218,90 @@ func _refresh() -> void:
 		cards[id].disabled = locked or (selected.size() == 3 and id not in selected)
 		cards[id].add_theme_stylebox_override("disabled", _panel(Color("30352f"), GOLD, 2) if id in selected else _panel(Color("131b25"), Color("293444")))
 		cards[id].modulate = Color.WHITE if id in selected else Color("9aa8ba")
-		card_records[id].text = "%d wins  /  +%d coins" % [fight.heroes[id].wins, fight.heroes[id].wins * FightRules.COINS_PER_VICTORY]
+		card_records[id].text = " / %d wins" % fight.heroes[id].wins
+		var hero: Dictionary = fight.heroes[id]
+		var stats := fight.stats_for(id)
+		var needed := fight.xp_needed(id)
+		var details := card_details[id]
+		details.level.text = "LV %d  /  %s" % [hero.level, "%d/%d XP" % [hero.xp, needed] if needed > 0 else "MAX"]
+		details.xp.max_value = needed if needed > 0 else 1
+		details.xp.value = hero.xp if needed > 0 else 1
+		details.stats.text = "%d HP   /   %d ATK" % [stats.health, stats.attack]
+		details.skill.text = "%s / %d coins" % [hero.skill.name, FightRules.CAST_TIP]
+		cards[id].tooltip_text = "%s / Level %d / %s\n%d HP, %d ATK / %d coins instantly per skill\nTargets the nearest opponent. %s\n%s: %s\nMana: +25 on normal hits, +15 when surviving a normal hit; cast at 100. Skills generate no mana.\n10 XP per completed fight, +10 bonus for winning. Each level: +5%% base HP/ATK and +5 base coins above level 1.\nEach career victory adds 5 base coins. Arena capacity multiplies base income. Each cast adds 8 excitement; final excitement boosts fight income, not tips. Progress is session-only." % [hero.name, hero.level, hero.unit.capitalize(), stats.health, stats.attack, FightRules.CAST_TIP, "Keeps 110-160 units of distance." if hero.ranged else "Chases into melee range (45 units).", hero.skill.name, hero.skill.description]
 	_refresh_money()
-	%Record.text = "%d fights completed" % fight.completed
-	%Selection.text = "YOUR FIGHT CARD  /  %d OF 3 BOOKED" % selected.size()
+	_refresh_excitement(fight.excitement)
+	%Record.text = "%d fights completed / Progress lasts for this session" % fight.completed
+	%Selection.text = "HEROES / %d OF 3 BOOKED" % selected.size()
+	%HeroesButton.text = "Heroes  %d/3" % selected.size()
 	%Hint.text = "Stop after this fight to change your trio." if locked else "Click a booked hero to make room for another."
-	%Income.text = "Guaranteed: %d coins + skill tips" % fight.income_for(selected) if selected.size() == 3 else "Select 3 heroes to see income"
-	%Formula.text = "100 base + 5 per victory  /  +10 instantly per skill  /  Session-only"
+	%Hint.tooltip_text = %Hint.text
+	var quote := fight.income_breakdown(selected)
+	%Income.text = "%d coins" % quote.guaranteed if not quote.is_empty() else "Choose 3 heroes"
+	%Formula.text = "%d base\n+%d hero levels\n+%d career victories\nx%.1f arena capacity" % [quote.base, quote.levels, quote.victories, quote.multiplier] if not quote.is_empty() else "Book a full trio to see\nthe income breakdown."
+	%Formula.tooltip_text = "Base income = round((100 + 5 x sum(level - 1) + 5 x total wins) x seats / 100).\nBase locked at fight start; later upgrades and level-ups affect the next booking.\nFinal fight income = round(base income x excitement multiplier). Tips are paid separately."
 	%Start.disabled = selected.size() != 3 or (fight.active and not auto_fight)
 	%Start.text = "Stop after this fight" if auto_fight else "Open arena"
 	if fight.active and not auto_fight:
-		%Start.text = "Finishing current fight..."
+		%Start.text = "Finishing fight..."
 
 
 func _refresh_money() -> void:
 	%Coins.text = "%d coins" % fight.coins
-	%Tips.text = "CROWD TIPS  +%d" % fight.crowd_tips
+	%Tips.text = "%d tips paid" % fight.crowd_tips
+	_refresh_venue()
+
+
+func _draw_excitement_markers() -> void:
+	for threshold in FightRules.EXCITEMENT_THRESHOLDS.slice(1):
+		var x: float = %Excitement.size.x * threshold / FightRules.EXCITEMENT_MAX
+		%Excitement.draw_line(Vector2(x, 0), Vector2(x, %Excitement.size.y), Color("edf1f7"), 2.0)
+
+
+func _refresh_excitement(score: float) -> void:
+	var tier := FightRules.excitement_tier(score)
+	var multiplier: float = FightRules.EXCITEMENT_MULTIPLIERS[tier]
+	var color: Color = [Color("c8ad72"), GOLD, Color("ffa06b")][tier]
+	%Excitement.value = score
+	%Excitement.get_theme_stylebox("fill").bg_color = color
+	%ExcitementLabel.text = "%s  %d/100" % [FightRules.EXCITEMENT_NAMES[tier], floori(score)]
+	%Multiplier.text = "x%.2f" % multiplier
+	%ExcitementLabel.add_theme_color_override("font_color", color)
+	if fight.active:
+		%FightIncome.text = "%d at finish" % fight.income_with_excitement(score)
+	elif fight.completed > 0:
+		%FightIncome.text = "%d paid / last fight" % fight.settled_income
+	else:
+		%FightIncome.text = "%d base / next fight" % fight.income_for(selected) if fight.valid_lineup(selected) else "Book three heroes"
+	%FightIncome.tooltip_text = "Fight payout excludes tips already in your bank. Base income is locked at fight start; excitement multiplies it. Open Arena for the next booking's breakdown."
+	%ExcitementHint.text = ["40: Excited x1.25 / Skills +8", "80: Wild x2.50 / Skills +8", "Wild crowd! / Maximum multiplier"][tier]
+	if tier > displayed_tier:
+		cheer = 1.0
+		if excitement_pulse and excitement_pulse.is_valid():
+			excitement_pulse.kill()
+		%ExcitementMeter.modulate = Color(1.7, 1.5, 1.2)
+		excitement_pulse = %ExcitementMeter.create_tween()
+		excitement_pulse.tween_property(%ExcitementMeter, "modulate", Color.WHITE, 0.7)
+	displayed_tier = tier
+
+
+func _refresh_venue() -> void:
+	var capacity := fight.arena_capacity()
+	var cost := fight.arena_upgrade_cost()
+	%Capacity.text = "%d seats" % capacity
+	%ArenaButton.text = "Arena / %d" % capacity
+	%CapacityInfo.text = "Full house / x%.1f income" % (float(capacity) / FightRules.ARENA_CAPACITIES[0])
+	%Expand.disabled = cost == 0 or fight.coins < cost
+	%Expand.text = "Expand / %d coins" % cost if cost > 0 else "Fully expanded"
+	%NextCapacity.text = "Next: %d seats / x%.1f" % [capacity + 50, float(capacity + 50) / FightRules.ARENA_CAPACITIES[0]] if cost > 0 else "Maximum capacity reached"
+	%UpgradeHint.text = "Applies to your next booking" if cost > 0 else "200 seats / all upgrades owned"
+	%Expand.tooltip_text = "Spend coins to expand seating. Your current fight keeps its quoted payout; the next booking earns more."
+
+
+func _expand_arena() -> void:
+	if fight.upgrade_arena():
+		_refresh()
+		%Stage.queue_redraw()
 
 
 func _toggle_running() -> void:
@@ -159,8 +320,16 @@ func _begin_fight() -> void:
 	if not fight.start(selected):
 		return
 	_show_fighters(fight.participants)
-	%Status.text = "Fight %02d  /  %d guaranteed coins" % [fight.completed + 1, fight.payout]
+	_close_drawers()
+	cheer = 0.0
+	if excitement_pulse and excitement_pulse.is_valid():
+		excitement_pulse.kill()
+	%ExcitementMeter.modulate = Color.WHITE
+	displayed_tier = 0
+	%Status.text = "Fight %02d  /  %d base coins" % [fight.completed + 1, fight.payout]
 	%Commentary.text = "Nearest opponent / Melee heroes chase / Nia keeps her distance"
+	%Commentary.tooltip_text = %Commentary.text
+	%Status.tooltip_text = %Status.text
 	%Tick.stop()
 	_refresh()
 
@@ -177,31 +346,53 @@ func _physics_process(delta: float) -> void:
 	_layout_fighters()
 	for event in events:
 		_present_action(event)
+	_refresh_excitement(fight.excitement)
 	_sync_fighters()
 
 
 func _process(delta: float) -> void:
-	if effects.is_empty():
-		return
+	crowd_clock += delta
+	crowd_tick += delta
+	cheer = maxf(0.0, cheer - delta * 0.5)
 	for effect in effects:
 		effect.age += delta
 	effects = effects.filter(func(effect: Dictionary): return effect.age < 0.45)
-	%Stage.queue_redraw()
+	if not effects.is_empty() or crowd_tick >= 1.0 / 12.0:
+		%Stage.queue_redraw()
+		crowd_tick = 0.0
 
 
 func _present_action(event: Dictionary) -> void:
 	_animate_action(event)
 	var attacker: Dictionary = fight.heroes[event.attacker]
 	if event.kind == "skill":
-		%Commentary.text = "%s casts %s / +%d crowd tip%s" % [attacker.name, attacker.skill.name, event.tip, " / heals %d HP" % event.healing if event.healing > 0 else ""]
+		%Commentary.text = "%s casts %s / +%d crowd tip / +%s excitement%s" % [attacker.name, attacker.skill.name, event.tip, String.num(event.excitement_gain, 1).trim_suffix(".0"), " / heals %d HP" % event.healing if event.healing > 0 else ""]
 	else:
 		var hit: Dictionary = event.hits[0]
 		%Commentary.text = "%s hits %s for %d%s" % [attacker.name, fight.heroes[hit.target].name, hit.damage, " / knocked out!" if fight.health[hit.target] == 0 else ""]
+	%Commentary.tooltip_text = %Commentary.text
 	if event.winner >= 0:
 		var winner: Dictionary = fight.heroes[event.winner]
 		%Status.text = "%s wins!  /  +1 career victory" % winner.name
-		%Commentary.text = "%d guaranteed + %d crowd tips = %d earned / Tips already paid" % [fight.payout, fight.crowd_tips, fight.payout + fight.crowd_tips]
+		var multiplier: float = FightRules.EXCITEMENT_MULTIPLIERS[FightRules.excitement_tier(event.excitement)]
+		%Commentary.text = "%d fight income + %d tips paid = %d earned" % [fight.settled_income, fight.crowd_tips, fight.settled_income + fight.crowd_tips]
+		%Commentary.tooltip_text = "%d base x%.2f = %d fight income. Tips already paid: %d. Total: %d." % [fight.payout, multiplier, fight.settled_income, fight.crowd_tips, fight.settled_income + fight.crowd_tips]
 		_refresh()
+		var xp_results := PackedStringArray()
+		var leveled := PackedStringArray()
+		for progress in event.progression:
+			var hero: Dictionary = fight.heroes[progress.hero]
+			xp_results.append("%s +%d XP" % [hero.name, progress.xp] if progress.xp > 0 else "%s MAX" % hero.name)
+			if progress.level > progress.before:
+				leveled.append("%s Lv.%d" % [hero.name, progress.level])
+				var label: Label = card_details[progress.hero].level
+				label.modulate = Color(1.6, 1.6, 1.6)
+				label.create_tween().tween_property(label, "modulate", Color.WHITE, 0.8)
+		%Hint.text = " / ".join(xp_results)
+		%Hint.tooltip_text = %Hint.text
+		if not leveled.is_empty():
+			%Status.text += " / Level up: " + ", ".join(leveled)
+		%Status.tooltip_text = %Status.text + "\n" + " / ".join(xp_results)
 		if auto_fight:
 			%Tick.start(INTERMISSION)
 
@@ -214,6 +405,7 @@ func _show_fighters(lineup: Array[int]) -> void:
 	fighters.clear()
 	for id in lineup:
 		var hero := fight.heroes[id]
+		var stats: Dictionary = fight.battle_stats[id] if fight.active else fight.stats_for(id)
 		var body := Node2D.new()
 		%Stage.add_child(body)
 		var sprite := AnimatedSprite2D.new()
@@ -226,8 +418,8 @@ func _show_fighters(lineup: Array[int]) -> void:
 		for stat in ["health", "mana"]:
 			var bar := ProgressBar.new()
 			bar.position = Vector2(-27, -65 if stat == "health" else -58)
-			bar.max_value = hero.health if stat == "health" else FightRules.MANA_MAX
-			bar.value = hero.health if stat == "health" else 0
+			bar.max_value = stats.health if stat == "health" else FightRules.MANA_MAX
+			bar.value = stats.health if stat == "health" else 0
 			bar.show_percentage = false
 			bar.add_theme_font_size_override("font_size", 1)
 			for part in ["background", "fill"]:
@@ -264,11 +456,13 @@ func _layout_fighters() -> void:
 
 
 func _ground_scale() -> float:
-	return maxf(0.1, minf((%Stage.size.x - 100.0) / (FightRules.ARENA_RADIUS * 2.0), (%Stage.size.y - 100.0) / (FightRules.ARENA_RADIUS * 2.0 * GROUND_DEPTH)))
+	return maxf(0.1, (%Stage.size.x - 48.0) / (FightRules.ARENA_RADIUS * 2.0))
 
 
 func _project(ground: Vector2) -> Vector2:
-	return Vector2(%Stage.size.x * 0.5, (%Stage.size.y + 55.0) * 0.5) + ground * Vector2(1.0, GROUND_DEPTH) * _ground_scale()
+	var scale_x := _ground_scale()
+	var scale_y := minf(scale_x * GROUND_DEPTH, 80.0 / FightRules.ARENA_RADIUS)
+	return Vector2(%Stage.size.x * 0.5, %Stage.size.y - 90.0) + ground * Vector2(scale_x, scale_y)
 
 
 func _circle_points(origin: Vector2, radius: float) -> PackedVector2Array:
@@ -279,15 +473,56 @@ func _circle_points(origin: Vector2, radius: float) -> PackedVector2Array:
 
 
 func _draw_ring() -> void:
+	# Each row represents 50 filled seats; expansion adds seating, not combat space.
+	for row in range(fight.arena_capacity() / 50 - 1, -1, -1):
+		var radius := FightRules.ARENA_RADIUS + 28.0 + row * 22.0
+		var bench := PackedVector2Array()
+		for seat in range(50):
+			bench.append(_project(Vector2.from_angle(PI + 0.1 + (PI - 0.2) * seat / 49.0) * radius))
+		%Stage.draw_polyline(bench, Color("39464a"), 23.0, false)
+		%Stage.draw_polyline(bench, Color("70503a"), 18.0, false)
+		%Stage.draw_polyline(bench, Color("b48a54"), 3.0, false)
+		for seat in range(bench.size()):
+			var pos := bench[seat]
+			var bounce := maxf(0.0, sin(crowd_clock * 7.0 + seat * 0.7)) * cheer * 6.0
+			var frame := (int(crowd_clock * 5) + seat) % 6
+			var tint := Color("ead3a0") if (seat + row) % 3 == 0 else Color.WHITE
+			%Stage.draw_texture_rect_region(SPECTATOR, Rect2(pos - Vector2(7, 23 + bounce), Vector2(14, 21)), Rect2(frame * 192 + 64, 48, 64, 88), tint)
+			if seat % 5 == 0:
+				%Stage.draw_line(pos + Vector2(0, 5), pos + Vector2(0, 17), Color("54452f"), 5.0)
 	var points := _circle_points(Vector2.ZERO, FightRules.ARENA_RADIUS)
-	%Stage.draw_polyline(points, Color("394857"), 22.0, true)
-	%Stage.draw_polyline(points, Color("859297"), 14.0, true)
-	%Stage.draw_colored_polygon(points.slice(0, 64), Color("c9aa70"))
-	%Stage.draw_polyline(points, Color("8c653e"), 4.0, true)
-	%Stage.draw_polyline(_circle_points(Vector2.ZERO, FightRules.ARENA_RADIUS - 18.0), Color("e0bf82"), 2.0, true)
-	for i in range(18):
-		var angle := TAU * i / 18.0
-		%Stage.draw_line(_project(Vector2.from_angle(angle) * (FightRules.ARENA_RADIUS + 1.0)), _project(Vector2.from_angle(angle) * (FightRules.ARENA_RADIUS + 13.0)), Color("53636c"), 2.0, true)
+	%Stage.draw_polyline(points, Color("324c53"), 24.0, false)
+	%Stage.draw_polyline(points, Color("72918b"), 17.0, false)
+	%Stage.draw_colored_polygon(points.slice(0, 64), Color("d8bc80"))
+	%Stage.draw_polyline(points, Color("ad8754"), 5.0, false)
+	%Stage.draw_polyline(_circle_points(Vector2.ZERO, FightRules.ARENA_RADIUS - 16.0), Color("ead099"), 2.0, false)
+	# Sparse sand marks, deterministic and purely visual; never consume combat RNG.
+	for i in range(90):
+		var ground := Vector2.from_angle(i * 2.399) * sqrt(float(i) / 90.0) * (FightRules.ARENA_RADIUS - 25)
+		var pos := _project(ground)
+		%Stage.draw_line(pos, pos + Vector2(3 + i % 4, 0), Color("cbae76"), 1.0)
+	for i in range(24):
+		var pos := _project(Vector2.from_angle(TAU * i / 24.0) * (FightRules.ARENA_RADIUS + 2.0))
+		%Stage.draw_rect(Rect2(pos - Vector2(3, 8), Vector2(6, 15)), Color("6b5137"))
+		%Stage.draw_rect(Rect2(pos - Vector2(4, 9), Vector2(8, 4)), Color("c29a61"))
+	for side in [-1, 1]:
+		var post := _project(Vector2(side * 275, -165))
+		%Stage.draw_line(post, post - Vector2(0, 53), Color("5e4935"), 5.0)
+		%Stage.draw_circle(post - Vector2(0, 55), 4.0, GOLD)
+		var sway := sin(crowd_clock * 2 + side) * 2.0
+		var flag := PackedVector2Array([post + Vector2(2, -49), post + Vector2(26, -47 + sway), post + Vector2(26, -12 + sway), post + Vector2(14, -18), post + Vector2(2, -14)])
+		%Stage.draw_colored_polygon(flag, Color("3c698b") if side < 0 else Color("a55345"))
+		%Stage.draw_line(post + Vector2(13, -41), post + Vector2(13, -24), GOLD, 3)
+	# Upgrades visibly add a covered stand, then a broader blue-and-cream canopy.
+	if fight.arena_tier > 0:
+		var roof := _project(Vector2(0, -365)) - Vector2(0, 28)
+		var width := 160.0 + fight.arena_tier * 80.0
+		for side in [-1, 1]:
+			%Stage.draw_line(roof + Vector2(side * width * 0.5, 12), roof + Vector2(side * width * 0.5, 45), Color("695138"), 5)
+		for stripe in range(12):
+			var x := roof.x - width * 0.5 + stripe * width / 12.0
+			%Stage.draw_rect(Rect2(x, roof.y, width / 12.0 + 1, 19), Color("3e718e") if stripe % 2 == 0 else Color("ebd6a2"))
+			%Stage.draw_rect(Rect2(x, roof.y + 18, width / 12.0 + 1, 4), Color("294957") if stripe % 2 == 0 else Color("b9a981"))
 	for id in fighters:
 		var pos: Vector2 = fighters[id].body.position
 		%Stage.draw_set_transform(pos, 0.0, Vector2(1.0, 0.3))
@@ -336,7 +571,9 @@ func _sync_fighters() -> void:
 func _animate_action(event: Dictionary) -> void:
 	# Update money in the same frame that starts the cast animation, before any tween.
 	%Coins.text = "%d coins" % event.coins
-	%Tips.text = "CROWD TIPS  +%d" % event.crowd_tips
+	%Tips.text = "%d tips paid" % event.crowd_tips
+	_refresh_venue()
+	_refresh_excitement(event.excitement)
 	var source: Dictionary = fighters[event.attacker]
 	var sprite: AnimatedSprite2D = source.sprite
 	sprite.play("attack")
@@ -345,7 +582,7 @@ func _animate_action(event: Dictionary) -> void:
 		sprite.flip_h = event.hits[0].position.x < event.origin.x
 	effects.append({"event": event, "age": 0.0})
 	if event.kind == "skill":
-		_show_tip(event.attacker)
+		_show_tip(event.attacker, event.tip, event.excitement_gain)
 		_tint_fighter(event.attacker, Color("a5ffd0") if event.healing > 0 else GOLD)
 	for hit in event.hits:
 		_tint_fighter(hit.target, Color("ffbc9e"))
@@ -363,7 +600,7 @@ func _tint_fighter(id: int, color: Color) -> void:
 	fighter.tint.tween_property(fighter.sprite, "modulate", Color("515c68") if fight.health[id] == 0 else Color.WHITE, 0.4)
 
 
-func _show_tip(id: int) -> void:
+func _show_tip(id: int, amount: int, excitement_gain: float) -> void:
 	var popup := Node2D.new()
 	popup.name = "SkillTip"
 	popup.set_meta("skill_tip", true)
@@ -381,10 +618,13 @@ func _show_tip(id: int) -> void:
 	var skill_name := _label("%s: %s" % [fight.heroes[id].name, fight.heroes[id].skill.name], 15, GOLD)
 	skill_name.position = Vector2(-120, -20)
 	skill_name.size.x = 240
-	var tip := _label("+%d" % FightRules.CAST_TIP, 26, GOLD)
+	var tip := _label("+%d" % amount, 26, GOLD)
 	tip.position = Vector2(-120, 2)
 	tip.size.x = 240
-	for label in [skill_name, tip]:
+	var boost := _label("+%s excitement" % String.num(excitement_gain, 1).trim_suffix(".0") if excitement_gain > 0.0 else "Excitement full!", 12, Color("b6caff"))
+	boost.position = Vector2(-120, 33)
+	boost.size.x = 240
+	for label in [skill_name, tip, boost]:
 		label.add_theme_color_override("font_outline_color", Color("11151e"))
 		label.add_theme_constant_override("outline_size", 5)
 		popup.add_child(label)
@@ -394,7 +634,7 @@ func _show_tip(id: int) -> void:
 	rise.tween_callback(popup.queue_free)
 	if coin_pulse and coin_pulse.is_valid():
 		coin_pulse.kill()
-	%Coins.pivot_offset = %Coins.size * Vector2(1, 0.5)
+	%Coins.pivot_offset = %Coins.size * Vector2(0, 0.5)
 	%Coins.scale = Vector2.ONE * 1.12
 	%Coins.modulate = Color(1.5, 1.3, 1.0)
 	coin_pulse = %Coins.create_tween().set_parallel(true)

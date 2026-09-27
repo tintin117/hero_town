@@ -15,6 +15,9 @@ func _run() -> void:
 	_check_mana()
 	_check_skills()
 	_check_reproducibility()
+	_check_progression()
+	_check_arena_income()
+	_check_excitement()
 	var fight := Rules.new()
 	for invalid in [[0, 1], [0, 0, 1], [-1, 1, 2], [0, 1, 5], [0, 1, 2, 3]]:
 		var ids: Array[int] = []
@@ -37,11 +40,12 @@ func _run() -> void:
 	assert(fight.start([0, 1, 2]))
 	assert(fight.crowd_tips == 0 and fight.pending_casts.is_empty())
 	for id in fight.participants:
-		assert(fight.health[id] == fight.heroes[id].health and fight.mana[id] == 0)
+		assert(fight.health[id] == fight.stats_for(id).health and fight.mana[id] == 0)
 		assert(fight.velocities[id] == Vector2.ZERO and fight.pauses[id] == 0.0)
 		assert(fight.targets[id] == -1 and fight.cooldowns[id] <= 0.3)
 	_finish(fight)
 	var longest := 0.0
+	var tiers := [0, 0, 0]
 	for a in range(3):
 		for b in range(a + 1, 4):
 			for c in range(b + 1, 5):
@@ -50,9 +54,26 @@ func _run() -> void:
 					sample.rng.seed = seed_value
 					assert(sample.start([a, b, c]))
 					longest = maxf(longest, _finish(sample))
-					assert(sample.income_for([a, b, c]) == 100 + 5 * (seed_value + 1))
-	print("PASS: movement, ranges, targeting, skills, mana, and 202 fights. Longest: %.2fs." % longest)
+					tiers[Rules.excitement_tier(sample.excitement)] += 1
+					var level_bonus := 0
+					for id in [a, b, c]:
+						level_bonus += 5 * (int(sample.heroes[id].level) - 1)
+					assert(sample.income_for([a, b, c]) == 100 + level_bonus + 5 * (seed_value + 1))
+				# Mixed-level bookings and the cap must also terminate and settle correctly.
+				for levels in [[1, 5, 10], [10, 10, 10]]:
+					var leveled := Rules.new()
+					leveled.rng.seed = 12
+					for index in range(3):
+						leveled.heroes[[a, b, c][index]].level = levels[index]
+					assert(leveled.start([a, b, c]))
+					longest = maxf(longest, _finish(leveled))
+	print("PASS: excitement, arena/level income, flat tips, XP, movement, mana, and 222 seeded/regression fights. Longest: %.2fs. Normal/Excited/Wild: %s" % [longest, tiers])
+	root.content_scale_size = Vector2i.ZERO
+	root.size = Vector2i(1280, 420)
 	await _check_ui()
+	await _check_arena_ui()
+	await _check_excitement_ui()
+	await _check_promenade_ui()
 	quit()
 
 
@@ -62,13 +83,16 @@ func _finish(fight: RefCounted) -> float:
 	for hero in fight.heroes:
 		wins += int(hero.wins)
 	var tips := 0
+	var xp_before := []
+	for hero in fight.heroes:
+		xp_before.append(_total_xp(hero))
 	var ticks := 0
 	while fight.active and ticks < 7200:
 		var previous_bank: int = fight.coins
 		for event in fight.advance(DT):
 			assert(event.tip == (10 if event.kind == "skill" else 0))
 			tips += int(event.tip)
-			assert(event.coins == previous_bank + event.tip + (fight.payout if event.winner >= 0 else 0))
+			assert(event.coins == previous_bank + event.tip + (fight.settled_income if event.winner >= 0 else 0))
 			previous_bank = event.coins
 			for hit in event.hits:
 				assert(hit.target != event.attacker and hit.damage > 0)
@@ -76,7 +100,7 @@ func _finish(fight: RefCounted) -> float:
 				assert(event.origin.distance_to(hit.position) <= radius + 0.001)
 		for id in fight.participants:
 			assert(fight.positions[id].length() <= Rules.ARENA_RADIUS + 0.001)
-			assert(fight.health[id] >= 0 and fight.health[id] <= fight.heroes[id].health)
+			assert(fight.health[id] >= 0 and fight.health[id] <= fight.battle_stats[id].health)
 			assert(fight.mana[id] >= 0 and fight.mana[id] <= 100)
 		ticks += 1
 	assert(not fight.active, "Fight failed to terminate within 120 seconds: %s" % [fight.participants])
@@ -84,9 +108,23 @@ func _finish(fight: RefCounted) -> float:
 	var after := 0
 	for hero in fight.heroes:
 		after += int(hero.wins)
-	assert(after == wins + 1 and fight.coins == bank + fight.payout + tips)
+	assert(after == wins + 1 and fight.coins == bank + fight.settled_income + tips)
+	var expected_excitement := minf(100.0, minf(fight.elapsed, 20.0) + tips * 0.8)
+	assert(is_equal_approx(fight.excitement, expected_excitement))
+	var multiplier := 2.5 if expected_excitement >= 80.0 else (1.25 if expected_excitement >= 40.0 else 1.0)
+	assert(fight.settled_income == roundi(fight.payout * multiplier))
 	assert(fight.crowd_tips == tips and fight.pending_casts.is_empty())
+	for id in range(fight.heroes.size()):
+		var gained := (20 if id == fight.last_winner else 10) if id in fight.participants else 0
+		assert(_total_xp(fight.heroes[id]) == mini(990, xp_before[id] + gained))
 	return ticks * DT
+
+
+func _total_xp(hero: Dictionary) -> int:
+	var total: int = hero.xp
+	for level in range(1, hero.level):
+		total += 30 + 20 * (level - 1)
+	return total
 
 
 func _battle(lineup: Array[int] = [0, 1, 2]) -> RefCounted:
@@ -265,7 +303,7 @@ func _check_skills() -> void:
 	fight.targets[2] = 1
 	event = _cast(fight, 2)
 	assert(event.hits[0].target == 0 and event.hits[0].damage == 45)
-	fight.heroes[2].attack = 17
+	fight.battle_stats[2].attack = 17
 	assert(_cast(fight, 2).hits[0].damage == 43)
 	fight = _battle()
 	fight.positions[2] = Vector2(-160.1, 0)
@@ -320,16 +358,198 @@ func _check_reproducibility() -> void:
 	assert(not first.active and first.coins == second.coins)
 
 
+func _check_progression() -> void:
+	var fight := Rules.new()
+	assert(fight.xp_needed(0) == 30 and fight.income_for([0, 1, 2]) == 100)
+	fight._award_xp(0, 29)
+	assert(fight.heroes[0].level == 1 and fight.heroes[0].xp == 29)
+	fight._award_xp(0, 1)
+	assert(fight.heroes[0].level == 2 and fight.heroes[0].xp == 0 and fight.xp_needed(0) == 50)
+	assert(fight.stats_for(0) == {"health": 158, "attack": 18} and fight.income_for([0, 1, 2]) == 105)
+	# Carry overflow across multiple thresholds and derive stats from the original base.
+	fight._award_xp(0, 130)
+	assert(fight.heroes[0].level == 4 and fight.heroes[0].xp == 10 and fight.xp_needed(0) == 90)
+	assert(fight.stats_for(0) == {"health": 173, "attack": 20} and fight.income_for([0, 1, 2]) == 115)
+	fight._award_xp(0, 10000)
+	assert(fight.heroes[0].level == 10 and fight.heroes[0].xp == 0 and fight.xp_needed(0) == 0)
+	assert(fight.stats_for(0) == {"health": 218, "attack": 25} and fight.income_for([0, 1, 2]) == 145)
+	assert(fight.heroes[0].health == 150 and fight.heroes[0].attack == 17)
+	assert(fight._award_xp(0, 20).xp == 0 and fight.heroes[0].xp == 0)
+	# Level-ups affect the next guarantee; the current fight keeps its quoted payout.
+	fight = _battle()
+	for id in fight.participants:
+		fight.heroes[id].xp = 20
+	fight.positions[2] = Vector2(80, 0)
+	fight.health[0] = 21
+	fight.health[2] = 21
+	var event := _cast(fight, 1)
+	assert(event.winner == 1 and event.tip == 10 and fight.coins == 110)
+	assert(event.progression.size() == 3)
+	assert(fight.heroes[1].level == 2 and fight.heroes[1].xp == 10)
+	assert(fight.heroes[0].level == 2 and fight.heroes[0].xp == 0)
+	assert(fight.heroes[2].level == 2 and fight.heroes[2].xp == 0)
+	assert(fight.heroes[3].level == 1 and fight.heroes[3].xp == 0)
+	assert(fight.battle_stats[1] == {"health": 132, "attack": 21})
+	var records: Array = fight.heroes.duplicate(true)
+	assert(fight.advance(DT).is_empty() and fight.heroes == records and fight.coins == 110)
+	assert(fight.start([0, 1, 2]))
+	assert(fight.battle_stats[1] == {"health": 139, "attack": 22})
+	assert(fight.health[1] == 139 and fight.heroes[1].xp == 10 and fight.payout == 120)
+	# Scaled attacks, healing caps, and cast payments still share the same rules.
+	fight = Rules.new()
+	fight.heroes[0].level = 10
+	fight.heroes[3].level = 10
+	fight.heroes[4].level = 10
+	assert(fight.start([0, 3, 4]))
+	for id in fight.participants:
+		fight.cooldowns[id] = 1000.0
+		fight.pauses[id] = 1000.0
+	fight.positions[0] = Vector2.ZERO
+	fight.positions[3] = Vector2(40, 0)
+	fight.positions[4] = Vector2(-40, 0)
+	fight.targets[0] = 3
+	event = _cast(fight, 0)
+	assert(event.hits[0].damage == 50 and event.tip == 10 and fight.coins == 10)
+	fight.health[3] = 100
+	assert(_cast(fight, 3).healing == 61 and fight.health[3] == 161)
+	fight.health[3] = 200
+	assert(_cast(fight, 3).healing == 3 and fight.health[3] == 203)
+	fight.health[0] = 7
+	fight.health[4] = 100
+	event = _cast(fight, 4)
+	assert(event.hits[0].damage == 7 and event.healing == 7 and fight.health[4] == 107)
+	assert(fight.coins == 40)
+
+
+func _check_arena_income() -> void:
+	var fight := Rules.new()
+	fight.heroes[0].level = 5
+	fight.heroes[1].level = 6
+	fight.heroes[2].level = 10
+	fight.heroes[4].level = 10
+	fight.heroes[4].wins = 100
+	assert(fight.income_breakdown([0, 1, 2]) == {"base": 100, "levels": 90, "victories": 0, "multiplier": 1.0, "guaranteed": 190})
+	assert(fight.income_for([0, 0, 1]) == 0 and fight.income_breakdown([0, 1]).is_empty())
+	fight.coins = 499
+	assert(not fight.upgrade_arena() and fight.coins == 499 and fight.arena_capacity() == 100)
+	fight.coins = 500
+	assert(fight.upgrade_arena() and fight.coins == 0 and fight.arena_capacity() == 150)
+	assert(fight.income_for([0, 1, 2]) == 285 and fight.arena_upgrade_cost() == 1000)
+	fight.heroes[0].wins = 1
+	assert(fight.income_for([0, 1, 2]) == 293, "Round the final capacity-scaled payout once, including half coins.")
+	fight.coins = 999
+	assert(not fight.upgrade_arena() and fight.coins == 999 and fight.arena_capacity() == 150)
+	fight.coins = 1000
+	assert(fight.upgrade_arena() and fight.coins == 0 and fight.arena_capacity() == 200)
+	assert(fight.income_for([0, 1, 2]) == 390)
+	fight.heroes[0].wins = 0
+	assert(fight.income_for([0, 1, 2]) == 380)
+	fight.coins = 10000
+	assert(fight.arena_upgrade_cost() == 0 and not fight.upgrade_arena() and fight.coins == 10000)
+	# Expansion during combat preserves the paid quote, geometry, and fighter stats.
+	fight = _battle()
+	var positions: Dictionary = fight.positions.duplicate()
+	var stats: Dictionary = fight.battle_stats.duplicate(true)
+	fight.coins = 500
+	assert(fight.upgrade_arena())
+	assert(fight.payout == 100 and fight.positions == positions and fight.battle_stats == stats)
+	for id in fight.participants:
+		fight.cooldowns[id] = 0.0
+		fight.pauses[id] = 0.0
+	_finish(fight)
+	assert(fight.coins == fight.settled_income + fight.crowd_tips and fight.payout == 100)
+	assert(fight.start([0, 1, 2]) and fight.arena_capacity() == 150 and fight.payout == 158)
+
+
+func _check_excitement() -> void:
+	var fight := _battle()
+	assert(fight.excitement == 0.0 and fight.elapsed == 0.0 and fight.settled_income == 0)
+	for delta in [0.0, -1.0, INF, NAN]:
+		assert(fight.advance(delta).is_empty() and fight.excitement == 0.0 and fight.elapsed == 0.0)
+	for delta in [0.25, 0.75, 18.5, 0.5, 20.0]:
+		assert(fight.advance(delta).is_empty())
+		assert(is_equal_approx(fight.excitement, minf(fight.elapsed, 20.0)))
+	assert(fight.excitement == 20.0 and fight.coins == 0)
+	for entry in [[0.0, 100], [39.999, 100], [40.0, 125], [79.999, 125], [80.0, 250], [100.0, 250]]:
+		assert(fight.income_with_excitement(entry[0]) == entry[1])
+	fight.payout = 285
+	assert(fight.income_with_excitement(80.0) == 713, "Round the boosted payout, including half coins.")
+	# A waiting skill contributes only elapsed time; normal hits add no excitement.
+	fight = _battle()
+	fight.positions[0] = Vector2(-200, 0)
+	fight.mana[0] = 100
+	assert(fight.advance(DT).is_empty() and is_equal_approx(fight.excitement, DT))
+	fight.positions[0] = Vector2.ZERO
+	var event: Dictionary = fight.advance(DT)[0]
+	assert(event.excitement_gain == 8.0 and is_equal_approx(event.excitement, 8.0 + 2.0 * DT))
+	fight.cooldowns[0] = 0.0
+	event = fight.advance(DT)[0]
+	assert(event.excitement_gain == 0.0 and is_equal_approx(event.excitement, 8.0 + 3.0 * DT))
+	# Same-frame casts retain ordered score snapshots, one increment each.
+	fight = _battle()
+	fight.mana[0] = 100
+	fight.mana[1] = 100
+	var events: Array[Dictionary] = fight.advance(DT)
+	assert(events.size() == 2 and is_equal_approx(events[0].excitement, 8.0 + DT))
+	assert(is_equal_approx(events[1].excitement, 16.0 + DT) and fight.coins == 20)
+	# Full-health healing counts, the bar caps at 100, and tips remain flat.
+	fight = _battle([0, 3, 4])
+	for i in range(13):
+		event = _cast(fight, 3)
+		assert(event.healing == 0 and event.tip == 10)
+	assert(fight.excitement == 100.0 and event.excitement_gain < 8.0 and fight.coins == 130)
+	assert(_cast(fight, 3).excitement_gain == 0.0 and fight.coins == 140)
+	# A final Sweep crosses a tier before settlement, pays once, and cancels a ready victim.
+	for score in [32.0, 72.0]:
+		fight = _battle()
+		fight.excitement = score
+		fight.elapsed = 20.0
+		fight.positions[2] = Vector2(80, 0)
+		fight.health[0] = 21
+		fight.health[2] = 21
+		fight.mana[1] = 100
+		fight.mana[2] = 100
+		fight.pending_casts.assign([1, 2])
+		events = fight.advance(DT)
+		var expected := 125 if score == 32.0 else 250
+		assert(events.size() == 1 and events[0].winner == 1 and events[0].excitement_gain == 8.0)
+		assert(fight.excitement == score + 8.0 and fight.settled_income == expected)
+		assert(fight.coins == expected + 10 and fight.crowd_tips == 10 and fight.pending_casts.is_empty())
+		var elapsed: float = fight.elapsed
+		assert(fight.advance(30.0).is_empty() and fight.excitement == score + 8.0 and fight.elapsed == elapsed)
+		assert(fight.coins == expected + 10 and fight.heroes[1].wins == 1)
+		var lineup: Array[int] = [0, 1, 2]
+		assert(fight.start(lineup) and fight.excitement == 0.0 and fight.elapsed == 0.0)
+		assert(fight.settled_income == 0 and fight.crowd_tips == 0 and fight.coins == expected + 10)
+	# A normal final hit cannot cash in a newly ready skill or its excitement.
+	fight = _battle()
+	fight.excitement = 32.0
+	fight.elapsed = 20.0
+	fight.health[1] = 1
+	fight.health[2] = 0
+	fight.mana[0] = 75
+	fight.cooldowns[0] = 0.0
+	assert(fight.advance(DT).size() == 1 and fight.excitement == 32.0 and fight.coins == 100)
+	print("PASS: excitement timing, thresholds, capped gains, ordered casts, final-cast bonus, cancellation, and one-time settlement.")
+
+
 func _check_ui() -> void:
 	var ui = load("res://game/main.tscn").instantiate()
 	root.add_child(ui)
 	ui.set_physics_process(false)
 	await process_frame
 	assert(ui.cards.size() == 5 and ui.selected.size() == 3 and ui.cards[3].disabled)
+	ui.get_node("%HeroesButton").pressed.emit()
 	ui.cards[0].pressed.emit()
 	assert(ui.selected.size() == 2 and ui.get_node("%Start").disabled)
 	ui.cards[3].pressed.emit()
 	assert(ui.selected == [1, 2, 3])
+	assert(ui.card_details[1].level.text == "LV 1  /  0/30 XP")
+	assert(ui.card_details[1].skill.text == "Sweep / 10 coins")
+	# A near-level-up booking exercises the locked payout and next fight's level bonus.
+	for id in ui.selected:
+		ui.fight.heroes[id].xp = 20
+	ui._refresh()
 	await _capture("booking")
 	ui.get_node("%Start").pressed.emit()
 	assert(ui.fight.active and ui.auto_fight and ui.get_node("%Tick").is_stopped())
@@ -354,7 +574,7 @@ func _check_ui() -> void:
 	ui._physics_process(DT)
 	# No frame or animation wait: payment and feedback happen on this call.
 	assert(ui.fight.coins == 10 and ui.get_node("%Coins").text == "10 coins")
-	assert(ui.get_node("%Tips").text == "CROWD TIPS  +10")
+	assert(ui.get_node("%Tips").text == "10 tips paid")
 	assert(ui.fighters[3].mana.value == 0 and ui.fighters[3].bar.value == 112)
 	assert(ui.get_node("%Stage").has_node("SkillTip"))
 	await _capture("skill-tip")
@@ -374,19 +594,38 @@ func _check_ui() -> void:
 		ui.fight.cooldowns[id] = 0.0
 		ui.fight.pauses[id] = 0.0
 	_finish_ui(ui)
-	assert(ui.fight.completed == 1 and ui.fight.coins == 100 + ui.fight.crowd_tips)
+	assert(ui.fight.completed == 1 and ui.fight.coins == ui.fight.settled_income + ui.fight.crowd_tips)
 	assert(ui.get_node("%Tick").is_stopped() and not ui.get_node("%Start").disabled)
-	assert(ui.get_node("%Income").text == "Guaranteed: 105 coins + skill tips")
-	assert("Tips already paid" in ui.get_node("%Commentary").text)
+	assert(ui.get_node("%Income").text == "120 coins")
+	assert("+15 hero levels" in ui.get_node("%Formula").text)
+	assert("Tips already paid" in ui.get_node("%Commentary").tooltip_text)
+	assert("Level up:" in ui.get_node("%Status").text and "XP" in ui.get_node("%Hint").text)
+	for id in ui.selected:
+		assert(ui.fight.heroes[id].level == 2)
+		assert("LV 2" in ui.card_details[id].level.text and "10 coins" in ui.card_details[id].skill.text)
+		assert(ui.card_details[id].xp.value == ui.fight.heroes[id].xp)
+		assert(ui.fighters[id].bar.max_value == ui.fight.battle_stats[id].health)
 	await create_timer(0.85).timeout
 	for id in ui.fighters:
 		if ui.fight.health[id] == 0:
 			assert(ui.fighters[id].sprite.modulate == Color("515c68"))
 	await _capture("winner")
 	ui.get_node("%Start").pressed.emit()
-	assert(ui.effects.is_empty() and ui.get_node("%Tips").text == "CROWD TIPS  +0")
+	assert(ui.effects.is_empty() and ui.get_node("%Tips").text == "0 tips paid")
 	for id in ui.selected:
 		assert(ui.fighters[id].mana.value == 0)
+		assert(ui.fighters[id].bar.max_value == ui.fight.stats_for(id).health)
+	var bank: int = ui.fight.coins
+	for id in ui.selected:
+		ui.fight.cooldowns[id] = 1000.0
+	ui.fight.mana[3] = 100
+	ui._physics_process(DT)
+	assert(ui.fight.coins == bank + 10 and ui.get_node("%Coins").text == "%d coins" % (bank + 10))
+	assert(ui.get_node("%Tips").text == "10 tips paid")
+	assert(ui.get_node("%Stage/SkillTip").get_child(1).text == "+10")
+	await _capture("level-tip")
+	for id in ui.selected:
+		ui.fight.cooldowns[id] = 0.0
 	_finish_ui(ui)
 	assert(not ui.get_node("%Tick").is_stopped())
 	ui.get_node("%Start").pressed.emit()
@@ -396,9 +635,188 @@ func _check_ui() -> void:
 	_finish_ui(ui)
 	ui._intermission_finished()
 	assert(ui.fight.active and ui.fight.completed == 3)
+	ui.fight.heroes[4].level = 10
+	ui._refresh()
+	assert(ui.card_details[4].level.text == "LV 10  /  MAX" and ui.card_details[4].xp.value == 1)
+	assert("10 coins" in ui.card_details[4].skill.text)
 	ui.queue_free()
 	await process_frame
-	print("PASS: UI movement/depth, immediate money/popups, Sweep, resets, settlement, and stop/rebook/repeat.")
+	print("PASS: UI XP/levels, flat cast tips, movement, resets, settlement, and stop/rebook/repeat.")
+
+
+func _check_arena_ui() -> void:
+	var ui = load("res://game/main.tscn").instantiate()
+	root.add_child(ui)
+	ui.set_physics_process(false)
+	await process_frame
+	ui.fight.heroes[0].level = 5
+	ui.fight.heroes[1].level = 6
+	ui.fight.heroes[2].level = 10
+	ui._show_fighters(ui.selected)
+	ui._refresh()
+	assert(ui.get_node("%Capacity").text == "100 seats" and ui.get_node("%Expand").disabled)
+	assert(ui.get_node("%Income").text == "190 coins" and "+90 hero levels" in ui.get_node("%Formula").text)
+	ui.get_node("%ArenaButton").pressed.emit()
+	await _capture("arena-booking")
+	ui.fight.coins = 500
+	ui._refresh()
+	assert(not ui.get_node("%Expand").disabled)
+	ui.get_node("%Expand").pressed.emit()
+	assert(ui.fight.coins == 0 and ui.get_node("%Coins").text == "0 coins")
+	assert(ui.get_node("%Income").text == "285 coins" and ui.get_node("%Capacity").text == "150 seats")
+	assert(ui.get_node("%Expand").disabled and "1000 coins" in ui.get_node("%Expand").text)
+	await _capture("arena-upgrade")
+	ui.get_node("%Start").pressed.emit()
+	ui.get_node("%Start").pressed.emit()
+	ui.fight.coins = 1000
+	ui._refresh()
+	ui.get_node("%Expand").pressed.emit()
+	assert(ui.fight.payout == 285 and ui.get_node("%Income").text == "380 coins")
+	assert("285 base" in ui.get_node("%Status").text)
+	assert(ui.get_node("%Expand").disabled and ui.get_node("%Expand").text == "Fully expanded")
+	assert(ui.get_node("%Capacity").text == "200 seats" and ui.fight.coins == 0)
+	ui._expand_arena()
+	assert(ui.fight.coins == 0 and ui.fight.arena_capacity() == 200)
+	await _capture("arena-expanded")
+	_finish_ui(ui)
+	assert(ui.fight.coins == ui.fight.settled_income + ui.fight.crowd_tips and ui.get_node("%Income").text == "390 coins")
+	# Buying an upgrade becomes possible immediately when a tip crosses its price.
+	ui.fight.arena_tier = 0
+	ui.fight.coins = 490
+	ui.get_node("%Start").pressed.emit()
+	for id in ui.selected:
+		ui.fight.cooldowns[id] = 1000.0
+		ui.fight.pauses[id] = 1000.0
+	ui.fight.positions[0] = Vector2.ZERO
+	ui.fight.positions[1] = Vector2(40, 0)
+	ui.fight.positions[2] = Vector2(200, 0)
+	ui.fight.mana[0] = 100
+	assert(ui.get_node("%Expand").disabled)
+	ui._physics_process(DT)
+	assert(ui.fight.coins == 500 and not ui.get_node("%Expand").disabled)
+	ui.queue_free()
+	await process_frame
+	print("PASS: arena income breakdown, purchasing, max capacity, quote snapshots, and instant affordability.")
+
+
+func _check_excitement_ui() -> void:
+	var ui = load("res://game/main.tscn").instantiate()
+	root.add_child(ui)
+	ui.set_physics_process(false)
+	await process_frame
+	assert(ui.get_node("%Excitement").value == 0 and "NORMAL" in ui.get_node("%ExcitementLabel").text)
+	assert(ui.get_node("%Multiplier").text == "x1.00")
+	ui.get_node("%Start").pressed.emit()
+	for id in ui.selected:
+		ui.fight.cooldowns[id] = 1000.0
+		ui.fight.pauses[id] = 1000.0
+	ui.fight.excitement = 39.5
+	ui.fight.elapsed = 19.5
+	ui._physics_process(0.5)
+	assert(ui.get_node("%Excitement").value == 40.0 and ui.displayed_tier == 1)
+	assert("EXCITED" in ui.get_node("%ExcitementLabel").text and ui.get_node("%Multiplier").text == "x1.25")
+	assert(ui.get_node("%FightIncome").text == "125 at finish" and ui.fight.coins == 0)
+	await _capture("excitement-excited")
+	ui.fight.positions[0] = Vector2(-40, 0)
+	ui.fight.positions[1] = Vector2.ZERO
+	ui.fight.positions[2] = Vector2(80, 0)
+	ui.fight.excitement = 72.0
+	ui.fight.mana[1] = 100
+	ui._physics_process(DT)
+	assert(ui.get_node("%Excitement").value == 80.0 and ui.displayed_tier == 2)
+	assert("WILD" in ui.get_node("%ExcitementLabel").text and ui.get_node("%Multiplier").text == "x2.50")
+	assert(ui.get_node("%FightIncome").text == "250 at finish")
+	assert(ui.get_node("%Coins").text == "10 coins" and "+8 excitement" in ui.get_node("%Commentary").text)
+	assert(ui.get_node("%Stage/SkillTip").get_child(2).text == "+8 excitement")
+	await _capture("excitement-wild")
+	ui.fight.health[0] = 21
+	ui.fight.health[2] = 21
+	ui.fight.mana[1] = 100
+	ui._physics_process(DT)
+	assert(ui.fight.coins == 270 and ui.get_node("%Coins").text == "270 coins")
+	assert("100 base x2.50 = 250" in ui.get_node("%Commentary").tooltip_text)
+	assert("20 tips paid = 270 earned" in ui.get_node("%Commentary").text)
+	assert(ui.get_node("%FightIncome").text == "250 paid / last fight")
+	await _capture("excitement-result")
+	ui.get_node("%Tick").stop()
+	ui._intermission_finished()
+	assert(ui.fight.active and ui.get_node("%Excitement").value == 0 and ui.displayed_tier == 0)
+	assert(ui.get_node("%ExcitementMeter").modulate == Color.WHITE)
+	assert(ui.get_node("%FightIncome").text == "105 at finish")
+	assert(not ui.get_node("%Stage").has_node("SkillTip"))
+	ui.queue_free()
+	await process_frame
+	print("PASS: excitement bar, time/cast tier feedback, projected income, result breakdown, and repeat reset.")
+
+
+func _check_promenade_ui() -> void:
+	var ui = load("res://game/main.tscn").instantiate()
+	root.add_child(ui)
+	ui.set_physics_process(false)
+	await process_frame
+	assert(not ui.get_node("%HeroesDrawer").visible and not ui.get_node("%ArenaDrawer").visible)
+	assert(not ui.get_node("%Dismiss").visible)
+	await _capture("promenade")
+	ui.get_node("%HeroesButton").pressed.emit()
+	assert(ui.get_node("%HeroesDrawer").visible and ui.get_node("%Dismiss").visible)
+	await process_frame
+	await process_frame
+	assert(ui.get_node("%Scroll").get_global_rect().encloses(ui.cards[4].get_global_rect()), "All five heroes fit without scrolling at default size.")
+	assert(ui.get_viewport().gui_get_focus_owner() == ui.get_node("%CloseHeroes"))
+	ui.cards[0].pressed.emit()
+	assert(ui.selected.size() == 2 and ui.get_node("%Start").disabled)
+	assert(ui.get_node("%FightIncome").text == "Book three heroes")
+	ui.cards[4].pressed.emit()
+	assert(ui.selected == [1, 2, 4] and not ui.get_node("%Start").disabled)
+	assert(ui.get_node("%HeroesButton").text == "Heroes  3/3")
+	await _capture("promenade-heroes")
+	ui.get_node("%ArenaButton").pressed.emit()
+	assert(not ui.get_node("%HeroesDrawer").visible and ui.get_node("%ArenaDrawer").visible)
+	ui.fight.coins = 1500
+	ui._refresh_money()
+	ui.get_node("%Expand").pressed.emit()
+	ui.get_node("%Expand").pressed.emit()
+	assert(ui.fight.arena_capacity() == 200 and ui.fight.coins == 0)
+	await _capture("promenade-arena")
+	ui.get_node("%Dismiss").pressed.emit()
+	assert(not ui.get_node("%ArenaDrawer").visible and not ui.get_node("%Dismiss").visible)
+	assert(ui.get_viewport().gui_get_focus_owner() == ui.get_node("%ArenaButton"))
+	ui.get_node("%HeroesButton").pressed.emit()
+	var escape := InputEventKey.new()
+	escape.keycode = KEY_ESCAPE
+	escape.pressed = true
+	ui._unhandled_key_input(escape)
+	assert(not ui.get_node("%HeroesDrawer").visible)
+	ui.get_node("%Start").pressed.emit()
+	ui.get_node("%HeroesButton").pressed.emit()
+	assert(ui.get_node("%HeroesDrawer").visible and ui.cards[1].disabled)
+	var start: Vector2 = ui.fight.positions[1]
+	ui._physics_process(1.0 / 60.0)
+	assert(ui.fight.positions[1] != start, "Inspecting a panel must not pause idle combat.")
+	ui.get_node("%CloseHeroes").pressed.emit()
+	assert(not ui.get_node("%Dismiss").visible)
+	ui.fight.excitement = 80.0
+	ui._refresh_excitement(80.0)
+	assert(ui.cheer == 1.0 and ui.get_node("%Multiplier").text == "x2.50")
+	ui._process(1.0)
+	assert(ui.cheer < 1.0)
+	# Fit the HUD and both popovers at minimum size and on a larger window.
+	for viewport_size in [Vector2i(960, 420), Vector2i(1600, 560)]:
+		root.size = viewport_size
+		await process_frame
+		await process_frame
+		for name in ["Bank", "ExcitementMeter", "Earnings", "Footer", "Start", "HeroesDrawer", "ArenaDrawer"]:
+			var rect: Rect2 = ui.get_node("%" + name).get_global_rect()
+			assert(Rect2(Vector2.ZERO, Vector2(root.size)).encloses(rect), "UI spills outside window: " + name)
+		assert(ui.get_node("%Bank").get_global_rect().end.x < ui.get_node("%ExcitementMeter").get_global_rect().position.x)
+		assert(ui.get_node("%ExcitementMeter").get_global_rect().end.x < ui.get_node("%Earnings").get_global_rect().position.x)
+		ui.get_node("%ArenaButton").pressed.emit()
+		await _capture("promenade-%d" % viewport_size.x)
+		ui._close_drawers()
+	root.size = Vector2i(1280, 420)
+	ui.queue_free()
+	await process_frame
+	print("PASS: promenade panels, keyboard/outside close, selection, upgrades, live combat, crowd feedback, and 960/1600px layouts.")
 
 
 func _finish_ui(ui: Control) -> void:
