@@ -1,6 +1,7 @@
 extends RefCounted
 ## Session-only fight rules. UI and animation never decide rewards.
 
+const REST_DURATION := 8.0
 const BASE_INCOME := 100
 const COINS_PER_VICTORY := 5
 const COINS_PER_LEVEL := 5
@@ -47,6 +48,7 @@ var heroes: Array[Dictionary] = [
 	{"name": "Rook", "unit": "warrior", "red": true, "level": 1, "xp": 0, "health": 105, "attack": 12, "wins": 0,
 		"ranged": false, "skill": {"name": "Drain", "kind": "drain", "power": 1.5, "description": "Deal 1.5x attack damage within 45 units. Heal by actual damage dealt."}},
 ]
+var rest_remaining: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0]
 var rng := RandomNumberGenerator.new()
 var participants: Array[int] = []
 var health: Dictionary = {}
@@ -81,6 +83,14 @@ func valid_lineup(lineup: Array[int]) -> bool:
 			return false
 		unique[id] = true
 	return true
+
+
+func lineup_rest(lineup: Array[int]) -> float:
+	var remaining := 0.0
+	for id in lineup:
+		if id >= 0 and id < rest_remaining.size():
+			remaining = maxf(remaining, rest_remaining[id])
+	return remaining
 
 
 func income_for(lineup: Array[int]) -> int:
@@ -154,7 +164,7 @@ func _award_xp(id: int, amount: int) -> Dictionary:
 
 
 func start(lineup: Array[int]) -> bool:
-	if active or not valid_lineup(lineup):
+	if active or not valid_lineup(lineup) or lineup_rest(lineup) > 0.0:
 		return false
 	participants = lineup.duplicate()
 	for state in [health, mana, battle_stats, positions, velocities, targets, target_timers, cooldowns, pauses]:
@@ -196,7 +206,11 @@ func survivors() -> Array[int]:
 
 func advance(delta: float) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
-	if not active or delta <= 0.0 or not is_finite(delta):
+	if delta <= 0.0 or not is_finite(delta):
+		return events
+	for id in range(rest_remaining.size()):
+		rest_remaining[id] = maxf(0.0, rest_remaining[id] - delta)
+	if not active:
 		return events
 	var time_gain := minf(delta, maxf(0.0, EXCITEMENT_TIME_CAP - elapsed))
 	elapsed += delta
@@ -344,6 +358,7 @@ func _act(attacker: int, casting: bool) -> Dictionary:
 		completed += 1
 		event.winner = last_winner
 		for id in participants:
+			rest_remaining[id] = REST_DURATION
 			velocities[id] = Vector2.ZERO
 			event.progression.append(_award_xp(id, XP_PER_FIGHT + (XP_WIN_BONUS if id == last_winner else 0)))
 	# Snapshots let the UI consume several same-frame actions in their reward order.

@@ -12,7 +12,7 @@ A Godot 4.6.3 idle arena prototype. Open `project.godot` and press **F5** to pla
 - Every skill cast pays **10 coins immediately**, at every hero level and arena size. The bank pulses, a gold +10 floats above the caster, and the crowd-tip total updates. The final breakdown includes those tips without paying them twice.
 - Every participant earns **10 XP** after a fight, with **10 extra XP for the winner**. Levels improve HP, attack, and base booking income. Roster cards show level, XP progress, current stats, and coins per skill.
 - Open **Arena** for seating capacity, the next expansion, and the next booking's base pay, level bonus, victory bonus, and capacity multiplier. Spend earned coins on **Expand** to add seats and a larger covered stand.
-- **Stop after this fight** finishes and pays the current fight, then unlocks the roster. During the three-second break it stops immediately.
+- **Stop after this fight** finishes and pays the current fight, then unlocks the roster. During recovery it cancels the queued fight immediately.
 
 Coins, victories, levels, XP, and arena expansion last for the current session. This demo uses a compact **1280×420** normal window, resizable from **960×420**. Desktop transparency/docking, saving, equipment, recruitment, and hero rarity are not implemented. Fight durations vary with combat; the preview shows base coins per fight before excitement and skill tips, not coins per minute.
 
@@ -39,6 +39,12 @@ No generated sprites are required for this pass. The arena floor, stands, canopy
 - **Fight income = round(locked base income × final excitement multiplier)**. The finishing skill contributes before settlement. For a 190-coin base, the three tiers pay 190, 238, or 475 coins.
 - Skill tips remain **10 coins at cast start**. They are neither multiplied nor paid again at settlement. The result shows base × multiplier, fight income, already-paid tips, and the combined total.
 - The bar retains the result during the break and resets for the next fight. Rarity bonuses are deferred until heroes have a rarity attribute; levels continue to raise base income.
+
+## Hero recovery
+
+Every fight participant, including the winner, rests for **8 seconds after settlement**. Roster cards show Ready or a rest countdown. Recovery continues while the arena is closed, while town panels are open, and during other fights; it grants no XP, income, or excitement. Progress remains session-only, without offline recovery.
+
+Automatic repeats retain your booked trio and resume only when everyone is ready. The three-second intermission runs concurrently with recovery, so the total normal wait is eight seconds. Opening the arena while selected heroes are resting queues a fight; **Cancel next fight** stops the queue without resetting recovery. Heroes start their next fight at full HP and zero mana. Houses and recovery-speed upgrades are deferred.
 
 ## Hero levels and earnings
 

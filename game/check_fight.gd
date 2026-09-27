@@ -18,6 +18,7 @@ func _run() -> void:
 	_check_progression()
 	_check_arena_income()
 	_check_excitement()
+	_check_recovery()
 	var fight := Rules.new()
 	for invalid in [[0, 1], [0, 0, 1], [-1, 1, 2], [0, 1, 5], [0, 1, 2, 3]]:
 		var ids: Array[int] = []
@@ -37,6 +38,7 @@ func _run() -> void:
 	var bank := fight.coins
 	assert(fight.heroes[4].wins == 99 and fight.income_for([0, 1, 2]) == 185)
 	assert(fight.advance(DT).is_empty() and fight.coins == bank)
+	fight.advance(Rules.REST_DURATION)
 	assert(fight.start([0, 1, 2]))
 	assert(fight.crowd_tips == 0 and fight.pending_casts.is_empty())
 	for id in fight.participants:
@@ -52,6 +54,7 @@ func _run() -> void:
 				var sample := Rules.new()
 				for seed_value in range(20):
 					sample.rng.seed = seed_value
+					sample.advance(Rules.REST_DURATION)
 					assert(sample.start([a, b, c]))
 					longest = maxf(longest, _finish(sample))
 					tiers[Rules.excitement_tier(sample.excitement)] += 1
@@ -74,6 +77,7 @@ func _run() -> void:
 	await _check_arena_ui()
 	await _check_excitement_ui()
 	await _check_promenade_ui()
+	await _check_recovery_ui()
 	quit()
 
 
@@ -392,6 +396,7 @@ func _check_progression() -> void:
 	assert(fight.battle_stats[1] == {"health": 132, "attack": 21})
 	var records: Array = fight.heroes.duplicate(true)
 	assert(fight.advance(DT).is_empty() and fight.heroes == records and fight.coins == 110)
+	fight.advance(Rules.REST_DURATION)
 	assert(fight.start([0, 1, 2]))
 	assert(fight.battle_stats[1] == {"health": 139, "attack": 22})
 	assert(fight.health[1] == 139 and fight.heroes[1].xp == 10 and fight.payout == 120)
@@ -458,6 +463,7 @@ func _check_arena_income() -> void:
 		fight.pauses[id] = 0.0
 	_finish(fight)
 	assert(fight.coins == fight.settled_income + fight.crowd_tips and fight.payout == 100)
+	fight.advance(Rules.REST_DURATION)
 	assert(fight.start([0, 1, 2]) and fight.arena_capacity() == 150 and fight.payout == 158)
 
 
@@ -611,6 +617,8 @@ func _check_ui() -> void:
 			assert(ui.fighters[id].sprite.modulate == Color("515c68"))
 	await _capture("winner")
 	ui.get_node("%Start").pressed.emit()
+	assert(not ui.fight.active and ui.auto_fight)
+	ui._physics_process(Rules.REST_DURATION)
 	assert(ui.effects.is_empty() and ui.get_node("%Tips").text == "0 tips paid")
 	for id in ui.selected:
 		assert(ui.fighters[id].mana.value == 0)
@@ -632,8 +640,10 @@ func _check_ui() -> void:
 	ui._intermission_finished()
 	assert(not ui.fight.active and not ui.auto_fight and ui.get_node("%Tick").is_stopped())
 	ui.get_node("%Start").pressed.emit()
+	ui._physics_process(Rules.REST_DURATION)
 	_finish_ui(ui)
 	ui._intermission_finished()
+	ui._physics_process(Rules.REST_DURATION)
 	assert(ui.fight.active and ui.fight.completed == 3)
 	ui.fight.heroes[4].level = 10
 	ui._refresh()
@@ -684,6 +694,7 @@ func _check_arena_ui() -> void:
 	ui.fight.arena_tier = 0
 	ui.fight.coins = 490
 	ui.get_node("%Start").pressed.emit()
+	ui._physics_process(Rules.REST_DURATION)
 	for id in ui.selected:
 		ui.fight.cooldowns[id] = 1000.0
 		ui.fight.pauses[id] = 1000.0
@@ -740,6 +751,7 @@ func _check_excitement_ui() -> void:
 	await _capture("excitement-result")
 	ui.get_node("%Tick").stop()
 	ui._intermission_finished()
+	ui._physics_process(Rules.REST_DURATION)
 	assert(ui.fight.active and ui.get_node("%Excitement").value == 0 and ui.displayed_tier == 0)
 	assert(ui.get_node("%ExcitementMeter").modulate == Color.WHITE)
 	assert(ui.get_node("%FightIncome").text == "105 at finish")
@@ -832,3 +844,68 @@ func _capture(label: String) -> void:
 		return
 	await RenderingServer.frame_post_draw
 	assert(root.get_texture().get_image().save_png("res://.godot/fight-%s.png" % label) == OK)
+
+
+func _check_recovery() -> void:
+	var fight := Rules.new()
+	fight = _battle()
+	fight.positions[2] = Vector2(80, 0)
+	fight.health[0] = 21
+	fight.health[2] = 21
+	_cast(fight, 1)
+	assert(fight.rest_remaining == [8.0, 8.0, 8.0, 0.0, 0.0])
+	assert(fight.valid_lineup([0, 3, 4]) and not fight.start([0, 3, 4]))
+	assert(fight.lineup_rest([0, 3, 4]) == 8.0 and fight.lineup_rest([3, 4]) == 0.0)
+	var bank: int = fight.coins
+	var records: Array = fight.heroes.duplicate(true)
+	var elapsed: float = fight.elapsed
+	var score: float = fight.excitement
+	for invalid in [0.0, -1.0, INF, NAN]:
+		assert(fight.advance(invalid).is_empty() and fight.lineup_rest([0, 1, 2]) == 8.0)
+	assert(fight.advance(7.5).is_empty() and fight.lineup_rest([0, 1, 2]) == 0.5)
+	assert(not fight.start([0, 1, 2]))
+	assert(fight.advance(0.5).is_empty() and fight.lineup_rest([0, 1, 2]) == 0.0)
+	assert(fight.coins == bank and fight.heroes == records and fight.elapsed == elapsed and fight.excitement == score)
+	fight.rest_remaining[4] = 4.0
+	assert(fight.start([0, 1, 2]) and fight.rest_remaining[4] == 4.0)
+	for id in fight.participants:
+		assert(fight.health[id] == fight.stats_for(id).health and fight.mana[id] == 0)
+	fight.advance(0.5)
+	assert(fight.rest_remaining[4] == 3.5)
+	print("PASS: individual recovery, invalid deltas, start guards, expiry, inactive rewards, and bench recovery during combat.")
+
+
+func _check_recovery_ui() -> void:
+	var ui = load("res://game/main.tscn").instantiate()
+	root.add_child(ui)
+	ui.set_physics_process(false)
+	await process_frame
+	ui.get_node("%Start").pressed.emit()
+	_finish_ui(ui)
+	assert(ui.fight.lineup_rest(ui.selected) == 8.0 and not ui.get_node("%Tick").is_stopped())
+	assert("Resting" in ui.card_details[0].rest.text and "Ready" in ui.card_details[3].rest.text)
+	ui.get_node("%HeroesButton").pressed.emit()
+	ui._physics_process(3.0)
+	ui._intermission_finished()
+	assert(not ui.fight.active and ui.fight.lineup_rest(ui.selected) == 5.0)
+	ui.get_node("%Start").pressed.emit()
+	assert(not ui.auto_fight and ui.get_node("%Tick").is_stopped())
+	ui._physics_process(2.0)
+	assert(ui.fight.lineup_rest(ui.selected) == 3.0)
+	ui.get_node("%Start").pressed.emit()
+	assert(ui.auto_fight and not ui.fight.active and "3s" in ui.get_node("%Start").text)
+	ui._physics_process(2.5)
+	assert(not ui.fight.active)
+	ui._physics_process(0.5)
+	assert(ui.fight.active and ui.selected == [0, 1, 2])
+	# Even an artificially longer intermission must finish before starting.
+	ui.fight.active = false
+	ui.fight.rest_remaining.assign([0.0, 0.0, 0.0, 0.0, 0.0])
+	ui.get_node("%Tick").start(3.0)
+	ui._physics_process(0.5)
+	assert(not ui.fight.active)
+	ui._intermission_finished()
+	assert(ui.fight.active)
+	ui.queue_free()
+	await process_frame
+	print("PASS: recovery countdown, concurrent intermission, queued booking, stop/rebook, open panels, and retained trio.")

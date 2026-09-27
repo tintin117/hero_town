@@ -172,7 +172,8 @@ func _build_roster() -> void:
 		nameplate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		heading.add_child(nameplate)
 		var details := {"level": _label("", 11, GOLD), "stats": _label("", 11),
-			"skill": _label("", 11, Color("b2c9e7")), "xp": ProgressBar.new()}
+			"skill": _label("", 11, Color("b2c9e7")), "rest": _label("Ready", 11, Color("a5ddc4")), "xp": ProgressBar.new()}
+		heading.add_child(details.rest)
 		heading.add_child(details.level)
 		var info := HBoxContainer.new()
 		info.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -241,9 +242,21 @@ func _refresh() -> void:
 	%Formula.text = "%d base\n+%d hero levels\n+%d career victories\nx%.1f arena capacity" % [quote.base, quote.levels, quote.victories, quote.multiplier] if not quote.is_empty() else "Book a full trio to see\nthe income breakdown."
 	%Formula.tooltip_text = "Base income = round((100 + 5 x sum(level - 1) + 5 x total wins) x seats / 100).\nBase locked at fight start; later upgrades and level-ups affect the next booking.\nFinal fight income = round(base income x excitement multiplier). Tips are paid separately."
 	%Start.disabled = selected.size() != 3 or (fight.active and not auto_fight)
-	%Start.text = "Stop after this fight" if auto_fight else "Open arena"
+	%Start.text = ("Stop after this fight" if fight.active else "Cancel next fight") if auto_fight else "Open arena"
 	if fight.active and not auto_fight:
 		%Start.text = "Finishing fight..."
+	_refresh_recovery()
+
+
+func _refresh_recovery() -> void:
+	for id in range(card_details.size()):
+		var remaining: float = fight.rest_remaining[id]
+		card_details[id].rest.text = "Resting · %ds  " % ceili(remaining) if remaining > 0.0 else "Ready  "
+		card_details[id].rest.add_theme_color_override("font_color", GOLD if remaining > 0.0 else Color("a5ddc4"))
+	if auto_fight and not fight.active:
+		var remaining := maxf(fight.lineup_rest(selected), %Tick.time_left)
+		%Start.text = "Cancel / next in %ds" % ceili(remaining)
+		%Start.tooltip_text = "Each participant rests for 8 seconds after a fight. The 3-second intermission overlaps recovery."
 
 
 func _refresh_money() -> void:
@@ -312,7 +325,7 @@ func _toggle_running() -> void:
 			%Status.text = "Arena closed / change your trio"
 	elif not fight.active and fight.valid_lineup(selected):
 		auto_fight = true
-		_begin_fight()
+		_try_begin_fight()
 	_refresh()
 
 
@@ -334,15 +347,23 @@ func _begin_fight() -> void:
 	_refresh()
 
 
-func _intermission_finished() -> void:
-	if auto_fight and not fight.active:
+func _try_begin_fight() -> void:
+	if auto_fight and not fight.active and %Tick.is_stopped() and fight.lineup_rest(selected) <= 0.0:
 		_begin_fight()
 
 
+func _intermission_finished() -> void:
+	%Tick.stop()
+	_try_begin_fight()
+
+
 func _physics_process(delta: float) -> void:
-	if not fight.active:
-		return
+	var was_active := fight.active
 	var events := fight.advance(delta)
+	_refresh_recovery()
+	if not was_active:
+		_try_begin_fight()
+		return
 	_layout_fighters()
 	for event in events:
 		_present_action(event)
