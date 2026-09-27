@@ -78,6 +78,7 @@ func _run() -> void:
 	await _check_excitement_ui()
 	await _check_promenade_ui()
 	await _check_recovery_ui()
+	await _check_town_grid()
 	quit()
 
 
@@ -909,3 +910,143 @@ func _check_recovery_ui() -> void:
 	ui.queue_free()
 	await process_frame
 	print("PASS: recovery countdown, concurrent intermission, queued booking, stop/rebook, open panels, and retained trio.")
+
+
+func _check_town_grid() -> void:
+	var grid := preload("res://game/town_grid.gd").new()
+	assert(grid.buildings.tavern.cell == Vector2i(12, 2) and grid.buildings.barracks.cell == Vector2i(34, 2))
+	assert(grid.footprint("tavern", Vector2i(12, 2)) == Rect2i(12, 2, 2, 2))
+	assert(grid.can_place("tavern", Vector2i(13, 2)), "A move may overlap its own old footprint.")
+	for invalid in [Vector2i(-1, 0), Vector2i(47, 0), Vector2i(1, 6), Vector2i(15, 0), Vector2i(34, 2)]:
+		var before: Dictionary = grid.buildings.duplicate(true)
+		assert(not grid.try_move("tavern", invalid) and grid.buildings == before)
+	assert(not grid.try_move("missing", Vector2i.ZERO))
+	assert(grid.try_move("tavern", Vector2i.ZERO) and grid.building_at(Vector2i(1, 1)) == "tavern")
+	assert(grid.building_at(Vector2i(12, 2)).is_empty())
+	assert(grid.try_move("barracks", Vector2i(45, 5)))
+	var ui = load("res://game/main.tscn").instantiate()
+	root.add_child(ui)
+	ui.set_physics_process(false)
+	await process_frame
+	await process_frame
+	var world = ui.get_node("%World")
+	var stage: Control = ui.get_node("%Stage")
+	var scroll: HScrollBar = ui.get_node("%TownScroll")
+	assert(world.tiles is TileMapLayer and world.tiles.get_used_cells().size() == 384)
+	assert(world.size.x == 2304.0 and stage.size.x == 536.0)
+	assert(is_equal_approx((stage.global_position + ui._project(Vector2.ZERO)).x, root.size.x * 0.5))
+	var combat_scale: float = ui._ground_scale()
+	var original: Dictionary = world.grid.buildings.duplicate(true)
+	ui.get_node("%Arrange").pressed.emit()
+	ui.get_node("%Arrange").button_pressed = true
+	assert(world.arranging)
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = world.point_for_cell(Vector2i(12, 2))
+	world._gui_input(click)
+	assert(world.selected_building == "tavern")
+	var motion := InputEventMouseMotion.new()
+	motion.position = world.point_for_cell(Vector2i(14, 5))
+	world._gui_input(motion)
+	assert(world.preview_cell == Vector2i(14, 5) and world.grid.can_place("tavern", world.preview_cell))
+	assert(world.grid.buildings == original, "Moving a preview must not mutate occupied cells.")
+	await _capture("town-arrange")
+	click.position = world.point_for_cell(Vector2i(16, 2))
+	world._gui_input(click)
+	assert(world.selected_building == "tavern" and world.grid.buildings == original)
+	click.button_index = MOUSE_BUTTON_RIGHT
+	world._gui_input(click)
+	assert(world.selected_building.is_empty() and world.grid.buildings == original)
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.position = world.point_for_cell(Vector2i(12, 2))
+	world._gui_input(click)
+	ui.get_node("%Start").pressed.emit()
+	assert(world.selected_building == "tavern" and world.arranging and ui.fight.active)
+	var start: Vector2 = ui.fight.positions[0]
+	ui._physics_process(DT)
+	assert(ui.fight.positions[0] != start)
+	# Scrolling moves world effects and picking together, while HUD stays fixed.
+	var bank_rect: Rect2 = ui.get_node("%Bank").get_global_rect()
+	scroll.value = 0.0
+	assert(world.position.x == 0.0 and world.cell_for_point(world.point_for_cell(Vector2i(4, 3))) == Vector2i(4, 3))
+	click.position = world.point_for_cell(Vector2i(4, 3))
+	world._gui_input(click)
+	assert(world.grid.buildings.tavern.cell == Vector2i(4, 3) and world.selected_building.is_empty())
+	var feet: Vector2 = world.building_nodes.tavern.position
+	assert(feet == Vector2(240, root.size.y - 160))
+	await _capture("town-left")
+	scroll.value = 100000.0
+	assert(scroll.value == 2304.0 - root.size.x and world.position.x == -scroll.value)
+	assert(ui.get_node("%Bank").get_global_rect() == bank_rect)
+	await _capture("town-right")
+	ui.get_node("%CenterArena").pressed.emit()
+	assert(is_equal_approx(scroll.value, 1152.0 - root.size.x * 0.5))
+	var pan := InputEventMouseButton.new()
+	pan.button_index = MOUSE_BUTTON_WHEEL_DOWN
+	pan.pressed = true
+	pan.shift_pressed = true
+	pan.position = Vector2(500, 250)
+	var previous := scroll.value
+	ui._input(pan)
+	assert(scroll.value == previous + 96.0)
+	pan.position = ui.get_node("%Bank").get_global_rect().get_center()
+	ui._input(pan)
+	assert(scroll.value == previous + 96.0, "HUD input must not pan the world.")
+	pan.button_index = MOUSE_BUTTON_MIDDLE
+	pan.position = Vector2(500, 250)
+	ui._input(pan)
+	motion.relative = Vector2(30, 0)
+	ui._input(motion)
+	assert(scroll.value == previous + 66.0)
+	pan.pressed = false
+	ui._input(pan)
+	assert(not ui.panning)
+	# Dispatch an actual click to the HUD: it must not place a pending building.
+	click.position = world.point_for_cell(Vector2i(34, 2))
+	world._gui_input(click)
+	assert(world.selected_building == "barracks")
+	var view_before_repeat := scroll.value
+	_finish_ui(ui)
+	ui._intermission_finished()
+	ui._physics_process(Rules.REST_DURATION)
+	assert(ui.fight.active and scroll.value == view_before_repeat and world.selected_building == "barracks")
+	var hud_click := InputEventMouseButton.new()
+	hud_click.button_index = MOUSE_BUTTON_LEFT
+	hud_click.position = ui.get_node("%HeroesButton").get_global_rect().get_center()
+	hud_click.pressed = true
+	root.push_input(hud_click)
+	hud_click = hud_click.duplicate()
+	hud_click.pressed = false
+	root.push_input(hud_click)
+	await process_frame
+	assert(world.selected_building == "barracks" and world.grid.buildings.barracks.cell == Vector2i(34, 2))
+	var escape := InputEventKey.new()
+	escape.keycode = KEY_ESCAPE
+	escape.pressed = true
+	root.push_input(escape)
+	await process_frame
+	assert(not ui.get_node("%Dismiss").visible and world.selected_building == "barracks")
+	root.push_input(escape)
+	await process_frame
+	assert(world.selected_building.is_empty() and world.arranging)
+	root.push_input(escape)
+	await process_frame
+	assert(not world.arranging and not ui.get_node("%Arrange").button_pressed)
+	ui.fight.arena_tier = 2
+	ui._center_arena()
+	for viewport_size in [Vector2i(960, 420), Vector2i(1280, 420), Vector2i(1600, 560)]:
+		root.size = viewport_size
+		await process_frame
+		await process_frame
+		assert(is_equal_approx(scroll.value + root.size.x * 0.5, 1152.0), "Resize preserves the viewed world center.")
+		assert(world.grid.buildings.tavern.cell == Vector2i(4, 3) and ui._ground_scale() == combat_scale)
+		assert(world.cell_for_point(world.point_for_cell(Vector2i(34, 2))) == Vector2i(34, 2))
+		for name in ["Arrange", "CenterArena", "TownScroll", "Start"]:
+			assert(Rect2(Vector2.ZERO, Vector2(root.size)).encloses(ui.get_node("%" + name).get_global_rect()))
+		ui._center_arena()
+		await _capture("town-grid-%d" % viewport_size.x)
+	root.size = Vector2i(1280, 420)
+	ui.queue_free()
+	await process_frame
+	print("PASS: native town grid, atomic multi-cell placement, protected cells, input isolation, preview cancellation, scrolling, resize, and live combat.")

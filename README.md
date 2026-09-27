@@ -20,7 +20,9 @@ Coins, victories, levels, XP, and arena expansion last for the current session. 
 
 The arena sits in a shallow town strip with the project's existing Tiny Swords houses, barracks, trees, terrain, and pawn sprites. Visitors stroll along the public path, clouds and smoke drift, banners move, and spectators briefly cheer when excitement reaches a new tier. These decorations do not affect combat or consume its seeded RNG. The combat floor and Sweep effects share the same projection.
 
-The compact central arena leaves wider town districts on both sides. Smaller tavern and barracks sprites sit behind six open plots, with short paths connecting them to the promenade. The plots reserve visual space for future buildings; construction is not implemented yet. Arena capacity upgrades stay within the central grounds.
+The town is a fixed **48 x 8 cell** ground strip, with each cell displayed at **48 x 24 pixels**. Explore it using the horizontal scrollbar, middle-button drag, or Shift + mouse wheel; **Center arena** returns to the fight. The HUD stays fixed, and automatic repeats preserve your view. Resizing changes the visible area, never cell coordinates or combat scale.
+
+**Arrange** shows the grid and occupied footprints. Select the tavern (2 x 2 cells) or barracks (3 x 2), then click a green preview to move it. Red previews overlap another building, the arena/seating reserve, the public path, or the map boundary. Escape, right-click, or leaving Arrange cancels a move. Opening a panel and starting another fight preserve the preview, and combat/recovery keep running. Roofs can extend above their ground footprint. New construction, prices, rotation, housing bonuses, and saving are deferred.
 
 - The bank shows spendable coins. **At finish** shows the active fight's pending payout; **tips paid** are already in the bank. Between fights, the completed payout is explicitly labeled **paid / last fight**.
 - The compact crowd board shows the score, multiplier, threshold markers, and next tier. HP stays green, mana blue, and excitement amber.
@@ -83,9 +85,11 @@ Checks all ten trios over 200 seeded fights with ongoing leveling, two reward/re
 
 Excitement checks cover elapsed-time caps, exact thresholds, ordered same-frame casts, full-health healing, cancelled casts, multi-target finishing casts, payout rounding, and repeat resets. Every seeded fight also verifies accumulated excitement and multiplied settlement. UI captures include Excited, Wild, and the final income breakdown.
 
+Recovery checks cover inactive time, invalid deltas, exact expiry, independent bench recovery, queued fights, concurrent intermission, and cancellation without resetting rest. Grid checks cover native cell conversion, overlap and protected-cell rejection, atomic moves, cancelled previews, HUD input isolation, panning, resize, and automatic repeats retaining both view and placement preview.
+
 Promenade checks also cover opening/switching/closing panels, Escape and outside dismissal, focus return, booking through the hero panel, purchasing through Arena, combat continuing behind an open panel, cheering feedback, and layouts at 960×420 and 1600×560. Captures include the closed promenade and both panels.
 
-Edit the five hero definitions and combat/income constants in `game/fight.gd` to tune the mechanic. The model's `advance(delta)` returns ordered action events and runs from the UI's fixed physics update; rendering never decides damage or rewards. `game/main.gd` handles projection, panels, animations, effects, and the three-second intermission; `game/promenade.gd` draws the decorative town and visitors.
+Edit the five hero definitions and combat/income constants in `game/fight.gd` to tune the mechanic. The model's `advance(delta)` returns ordered action events and runs from the UI's fixed physics update; rendering never decides damage or rewards. `game/main.gd` handles projection, panels, animations, effects, and the three-second intermission; `game/promenade.gd` uses a native TileMapLayer for ground coordinates and upright building nodes, while `game/town_grid.gd` validates integer-cell footprints.
 
 ## Movement and ranges
 

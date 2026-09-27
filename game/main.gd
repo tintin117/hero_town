@@ -22,6 +22,8 @@ var effects: Array[Dictionary] = []
 var cheer := 0.0
 var crowd_clock := 0.0
 var crowd_tick := 0.0
+var panning := false
+var town_view_width := 0.0
 
 
 func _ready() -> void:
@@ -30,6 +32,13 @@ func _ready() -> void:
 		get_window().content_scale_size = Vector2i.ZERO
 		get_window().min_size = Vector2i(960, 420)
 		get_window().size = Vector2i(1280, 420)
+	%World.move_child(%Stage, -1)
+	%TownScroll.value_changed.connect(_scroll_world)
+	%CenterArena.pressed.connect(_center_arena)
+	%Arrange.toggled.connect(_set_arranging)
+	resized.connect(_layout_town)
+	_layout_town()
+	_center_arena()
 	_apply_theme()
 	_build_roster()
 	%HeroesButton.pressed.connect(_toggle_drawer.bind(%HeroesDrawer))
@@ -44,6 +53,57 @@ func _ready() -> void:
 	%Excitement.draw.connect(_draw_excitement_markers)
 	_show_fighters(selected)
 	_refresh()
+
+
+func _layout_town() -> void:
+	var center: float = %TownScroll.value + town_view_width * 0.5
+	%World.size = Vector2(%World.WORLD_WIDTH, size.y)
+	%TownScroll.max_value = %World.WORLD_WIDTH
+	%TownScroll.page = minf(size.x, %World.WORLD_WIDTH)
+	%TownScroll.value = clampf(center - size.x * 0.5, 0.0, %TownScroll.max_value - %TownScroll.page) if town_view_width > 0.0 else 0.0
+	town_view_width = size.x
+	_scroll_world(%TownScroll.value)
+
+
+func _scroll_world(value: float) -> void:
+	%World.position.x = -value
+
+
+func _center_arena() -> void:
+	%TownScroll.value = 1152.0 - size.x * 0.5
+
+
+func _set_arranging(enabled: bool) -> void:
+	if enabled:
+		_close_drawers()
+	%World.set_arranging(enabled)
+	%ArrangeHint.visible = enabled
+	%Arrange.set_pressed_no_signal(enabled)
+
+
+func _world_input_allowed(point: Vector2) -> bool:
+	if %Dismiss.visible or not Rect2(Vector2.ZERO, Vector2(size.x, size.y - 88.0)).has_point(point):
+		return false
+	for panel in [%Bank, %ExcitementMeter, %Earnings]:
+		if panel.get_global_rect().has_point(point):
+			return false
+	return true
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_MIDDLE:
+			if not event.pressed:
+				panning = false
+			elif _world_input_allowed(event.position):
+				panning = true
+				get_viewport().set_input_as_handled()
+		elif event.pressed and event.shift_pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN] and _world_input_allowed(event.position):
+			%TownScroll.value += -96.0 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 96.0
+			get_viewport().set_input_as_handled()
+	elif event is InputEventMouseMotion and panning:
+		%TownScroll.value -= event.relative.x
+		get_viewport().set_input_as_handled()
 
 
 func _toggle_drawer(drawer: Control) -> void:
@@ -70,9 +130,17 @@ func _close_drawers() -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel") and %Dismiss.visible:
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	if %Dismiss.visible:
 		_close_drawers()
-		get_viewport().set_input_as_handled()
+	elif not %World.selected_building.is_empty():
+		%World.cancel_placement()
+	elif %World.arranging:
+		_set_arranging(false)
+	else:
+		return
+	get_viewport().set_input_as_handled()
 
 
 func _panel(color: Color, border: Color, width: int = 1) -> StyleBoxFlat:
@@ -113,6 +181,12 @@ func _apply_theme() -> void:
 	%Start.add_theme_stylebox_override("normal", _panel(GOLD, GOLD))
 	%Start.add_theme_stylebox_override("hover", _panel(Color("ffda93"), GOLD))
 	%Start.add_theme_stylebox_override("pressed", _panel(Color("d8ab55"), GOLD))
+	for part in ["scroll", "grabber", "grabber_highlight", "grabber_pressed"]:
+		var color := Color("182b35") if part == "scroll" else (Color("748d90") if part == "grabber" else GOLD)
+		var style := _panel(color, color, 0)
+		style.set_content_margin_all(0)
+		style.set_corner_radius_all(3)
+		%TownScroll.add_theme_stylebox_override(part, style)
 	for part in ["background", "fill"]:
 		var color := Color("c8ad72") if part == "fill" else Color("0b1119")
 		var style := _panel(color, color, 0)
