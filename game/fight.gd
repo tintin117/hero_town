@@ -15,7 +15,7 @@ const EXCITEMENT_MAX := 100.0
 const EXCITEMENT_PER_CAST := 8.0
 const EXCITEMENT_PER_SECOND := 1.0
 const EXCITEMENT_TIME_CAP := 20.0
-const EXCITEMENT_THRESHOLDS := [0.0, 40.0, 80.0]
+const EXCITEMENT_THRESHOLDS := [0.0, 25.0, 60.0]
 const EXCITEMENT_MULTIPLIERS := [1.0, 1.25, 2.5]
 const EXCITEMENT_NAMES := ["NORMAL", "EXCITED", "WILD"]
 const LEVEL_CAP := 10
@@ -314,7 +314,7 @@ func _act(attacker: int, casting: bool) -> Dictionary:
 	var target := _target_for(attacker)
 	var event := {"kind": "skill" if casting else "attack", "attacker": attacker,
 		"origin": positions[attacker], "radius": 0.0, "hits": [], "healing": 0, "tip": 0,
-		"excitement_gain": 0.0, "winner": -1, "progression": []}
+		"excitement_gain": 0.0, "time": elapsed, "winner": -1, "progression": []}
 	pauses[attacker] = ACTION_PAUSE
 	if casting:
 		# Tips and excitement start with the cast, including a fight-ending cast.

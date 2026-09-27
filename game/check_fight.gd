@@ -76,6 +76,7 @@ func _run() -> void:
 	await _check_ui()
 	await _check_arena_ui()
 	await _check_excitement_ui()
+	await _check_combat_feedback()
 	await _check_promenade_ui()
 	await _check_recovery_ui()
 	await _check_town_grid()
@@ -96,6 +97,7 @@ func _finish(fight: RefCounted) -> float:
 		var previous_bank: int = fight.coins
 		for event in fight.advance(DT):
 			assert(event.tip == (10 if event.kind == "skill" else 0))
+			assert(event.time == fight.elapsed)
 			tips += int(event.tip)
 			assert(event.coins == previous_bank + event.tip + (fight.settled_income if event.winner >= 0 else 0))
 			previous_bank = event.coins
@@ -116,7 +118,7 @@ func _finish(fight: RefCounted) -> float:
 	assert(after == wins + 1 and fight.coins == bank + fight.settled_income + tips)
 	var expected_excitement := minf(100.0, minf(fight.elapsed, 20.0) + tips * 0.8)
 	assert(is_equal_approx(fight.excitement, expected_excitement))
-	var multiplier := 2.5 if expected_excitement >= 80.0 else (1.25 if expected_excitement >= 40.0 else 1.0)
+	var multiplier := 2.5 if expected_excitement >= 60.0 else (1.25 if expected_excitement >= 25.0 else 1.0)
 	assert(fight.settled_income == roundi(fight.payout * multiplier))
 	assert(fight.crowd_tips == tips and fight.pending_casts.is_empty())
 	for id in range(fight.heroes.size()):
@@ -477,10 +479,10 @@ func _check_excitement() -> void:
 		assert(fight.advance(delta).is_empty())
 		assert(is_equal_approx(fight.excitement, minf(fight.elapsed, 20.0)))
 	assert(fight.excitement == 20.0 and fight.coins == 0)
-	for entry in [[0.0, 100], [39.999, 100], [40.0, 125], [79.999, 125], [80.0, 250], [100.0, 250]]:
+	for entry in [[0.0, 100], [24.999, 100], [25.0, 125], [59.999, 125], [60.0, 250], [100.0, 250]]:
 		assert(fight.income_with_excitement(entry[0]) == entry[1])
 	fight.payout = 285
-	assert(fight.income_with_excitement(80.0) == 713, "Round the boosted payout, including half coins.")
+	assert(fight.income_with_excitement(60.0) == 713, "Round the boosted payout, including half coins.")
 	# A waiting skill contributes only elapsed time; normal hits add no excitement.
 	fight = _battle()
 	fight.positions[0] = Vector2(-200, 0)
@@ -507,7 +509,7 @@ func _check_excitement() -> void:
 	assert(fight.excitement == 100.0 and event.excitement_gain < 8.0 and fight.coins == 130)
 	assert(_cast(fight, 3).excitement_gain == 0.0 and fight.coins == 140)
 	# A final Sweep crosses a tier before settlement, pays once, and cancels a ready victim.
-	for score in [32.0, 72.0]:
+	for score in [17.0, 52.0]:
 		fight = _battle()
 		fight.excitement = score
 		fight.elapsed = 20.0
@@ -518,7 +520,7 @@ func _check_excitement() -> void:
 		fight.mana[2] = 100
 		fight.pending_casts.assign([1, 2])
 		events = fight.advance(DT)
-		var expected := 125 if score == 32.0 else 250
+		var expected := 125 if score == 17.0 else 250
 		assert(events.size() == 1 and events[0].winner == 1 and events[0].excitement_gain == 8.0)
 		assert(fight.excitement == score + 8.0 and fight.settled_income == expected)
 		assert(fight.coins == expected + 10 and fight.crowd_tips == 10 and fight.pending_casts.is_empty())
@@ -530,13 +532,13 @@ func _check_excitement() -> void:
 		assert(fight.settled_income == 0 and fight.crowd_tips == 0 and fight.coins == expected + 10)
 	# A normal final hit cannot cash in a newly ready skill or its excitement.
 	fight = _battle()
-	fight.excitement = 32.0
+	fight.excitement = 17.0
 	fight.elapsed = 20.0
 	fight.health[1] = 1
 	fight.health[2] = 0
 	fight.mana[0] = 75
 	fight.cooldowns[0] = 0.0
-	assert(fight.advance(DT).size() == 1 and fight.excitement == 32.0 and fight.coins == 100)
+	assert(fight.advance(DT).size() == 1 and fight.excitement == 17.0 and fight.coins == 100)
 	print("PASS: excitement timing, thresholds, capped gains, ordered casts, final-cast bonus, cancellation, and one-time settlement.")
 
 
@@ -583,15 +585,15 @@ func _check_ui() -> void:
 	assert(ui.fight.coins == 10 and ui.get_node("%Coins").text == "10 coins")
 	assert(ui.get_node("%Tips").text == "10 tips paid")
 	assert(ui.fighters[3].mana.value == 0 and ui.fighters[3].bar.value == 112)
-	assert(ui.get_node("%Stage").has_node("SkillTip"))
+	assert(ui.feedback.toast.text == "Crowd tips +10")
 	await _capture("skill-tip")
 	ui.fight.mana[1] = 100
 	ui._physics_process(DT)
 	assert(ui.fight.coins == 20 and ui.get_node("%Coins").text == "20 coins")
-	assert(ui.effects[-1].event.radius == 90.0)
+	assert(ui.feedback.effects[-1].event.radius == 90.0)
 	var popups := 0
-	for node in ui.get_node("%Stage").get_children():
-		if node.has_meta("skill_tip"):
+	for node in ui.feedback.world.get_children():
+		if node.get_meta("feedback_kind", "") == "skill_name":
 			popups += 1
 	assert(popups == 2)
 	assert(ui.fighters[2].body.z_index < ui.fighters[1].body.z_index)
@@ -620,7 +622,7 @@ func _check_ui() -> void:
 	ui.get_node("%Start").pressed.emit()
 	assert(not ui.fight.active and ui.auto_fight)
 	ui._physics_process(Rules.REST_DURATION)
-	assert(ui.effects.is_empty() and ui.get_node("%Tips").text == "0 tips paid")
+	assert(ui.feedback.effects.is_empty() and ui.get_node("%Tips").text == "0 tips paid")
 	for id in ui.selected:
 		assert(ui.fighters[id].mana.value == 0)
 		assert(ui.fighters[id].bar.max_value == ui.fight.stats_for(id).health)
@@ -631,7 +633,7 @@ func _check_ui() -> void:
 	ui._physics_process(DT)
 	assert(ui.fight.coins == bank + 10 and ui.get_node("%Coins").text == "%d coins" % (bank + 10))
 	assert(ui.get_node("%Tips").text == "10 tips paid")
-	assert(ui.get_node("%Stage/SkillTip").get_child(1).text == "+10")
+	assert(ui.feedback.toast.text == "Crowd tips +10")
 	await _capture("level-tip")
 	for id in ui.selected:
 		ui.fight.cooldowns[id] = 0.0
@@ -722,24 +724,24 @@ func _check_excitement_ui() -> void:
 	for id in ui.selected:
 		ui.fight.cooldowns[id] = 1000.0
 		ui.fight.pauses[id] = 1000.0
-	ui.fight.excitement = 39.5
+	ui.fight.excitement = 24.5
 	ui.fight.elapsed = 19.5
 	ui._physics_process(0.5)
-	assert(ui.get_node("%Excitement").value == 40.0 and ui.displayed_tier == 1)
+	assert(ui.get_node("%Excitement").value == 25.0 and ui.displayed_tier == 1)
 	assert("EXCITED" in ui.get_node("%ExcitementLabel").text and ui.get_node("%Multiplier").text == "x1.25")
 	assert(ui.get_node("%FightIncome").text == "125 at finish" and ui.fight.coins == 0)
 	await _capture("excitement-excited")
 	ui.fight.positions[0] = Vector2(-40, 0)
 	ui.fight.positions[1] = Vector2.ZERO
 	ui.fight.positions[2] = Vector2(80, 0)
-	ui.fight.excitement = 72.0
+	ui.fight.excitement = 52.0
 	ui.fight.mana[1] = 100
 	ui._physics_process(DT)
-	assert(ui.get_node("%Excitement").value == 80.0 and ui.displayed_tier == 2)
+	assert(ui.get_node("%Excitement").value == 60.0 and ui.displayed_tier == 2)
 	assert("WILD" in ui.get_node("%ExcitementLabel").text and ui.get_node("%Multiplier").text == "x2.50")
 	assert(ui.get_node("%FightIncome").text == "250 at finish")
 	assert(ui.get_node("%Coins").text == "10 coins" and "+8 excitement" in ui.get_node("%Commentary").text)
-	assert(ui.get_node("%Stage/SkillTip").get_child(2).text == "+8 excitement")
+	assert(ui.feedback.toast.text == "Crowd tips +10")
 	await _capture("excitement-wild")
 	ui.fight.health[0] = 21
 	ui.fight.health[2] = 21
@@ -756,10 +758,124 @@ func _check_excitement_ui() -> void:
 	assert(ui.fight.active and ui.get_node("%Excitement").value == 0 and ui.displayed_tier == 0)
 	assert(ui.get_node("%ExcitementMeter").modulate == Color.WHITE)
 	assert(ui.get_node("%FightIncome").text == "105 at finish")
-	assert(not ui.get_node("%Stage").has_node("SkillTip"))
+	assert(not ui.feedback.toast.visible and ui.feedback.world.get_child_count() == 0)
 	ui.queue_free()
 	await process_frame
 	print("PASS: excitement bar, time/cast tier feedback, projected income, result breakdown, and repeat reset.")
+
+
+func _check_combat_feedback() -> void:
+	var ui = load("res://game/main.tscn").instantiate()
+	root.add_child(ui)
+	ui.set_physics_process(false)
+	await process_frame
+	# Actual events from all five skills produce one damage label per victim.
+	for actor in range(5):
+		var lineup: Array[int] = []
+		lineup.assign([0, 1, 2] if actor < 3 else [0, 3, 4])
+		ui.fight = _battle(lineup)
+		ui.selected.assign(ui.fight.participants)
+		for index in range(3):
+			ui.fight.positions[ui.selected[index]] = Vector2(index * 35, 0)
+		ui.fight.health[actor] -= 40
+		ui._show_fighters(ui.selected)
+		var event := _cast(ui.fight, actor)
+		var rng_before: int = ui.fight.rng.state
+		ui._present_action(event)
+		assert(ui.fight.rng.state == rng_before, "Cosmetic effects must not consume combat RNG.")
+		var labels: Array = _feedback_labels(ui, "damage")
+		assert(labels.size() == event.hits.size())
+		for index in range(labels.size()):
+			assert(labels[index].text == str(event.hits[index].damage))
+			assert(labels[index].global_position.y >= ui.get_node("%Bank").get_global_rect().end.y)
+		var heals: Array = _feedback_labels(ui, "healing")
+		assert(heals.size() == (1 if event.healing > 0 else 0))
+		if not heals.is_empty():
+			assert(heals[0].text == "+%d" % event.healing)
+		assert(_feedback_labels(ui, "skill_name").size() == 1)
+		assert(ui.feedback.toast.text == "Crowd tips +10")
+		assert(ui.feedback.world.get_parent() == ui.get_node("%Stage"))
+		assert(ui.feedback.hud.mouse_filter == Control.MOUSE_FILTER_IGNORE)
+		await _capture("feedback-skill-%d" % actor)
+	# Normal damage, overkill, two victims, and winning animation follow-through.
+	ui.fight = _battle()
+	ui.selected.assign([0, 1, 2])
+	ui._show_fighters(ui.selected)
+	ui.fight.health[1] = 1
+	ui.fight.health[2] = 0
+	ui.fight.cooldowns[0] = 0
+	ui._physics_process(DT)
+	var labels: Array = _feedback_labels(ui, "damage")
+	assert(labels.size() == 1 and labels[0].text == "1")
+	assert(ui.fighters[0].sprite.animation == "attack" and ui.fighters[0].sprite.is_playing())
+	ui._sync_fighters()
+	assert(ui.fighters[0].sprite.animation == "attack")
+	await create_timer(1.25).timeout
+	assert(ui.fighters[0].sprite.animation == "idle")
+	assert(ui.feedback.world.get_child_count() == 0, "Transient effect nodes must free themselves.")
+	# Presentation aggregation never modifies the bank or consumes model RNG.
+	ui.fight = _battle([0, 3, 4])
+	ui.selected.assign([0, 3, 4])
+	ui._show_fighters(ui.selected)
+	var event := _cast(ui.fight, 3)
+	var bank: int = ui.fight.coins
+	event.time = 0.0
+	ui.feedback.present(event)
+	assert(ui.feedback.pending_celebration == 0)
+	ui.feedback.clock += 0.25
+	event.time = 2.0
+	ui.feedback.present(event)
+	assert(ui.feedback.toast.text == "Crowd tips +20")
+	assert(ui.feedback.pending_celebration == 1 and ui.feedback.burst_until == 6.0)
+	ui.feedback.tier_crossed(1)
+	ui.feedback.flush_celebration()
+	assert(ui.feedback.fireworks.size() == 1 and ui.feedback.fireworks[0].strength == 2)
+	ui.feedback.clock += 0.251
+	event.time = 3.0
+	ui.feedback.present(event)
+	assert(ui.feedback.toast.text == "Crowd tips +10" and ui.feedback.pending_celebration == 0)
+	event.time = 5.9
+	ui.feedback.present(event)
+	assert(ui.feedback.pending_celebration == 0)
+	event.time = 6.0
+	ui.feedback.present(event)
+	assert(ui.feedback.pending_celebration == 1)
+	ui.feedback.flush_celebration()
+	ui.feedback.reset()
+	event.excitement_gain = 0.0
+	ui.feedback.present(event)
+	ui.feedback.present(event)
+	assert(ui.feedback.pending_celebration == 0 and ui.feedback.gains.is_empty())
+	event.excitement_gain = 7.9
+	ui.feedback.present(event)
+	ui.feedback.present(event)
+	assert(ui.feedback.pending_celebration == 0, "Use actual gains, not the number of casts.")
+	assert(ui.fight.coins == bank)
+	ui.feedback.reset()
+	event.time = 0.0
+	event.excitement_gain = 8.0
+	ui.feedback.present(event)
+	event.time = 2.001
+	ui.feedback.present(event)
+	assert(ui.feedback.pending_celebration == 0, "Gains older than two seconds cannot trigger a burst.")
+	ui.feedback.reset()
+	assert(ui.feedback.world.get_child_count() == 0 and ui.feedback.hud.get_child_count() == 1)
+	assert(ui.feedback.fireworks.is_empty() and ui.feedback.gains.is_empty() and not ui.feedback.toast.visible)
+	ui.queue_free()
+	await process_frame
+	var opening := Rules.new()
+	var distribution := [0, 0, 0]
+	for seed_value in range(20):
+		opening.advance(8.0)
+		opening.rng.seed = seed_value
+		assert(opening.start([0, 1, 2]))
+		_finish(opening)
+		distribution[Rules.excitement_tier(opening.excitement)] += 1
+	print("PASS: damage/healing on all five skills, winner follow-through, fixed tips, aggregation, rapid celebrations, and effect cleanup. Opening twenty default fights Normal/Excited/Wild: %s" % [distribution])
+
+
+func _feedback_labels(ui: Control, kind: String) -> Array:
+	return ui.feedback.world.get_children().filter(func(node: Node): return node.get_meta("feedback_kind", "") == kind)
 
 
 func _check_promenade_ui() -> void:

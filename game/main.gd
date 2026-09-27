@@ -1,6 +1,7 @@
 extends Control
 
 const FightRules := preload("res://game/fight.gd")
+const CombatFeedback := preload("res://game/combat_feedback.gd")
 const ART := preload("res://resources/art/unit_library.tres")
 const GOLD := Color("f2c771")
 const MUTED := Color("a5b2c3")
@@ -15,10 +16,9 @@ var cards: Array[Button] = []
 var card_records: Array[Label] = []
 var card_details: Array[Dictionary] = []
 var fighters: Dictionary = {}
-var coin_pulse: Tween
+var feedback := CombatFeedback.new()
 var excitement_pulse: Tween
 var displayed_tier := 0
-var effects: Array[Dictionary] = []
 var cheer := 0.0
 var crowd_clock := 0.0
 var crowd_tick := 0.0
@@ -40,6 +40,8 @@ func _ready() -> void:
 	_layout_town()
 	_center_arena()
 	_apply_theme()
+	add_child(feedback)
+	feedback.setup(self)
 	_build_roster()
 	%HeroesButton.pressed.connect(_toggle_drawer.bind(%HeroesDrawer))
 	%ArenaButton.pressed.connect(_toggle_drawer.bind(%ArenaDrawer))
@@ -361,8 +363,9 @@ func _refresh_excitement(score: float) -> void:
 	else:
 		%FightIncome.text = "%d base / next fight" % fight.income_for(selected) if fight.valid_lineup(selected) else "Book three heroes"
 	%FightIncome.tooltip_text = "Fight payout excludes tips already in your bank. Base income is locked at fight start; excitement multiplies it. Open Arena for the next booking's breakdown."
-	%ExcitementHint.text = ["40: Excited x1.25 / Skills +8", "80: Wild x2.50 / Skills +8", "Wild crowd! / Maximum multiplier"][tier]
+	%ExcitementHint.text = ["25: Excited x1.25 / Skills +8", "60: Wild x2.50 / Skills +8", "Wild crowd! / Maximum multiplier"][tier]
 	if tier > displayed_tier:
+		feedback.tier_crossed(tier)
 		cheer = 1.0
 		if excitement_pulse and excitement_pulse.is_valid():
 			excitement_pulse.kill()
@@ -443,16 +446,14 @@ func _physics_process(delta: float) -> void:
 		_present_action(event)
 	_refresh_excitement(fight.excitement)
 	_sync_fighters()
+	feedback.flush_celebration()
 
 
 func _process(delta: float) -> void:
 	crowd_clock += delta
 	crowd_tick += delta
 	cheer = maxf(0.0, cheer - delta * 0.5)
-	for effect in effects:
-		effect.age += delta
-	effects = effects.filter(func(effect: Dictionary): return effect.age < 0.45)
-	if not effects.is_empty() or crowd_tick >= 1.0 / 12.0:
+	if crowd_tick >= 1.0 / 12.0:
 		%Stage.queue_redraw()
 		crowd_tick = 0.0
 
@@ -493,10 +494,10 @@ func _present_action(event: Dictionary) -> void:
 
 
 func _show_fighters(lineup: Array[int]) -> void:
-	effects.clear()
-	for node in %Stage.get_children():
-		%Stage.remove_child(node)
-		node.queue_free()
+	feedback.reset()
+	for fighter in fighters.values():
+		%Stage.remove_child(fighter.body)
+		fighter.body.queue_free()
 	fighters.clear()
 	for id in lineup:
 		var hero := fight.heroes[id]
@@ -508,6 +509,7 @@ func _show_fighters(lineup: Array[int]) -> void:
 		sprite.scale = Vector2.ONE * 0.78
 		sprite.position.y = -23
 		sprite.play("idle")
+		sprite.animation_finished.connect(func(): sprite.play("idle"))
 		body.add_child(sprite)
 		var bars := {}
 		for stat in ["health", "mana"]:
@@ -623,22 +625,6 @@ func _draw_ring() -> void:
 		%Stage.draw_set_transform(pos, 0.0, Vector2(1.0, 0.3))
 		%Stage.draw_circle(Vector2.ZERO, 19.0, Color(0.24, 0.18, 0.1, 0.3))
 		%Stage.draw_set_transform(Vector2.ZERO)
-	for effect in effects:
-		var event: Dictionary = effect.event
-		var alpha: float = 1.0 - effect.age / 0.45
-		var color := Color(GOLD, alpha) if event.kind == "skill" else Color(1.0, 0.96, 0.8, alpha)
-		if event.radius > 0.0:
-			var area := _circle_points(event.origin, event.radius)
-			%Stage.draw_colored_polygon(area.slice(0, 64), Color(GOLD, alpha * 0.3))
-			%Stage.draw_polyline(area, color, 3.0, true)
-		elif event.hits.is_empty():
-			%Stage.draw_polyline(_circle_points(event.origin, 35.0), Color(0.5, 1.0, 0.7, alpha), 3.0, true)
-		else:
-			for hit in event.hits:
-				var origin := _project(event.origin) - Vector2(0, 22)
-				var target := _project(hit.position) - Vector2(0, 22)
-				%Stage.draw_line(origin, target, color, 3.0 if event.kind == "skill" else 1.5, true)
-				%Stage.draw_circle(target, 5.0, color)
 
 
 func _sync_fighters() -> void:
@@ -659,7 +645,7 @@ func _sync_fighters() -> void:
 			direction = fight.positions[fight.targets[id]] - fight.positions[id]
 		if absf(direction.x) > 0.1:
 			fighter.sprite.flip_h = direction.x < 0.0
-		if not fight.active or (fight.pauses[id] <= 0.0 and not (fighter.sprite.animation == "attack" and fighter.sprite.is_playing())):
+		if not (fighter.sprite.animation == "attack" and fighter.sprite.is_playing()) and (not fight.active or fight.pauses[id] <= 0.0):
 			fighter.sprite.play("run" if moving and fight.active else "idle")
 
 
@@ -675,9 +661,8 @@ func _animate_action(event: Dictionary) -> void:
 	sprite.frame = 0
 	if not event.hits.is_empty():
 		sprite.flip_h = event.hits[0].position.x < event.origin.x
-	effects.append({"event": event, "age": 0.0})
+	feedback.present(event)
 	if event.kind == "skill":
-		_show_tip(event.attacker, event.tip, event.excitement_gain)
 		_tint_fighter(event.attacker, Color("a5ffd0") if event.healing > 0 else GOLD)
 	for hit in event.hits:
 		_tint_fighter(hit.target, Color("ffbc9e"))
@@ -693,45 +678,3 @@ func _tint_fighter(id: int, color: Color) -> void:
 	fighter.sprite.modulate = color
 	fighter.tint = fighter.sprite.create_tween()
 	fighter.tint.tween_property(fighter.sprite, "modulate", Color("515c68") if fight.health[id] == 0 else Color.WHITE, 0.4)
-
-
-func _show_tip(id: int, amount: int, excitement_gain: float) -> void:
-	var popup := Node2D.new()
-	popup.name = "SkillTip"
-	popup.set_meta("skill_tip", true)
-	popup.position = fighters[id].body.position + Vector2(0, -80)
-	popup.position.y = maxf(45.0, popup.position.y)
-	# Keep simultaneous skill names readable when their casters are clustered.
-	for other in %Stage.get_children():
-		if other.has_meta("skill_tip") and absf(popup.position.y - other.position.y) < 65.0 and absf(popup.position.x - other.position.x) < 150.0:
-			if other.position.y >= 80.0:
-				popup.position.y = other.position.y - 60.0
-			else:
-				popup.position.x = other.position.x + (150.0 if popup.position.x >= other.position.x else -150.0)
-	popup.z_index = 1000
-	%Stage.add_child(popup)
-	var skill_name := _label("%s: %s" % [fight.heroes[id].name, fight.heroes[id].skill.name], 15, GOLD)
-	skill_name.position = Vector2(-120, -20)
-	skill_name.size.x = 240
-	var tip := _label("+%d" % amount, 26, GOLD)
-	tip.position = Vector2(-120, 2)
-	tip.size.x = 240
-	var boost := _label("+%s excitement" % String.num(excitement_gain, 1).trim_suffix(".0") if excitement_gain > 0.0 else "Excitement full!", 12, Color("b6caff"))
-	boost.position = Vector2(-120, 33)
-	boost.size.x = 240
-	for label in [skill_name, tip, boost]:
-		label.add_theme_color_override("font_outline_color", Color("11151e"))
-		label.add_theme_constant_override("outline_size", 5)
-		popup.add_child(label)
-	var rise := popup.create_tween()
-	rise.tween_property(popup, "position:y", popup.position.y - 34, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	rise.parallel().tween_property(popup, "modulate:a", 0.0, 0.3).set_delay(0.5)
-	rise.tween_callback(popup.queue_free)
-	if coin_pulse and coin_pulse.is_valid():
-		coin_pulse.kill()
-	%Coins.pivot_offset = %Coins.size * Vector2(0, 0.5)
-	%Coins.scale = Vector2.ONE * 1.12
-	%Coins.modulate = Color(1.5, 1.3, 1.0)
-	coin_pulse = %Coins.create_tween().set_parallel(true)
-	coin_pulse.tween_property(%Coins, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	coin_pulse.tween_property(%Coins, "modulate", Color.WHITE, 0.4)
