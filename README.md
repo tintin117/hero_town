@@ -1,50 +1,17 @@
-# Hero Town
+# Fight club
 
-Open `project.godot` in **Godot 4.6.3**. **F5** starts the main menu and desktop companion. Disable **Embed Game on Play** to let the companion position its own desktop window.
+A fresh Godot 4.6.3 prototype. Open `project.godot` and press **F5** to run the empty `game/main.tscn` scene. Gameplay and mechanics will be designed from scratch.
 
-The desktop companion now runs **Farm and Fight**: assign farmers to gold and wood, build hero towers, invest in four research branches, and push through continuous waves to an endless frontier. Old expedition saves remain separate.
+## Reusable assets
 
-## Start editing
+- `asset/` — original art, audio, models, textures, and shaders.
+- `fonts/` — original fonts.
+- `resources/` — authored sprite animations, UI textures/themes, and particle resources.
+- `vfx/` — standalone effect scenes, shaders, and their supporting scripts.
+- `icon.svg` and `icon.jpg` — existing project artwork.
 
-New designers and artists: start with the [game structure and onboarding map](docs/GAME_MAP.md) for mode diagrams, scene trees, editing locations, and a first 10-minute walkthrough.
+Third-party editor tools remain in `addons/`, disabled by default. The project has no autoloads, custom input actions, save system, or previous gameplay.
 
-| Work | Open in Godot |
-| --- | --- |
-| Menu layout and artwork | `game/menu/main_menu.tscn` |
-| Companion town and buildings | `game/companion/companion.tscn` |
-| Companion ground and land layouts | `game/companion/farm_terrain.tscn`, `farm_land.tscn`, `farm_quarry.tscn`, `farm_river.tscn` |
-| Farming spots and minimized sparring | `game/companion/gold_spot.tscn`, `wood_spot.tscn`, `taskbar_sparring.tscn` |
-| Farm and Fight economy, heroes, waves, and land scaling | `data/companion/farm_fight_balance.tres` |
-| Town mode, HUD, and landscapes | `game/town/town.tscn` and neighboring scenes |
-| Town balance | `data/town/` |
-| Shared soldier animations and UI theme | `resources/art/`, `resources/ui/` |
+## Previous prototype
 
-For experiments, open **`game/previews/companion_preview.tscn`** or **`game/previews/town_preview.tscn`** and press **F6**. These previews disable player-save loading and writing. Edit the base scenes for shared changes. The companion preview also supports inherited-scene overrides; the town preview loads the base town scenes with sample progress. Running a normal gameplay scene directly uses its regular save.
-
-Read the [editor workflow](docs/EDITOR_WORKFLOW.md) for Inspector controls and the boundary between authored content and game rules. [Companion controls](docs/COMPANION.md), [town mode](docs/TOWN.md), and [test commands](tests/README.md) cover the rest.
-
-## Folder map
-
-Scenes and their scripts live together, grouped by feature. Keep each scene's behavior beside it; keep tunable resource values in `data/`.
-
-```text
-game/
-  menu/          Main menu scene, backdrop, and buttons
-  companion/     Desktop town, terrain, workers, sparring, and campaign state
-  town/          Army town, combat, HUD, landscapes, and town autoloads
-  shared/        Display sizing and sound helpers
-  previews/      Safe F6 entry scenes for designers and artists
-data/
-  companion/     Campaign balance resources and their schemas
-  town/          Buildings, heroes, enemies, research, stages, and schemas
-resources/       Authored animation libraries, UI themes, and effects
-vfx/             Reusable visual effects
-asset/           Original art and audio packs
-fonts/           Original fonts
-tests/           Checks grouped by feature; fixtures are read-only inputs
-prototypes/      Retained full-window conquest prototype
-docs/            Current guides; archive/ contains historical notes
-addons/          Third-party editor plugins
-```
-
-Generated test reports, captures, and temporary resources belong in `.godot/` and stay out of source control. Preserve `.gd.uid` files when moving scripts; Godot uses them to identify resources. Save filenames and resource IDs are independent of this folder layout.
+The previous committed prototype remains on `codex/farm-fight-redesign`. Its uncommitted work was saved before the reset in Git stash `64b9c5f6845bb4f6991925cf5d3e6e7774d19a48`, named `Before Fight club reset: farm-fight-redesign work in progress`.
