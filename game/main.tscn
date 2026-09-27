@@ -24,10 +24,11 @@ script = ExtResource("2")
 [node name="Stage" type="Control" parent="World"]
 unique_name_in_owner = true
 layout_mode = 1
+anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 884.0
 offset_right = 1420.0
-offset_top = 64.0
+offset_top = -356.0
 offset_bottom = -80.0
 mouse_filter = 2
 

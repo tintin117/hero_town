@@ -23,6 +23,7 @@ var cheer := 0.0
 var crowd_clock := 0.0
 var crowd_tick := 0.0
 var panning := false
+var town_pointer := Vector2.ZERO
 var town_view_width := 0.0
 
 
@@ -69,6 +70,14 @@ func _layout_town() -> void:
 
 func _scroll_world(value: float) -> void:
 	%World.position.x = -value
+	_sync_placement_pointer(town_pointer)
+
+
+func _sync_placement_pointer(point: Vector2) -> void:
+	if %World.selected_building.is_empty() or not _world_input_allowed(point):
+		return
+	%World.preview_cell = %World.cell_for_point(point - %World.global_position)
+	%World._update_preview()
 
 
 func _center_arena() -> void:
@@ -93,6 +102,8 @@ func _world_input_allowed(point: Vector2) -> bool:
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventMouse:
+		town_pointer = event.position
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_MIDDLE:
 			if not event.pressed:
@@ -102,9 +113,11 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 		elif event.pressed and event.shift_pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN] and _world_input_allowed(event.position):
 			%TownScroll.value += -96.0 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 96.0
+			_sync_placement_pointer(event.position)
 			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion and panning:
 		%TownScroll.value -= event.relative.x
+		_sync_placement_pointer(event.position)
 		get_viewport().set_input_as_handled()
 
 

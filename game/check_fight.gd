@@ -80,6 +80,7 @@ func _run() -> void:
 	await _check_promenade_ui()
 	await _check_recovery_ui()
 	await _check_town_grid()
+	await _check_placement_panning()
 	quit()
 
 
@@ -1052,6 +1053,7 @@ func _check_town_grid() -> void:
 	assert(world.size.x == 2304.0 and stage.size.x == 536.0)
 	assert(is_equal_approx((stage.global_position + ui._project(Vector2.ZERO)).x, root.size.x * 0.5))
 	var combat_scale: float = ui._ground_scale()
+	var impact_position: Vector2 = ui._project(Vector2(120, -50))
 	var original: Dictionary = world.grid.buildings.duplicate(true)
 	ui.get_node("%Arrange").pressed.emit()
 	ui.get_node("%Arrange").button_pressed = true
@@ -1157,6 +1159,7 @@ func _check_town_grid() -> void:
 		await process_frame
 		assert(is_equal_approx(scroll.value + root.size.x * 0.5, 1152.0), "Resize preserves the viewed world center.")
 		assert(world.grid.buildings.tavern.cell == Vector2i(4, 3) and ui._ground_scale() == combat_scale)
+		assert(stage.size == Vector2(536, 276) and ui._project(Vector2(120, -50)) == impact_position, "Resize must move existing effects and fighters together.")
 		assert(world.cell_for_point(world.point_for_cell(Vector2i(34, 2))) == Vector2i(34, 2))
 		for name in ["Arrange", "CenterArena", "TownScroll", "Start"]:
 			assert(Rect2(Vector2.ZERO, Vector2(root.size)).encloses(ui.get_node("%" + name).get_global_rect()))
@@ -1166,3 +1169,64 @@ func _check_town_grid() -> void:
 	ui.queue_free()
 	await process_frame
 	print("PASS: native town grid, atomic multi-cell placement, protected cells, input isolation, preview cancellation, scrolling, resize, and live combat.")
+
+
+func _check_placement_panning() -> void:
+	var ui = load("res://game/main.tscn").instantiate()
+	root.add_child(ui)
+	ui.set_physics_process(false)
+	await process_frame
+	var world = ui.get_node("%World")
+	var scroll: HScrollBar = ui.get_node("%TownScroll")
+	ui._set_arranging(true)
+	world.selected_building = "tavern"
+	world.preview_cell = Vector2i(12, 2)
+	world._update_preview()
+	var motion := InputEventMouseMotion.new()
+	motion.position = Vector2(200, 280)
+	root.push_input(motion)
+	await process_frame
+	var wheel := InputEventMouseButton.new()
+	wheel.position = motion.position
+	wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+	wheel.shift_pressed = true
+	wheel.pressed = true
+	root.push_input(wheel)
+	await process_frame
+	assert(world.preview_cell == world.cell_for_point(wheel.position - world.global_position))
+	var middle := InputEventMouseButton.new()
+	middle.position = wheel.position
+	middle.button_index = MOUSE_BUTTON_MIDDLE
+	middle.pressed = true
+	root.push_input(middle)
+	motion.position += Vector2(96, 0)
+	motion.relative = Vector2(96, 0)
+	root.push_input(motion)
+	await process_frame
+	assert(world.preview_cell == world.cell_for_point(motion.position - world.global_position))
+	middle.pressed = false
+	middle.position = motion.position
+	root.push_input(middle)
+	# Moving a native scrollbar leaves the visible preview at its world cell while
+	# the pointer is over UI, then resnaps it when the pointer returns to town.
+	var previous_cell: Vector2i = world.preview_cell
+	motion.position = scroll.get_global_rect().get_center()
+	root.push_input(motion)
+	scroll.value = 0.0
+	await process_frame
+	assert(world.preview_cell == previous_cell)
+	motion.position = Vector2(200, 280)
+	root.push_input(motion)
+	await process_frame
+	var visible_cell: Vector2i = world.preview_cell
+	assert(visible_cell == world.cell_for_point(motion.position - world.global_position))
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = motion.position
+	root.push_input(click)
+	await process_frame
+	assert(world.selected_building.is_empty() and world.grid.buildings.tavern.cell == visible_cell)
+	ui.queue_free()
+	await process_frame
+	print("PASS: placement preview follows middle drag and Shift-wheel; scrollbar return confirms the shown cell.")
