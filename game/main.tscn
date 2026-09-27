@@ -35,7 +35,7 @@ theme_override_constants/margin_bottom = 20
 
 [node name="Layout" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
 
 [node name="Header" type="HBoxContainer" parent="Margin/Layout"]
 layout_mode = 2
@@ -129,7 +129,7 @@ text = "Click a booked hero to make room for another."
 
 [node name="Roster" type="HBoxContainer" parent="Margin/Layout"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 184)
+custom_minimum_size = Vector2(0, 146)
 layout_mode = 2
 theme_override_constants/separation = 12
 

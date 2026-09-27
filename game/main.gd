@@ -4,8 +4,8 @@ const FightRules := preload("res://game/fight.gd")
 const ART := preload("res://resources/art/unit_library.tres")
 const GOLD := Color("f2c771")
 const MUTED := Color("a5b2c3")
-const HIT_INTERVAL := 0.75
 const INTERMISSION := 3.0
+const GROUND_DEPTH := 0.32
 
 var fight := FightRules.new()
 var selected: Array[int] = [0, 1, 2]
@@ -14,13 +14,14 @@ var cards: Array[Button] = []
 var card_records: Array[Label] = []
 var fighters: Dictionary = {}
 var coin_pulse: Tween
+var effects: Array[Dictionary] = []
 
 
 func _ready() -> void:
 	_apply_theme()
 	_build_roster()
 	%Start.pressed.connect(_toggle_running)
-	%Tick.timeout.connect(_tick)
+	%Tick.timeout.connect(_intermission_finished)
 	%Stage.draw.connect(_draw_ring)
 	%Stage.resized.connect(_layout_fighters)
 	_show_fighters(selected)
@@ -74,7 +75,7 @@ func _build_roster() -> void:
 		var card := Button.new()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.toggle_mode = true
-		card.tooltip_text = "%s: %d stars, %d HP, %d ATK\nTargets: %s\n%s: %s\nMana: +25 on normal hits, +15 when surviving a normal hit.\nAt 100 mana: cast immediately, reset to 0, earn 10 coins.\nSkills generate no mana. Career victories add 5 coins per fight." % [hero.name, hero.stars, hero.health, hero.attack, FightRules.TARGET_LABELS[hero.target], hero.skill.name, hero.skill.description]
+		card.tooltip_text = "%s: %d stars, %d HP, %d ATK\nTargets the nearest opponent. %s\n%s: %s\nMana: +25 on normal hits, +15 when surviving a normal hit.\nAt 100 mana: cast when in range, reset to 0, earn 10 coins.\nSkills generate no mana. Career victories add 5 coins per fight." % [hero.name, hero.stars, hero.health, hero.attack, "Keeps 110-160 units of distance." if hero.ranged else "Chases into melee range (45 units).", hero.skill.name, hero.skill.description]
 		card.pressed.connect(_select_hero.bind(id))
 		%Roster.add_child(card)
 		cards.append(card)
@@ -90,16 +91,16 @@ func _build_roster() -> void:
 		crop.atlas = ART.frames(hero.unit, hero.red).get_frame_texture("idle", 0)
 		crop.region = Rect2(crop.atlas.get_size() * 0.5 - Vector2(48, 48), Vector2(96, 96))
 		portrait.texture = crop
-		portrait.custom_minimum_size.y = 44
+		portrait.custom_minimum_size.y = 30
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		content.add_child(portrait)
-		content.add_child(_label(hero.name, 21, Color("edf1f7")))
+		content.add_child(_label(hero.name, 18, Color("edf1f7")))
 		content.add_child(_label("%d STAR  /  %s" % [hero.stars, hero.unit.to_upper()], 12, GOLD))
-		content.add_child(_label("%d HP   /   %d ATK" % [hero.health, hero.attack], 14))
-		content.add_child(_label(hero.skill.name, 14, Color("a7bfff")))
-		var record := _label("", 15, Color("a5ddc4"))
+		content.add_child(_label("%d HP   /   %d ATK" % [hero.health, hero.attack], 13))
+		content.add_child(_label(hero.skill.name, 13, Color("a7bfff")))
+		var record := _label("", 13, Color("a5ddc4"))
 		content.add_child(record)
 		card_records.append(record)
 
@@ -159,17 +160,36 @@ func _begin_fight() -> void:
 		return
 	_show_fighters(fight.participants)
 	%Status.text = "Fight %02d  /  %d guaranteed coins" % [fight.completed + 1, fight.payout]
-	%Commentary.text = "Mana: +25 on a hit, +15 when hit. Full mana casts a skill and earns 10 coins."
-	%Tick.start(HIT_INTERVAL)
+	%Commentary.text = "Nearest opponent / Melee heroes chase / Nia keeps her distance"
+	%Tick.stop()
 	_refresh()
 
 
-func _tick() -> void:
+func _intermission_finished() -> void:
+	if auto_fight and not fight.active:
+		_begin_fight()
+
+
+func _physics_process(delta: float) -> void:
 	if not fight.active:
-		if auto_fight:
-			_begin_fight()
 		return
-	var event := fight.step()
+	var events := fight.advance(delta)
+	_layout_fighters()
+	for event in events:
+		_present_action(event)
+	_sync_fighters()
+
+
+func _process(delta: float) -> void:
+	if effects.is_empty():
+		return
+	for effect in effects:
+		effect.age += delta
+	effects = effects.filter(func(effect: Dictionary): return effect.age < 0.45)
+	%Stage.queue_redraw()
+
+
+func _present_action(event: Dictionary) -> void:
 	_animate_action(event)
 	var attacker: Dictionary = fight.heroes[event.attacker]
 	if event.kind == "skill":
@@ -184,11 +204,10 @@ func _tick() -> void:
 		_refresh()
 		if auto_fight:
 			%Tick.start(INTERMISSION)
-	else:
-		%Tick.start(HIT_INTERVAL)
 
 
 func _show_fighters(lineup: Array[int]) -> void:
+	effects.clear()
 	for node in %Stage.get_children():
 		%Stage.remove_child(node)
 		node.queue_free()
@@ -199,17 +218,14 @@ func _show_fighters(lineup: Array[int]) -> void:
 		%Stage.add_child(body)
 		var sprite := AnimatedSprite2D.new()
 		sprite.sprite_frames = ART.frames(hero.unit, hero.red)
-		sprite.scale = Vector2.ONE * 0.9
+		sprite.scale = Vector2.ONE * 0.78
+		sprite.position.y = -23
 		sprite.play("idle")
-		sprite.animation_finished.connect(func():
-			if fight.health.get(id, 1) > 0:
-				sprite.play("idle")
-		)
 		body.add_child(sprite)
 		var bars := {}
 		for stat in ["health", "mana"]:
 			var bar := ProgressBar.new()
-			bar.position = Vector2(-68, 32 if stat == "health" else 45)
+			bar.position = Vector2(-27, -65 if stat == "health" else -58)
 			bar.max_value = hero.health if stat == "health" else FightRules.MANA_MAX
 			bar.value = hero.health if stat == "health" else 0
 			bar.show_percentage = false
@@ -223,11 +239,13 @@ func _show_fighters(lineup: Array[int]) -> void:
 				style.set_corner_radius_all(3)
 				bar.add_theme_stylebox_override(part, style)
 			body.add_child(bar)
-			bar.set_deferred("size", Vector2(136, 8))
+			bar.set_deferred("size", Vector2(54, 5))
 			bars[stat] = bar
-		var nameplate := _label(hero.name, 18, Color("edf1f7"))
-		nameplate.position = Vector2(-85, 58)
-		nameplate.size.x = 170
+		var nameplate := _label(hero.name, 13, Color("edf1f7"))
+		nameplate.add_theme_color_override("font_outline_color", Color("18222f"))
+		nameplate.add_theme_constant_override("outline_size", 4)
+		nameplate.position = Vector2(-60, 6)
+		nameplate.size.x = 120
 		body.add_child(nameplate)
 		fighters[id] = {"body": body, "sprite": sprite, "bar": bars.health, "mana": bars.mana, "name": nameplate, "tint": null}
 	_layout_fighters()
@@ -236,50 +254,101 @@ func _show_fighters(lineup: Array[int]) -> void:
 func _layout_fighters() -> void:
 	var index := 0
 	for id in fighters:
-		fighters[id].body.position = Vector2(%Stage.size.x * (0.25 + index * 0.25), %Stage.size.y * 0.58)
+		var ground := Vector2.from_angle(-PI / 2.0 + TAU * index / 3.0) * FightRules.ARENA_RADIUS * 0.72
+		if fight.active or (fight.completed > 0 and fight.participants == selected):
+			ground = fight.positions.get(id, ground)
+		fighters[id].body.position = _project(ground)
+		fighters[id].body.z_index = roundi(ground.y) + 300
 		index += 1
 	%Stage.queue_redraw()
 
 
-func _draw_ring() -> void:
-	var center: Vector2 = %Stage.size * Vector2(0.5, 0.46)
-	var radius: Vector2 = %Stage.size * Vector2(0.43, 0.4)
+func _ground_scale() -> float:
+	return maxf(0.1, minf((%Stage.size.x - 100.0) / (FightRules.ARENA_RADIUS * 2.0), (%Stage.size.y - 100.0) / (FightRules.ARENA_RADIUS * 2.0 * GROUND_DEPTH)))
+
+
+func _project(ground: Vector2) -> Vector2:
+	return Vector2(%Stage.size.x * 0.5, (%Stage.size.y + 55.0) * 0.5) + ground * Vector2(1.0, GROUND_DEPTH) * _ground_scale()
+
+
+func _circle_points(origin: Vector2, radius: float) -> PackedVector2Array:
 	var points := PackedVector2Array()
 	for i in range(65):
-		var angle := TAU * i / 64.0
-		points.append(center + Vector2(cos(angle), sin(angle)) * radius)
-	%Stage.draw_colored_polygon(points, Color("1b2a36"))
-	%Stage.draw_polyline(points, Color("596051"), 3.0, true)
-	%Stage.draw_line(center - Vector2(0, radius.y), center + Vector2(0, radius.y), Color("2c3c45"), 2.0)
+		points.append(_project(origin + Vector2.from_angle(TAU * i / 64.0) * radius))
+	return points
+
+
+func _draw_ring() -> void:
+	var points := _circle_points(Vector2.ZERO, FightRules.ARENA_RADIUS)
+	%Stage.draw_polyline(points, Color("394857"), 22.0, true)
+	%Stage.draw_polyline(points, Color("859297"), 14.0, true)
+	%Stage.draw_colored_polygon(points.slice(0, 64), Color("c9aa70"))
+	%Stage.draw_polyline(points, Color("8c653e"), 4.0, true)
+	%Stage.draw_polyline(_circle_points(Vector2.ZERO, FightRules.ARENA_RADIUS - 18.0), Color("e0bf82"), 2.0, true)
+	for i in range(18):
+		var angle := TAU * i / 18.0
+		%Stage.draw_line(_project(Vector2.from_angle(angle) * (FightRules.ARENA_RADIUS + 1.0)), _project(Vector2.from_angle(angle) * (FightRules.ARENA_RADIUS + 13.0)), Color("53636c"), 2.0, true)
 	for id in fighters:
-		var pos: Vector2 = fighters[id].body.position + Vector2(0, 25)
-		%Stage.draw_style_box(_panel(Color("111d26"), Color("111d26"), 0), Rect2(pos - Vector2(34, 5), Vector2(68, 10)))
+		var pos: Vector2 = fighters[id].body.position
+		%Stage.draw_set_transform(pos, 0.0, Vector2(1.0, 0.3))
+		%Stage.draw_circle(Vector2.ZERO, 19.0, Color(0.24, 0.18, 0.1, 0.3))
+		%Stage.draw_set_transform(Vector2.ZERO)
+	for effect in effects:
+		var event: Dictionary = effect.event
+		var alpha: float = 1.0 - effect.age / 0.45
+		var color := Color(GOLD, alpha) if event.kind == "skill" else Color(1.0, 0.96, 0.8, alpha)
+		if event.radius > 0.0:
+			var area := _circle_points(event.origin, event.radius)
+			%Stage.draw_colored_polygon(area.slice(0, 64), Color(GOLD, alpha * 0.3))
+			%Stage.draw_polyline(area, color, 3.0, true)
+		elif event.hits.is_empty():
+			%Stage.draw_polyline(_circle_points(event.origin, 35.0), Color(0.5, 1.0, 0.7, alpha), 3.0, true)
+		else:
+			for hit in event.hits:
+				var origin := _project(event.origin) - Vector2(0, 22)
+				var target := _project(hit.position) - Vector2(0, 22)
+				%Stage.draw_line(origin, target, color, 3.0 if event.kind == "skill" else 1.5, true)
+				%Stage.draw_circle(target, 5.0, color)
+
+
+func _sync_fighters() -> void:
+	for id in fighters:
+		var fighter: Dictionary = fighters[id]
+		fighter.bar.value = fight.health[id]
+		fighter.mana.value = fight.mana[id]
+		fighter.mana.tooltip_text = "%d / 100 mana" % fight.mana[id]
+		if fight.health[id] <= 0:
+			fighter.sprite.stop()
+			fighter.bar.hide()
+			fighter.mana.hide()
+			fighter.name.hide()
+			continue
+		var moving: bool = fight.velocities[id].length() > 1.0
+		var direction: Vector2 = fight.velocities[id]
+		if not moving and fight.targets[id] >= 0:
+			direction = fight.positions[fight.targets[id]] - fight.positions[id]
+		if absf(direction.x) > 0.1:
+			fighter.sprite.flip_h = direction.x < 0.0
+		if not fight.active or (fight.pauses[id] <= 0.0 and not (fighter.sprite.animation == "attack" and fighter.sprite.is_playing())):
+			fighter.sprite.play("run" if moving and fight.active else "idle")
 
 
 func _animate_action(event: Dictionary) -> void:
 	# Update money in the same frame that starts the cast animation, before any tween.
-	_refresh_money()
+	%Coins.text = "%d coins" % event.coins
+	%Tips.text = "CROWD TIPS  +%d" % event.crowd_tips
 	var source: Dictionary = fighters[event.attacker]
 	var sprite: AnimatedSprite2D = source.sprite
 	sprite.play("attack")
-	if event.hits.size() == 1:
-		var distance: Vector2 = fighters[event.hits[0].target].body.position - source.body.position
-		sprite.flip_h = distance.x < 0
-		var motion := sprite.create_tween()
-		motion.tween_property(sprite, "position", distance * 0.65, 0.15).set_trans(Tween.TRANS_QUAD)
-		motion.tween_property(sprite, "position", Vector2.ZERO, 0.25).set_delay(0.1)
+	sprite.frame = 0
+	if not event.hits.is_empty():
+		sprite.flip_h = event.hits[0].position.x < event.origin.x
+	effects.append({"event": event, "age": 0.0})
 	if event.kind == "skill":
 		_show_tip(event.attacker)
 		_tint_fighter(event.attacker, Color("a5ffd0") if event.healing > 0 else GOLD)
 	for hit in event.hits:
 		_tint_fighter(hit.target, Color("ffbc9e"))
-	for id in fighters:
-		fighters[id].bar.value = fight.health[id]
-		fighters[id].mana.value = fight.mana[id]
-		fighters[id].mana.tooltip_text = "%d / 100 mana" % fight.mana[id]
-		if fight.health[id] == 0:
-			fighters[id].name.text = "%s / OUT" % fight.heroes[id].name
-			fighters[id].sprite.stop()
 	if event.winner >= 0:
 		fighters[event.winner].name.text = "%s / WINNER" % fight.heroes[event.winner].name
 		fighters[event.winner].name.add_theme_color_override("font_color", GOLD)
@@ -297,13 +366,22 @@ func _tint_fighter(id: int, color: Color) -> void:
 func _show_tip(id: int) -> void:
 	var popup := Node2D.new()
 	popup.name = "SkillTip"
-	popup.position = Vector2(0, -70)
-	popup.z_index = 5
-	fighters[id].body.add_child(popup)
-	var skill_name := _label(fight.heroes[id].skill.name, 17, GOLD)
+	popup.set_meta("skill_tip", true)
+	popup.position = fighters[id].body.position + Vector2(0, -80)
+	popup.position.y = maxf(45.0, popup.position.y)
+	# Keep simultaneous skill names readable when their casters are clustered.
+	for other in %Stage.get_children():
+		if other.has_meta("skill_tip") and absf(popup.position.y - other.position.y) < 65.0 and absf(popup.position.x - other.position.x) < 150.0:
+			if other.position.y >= 80.0:
+				popup.position.y = other.position.y - 60.0
+			else:
+				popup.position.x = other.position.x + (150.0 if popup.position.x >= other.position.x else -150.0)
+	popup.z_index = 1000
+	%Stage.add_child(popup)
+	var skill_name := _label("%s: %s" % [fight.heroes[id].name, fight.heroes[id].skill.name], 15, GOLD)
 	skill_name.position = Vector2(-120, -20)
 	skill_name.size.x = 240
-	var tip := _label("+%d" % FightRules.CAST_TIP, 32, GOLD)
+	var tip := _label("+%d" % FightRules.CAST_TIP, 26, GOLD)
 	tip.position = Vector2(-120, 2)
 	tip.size.x = 240
 	for label in [skill_name, tip]:
