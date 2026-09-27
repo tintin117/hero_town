@@ -13,6 +13,7 @@ var auto_fight := false
 var cards: Array[Button] = []
 var card_records: Array[Label] = []
 var fighters: Dictionary = {}
+var coin_pulse: Tween
 
 
 func _ready() -> void:
@@ -73,7 +74,7 @@ func _build_roster() -> void:
 		var card := Button.new()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.toggle_mode = true
-		card.tooltip_text = "%s: %d stars, %d health, %d attack. Victories add 5 coins per fight." % [hero.name, hero.stars, hero.health, hero.attack]
+		card.tooltip_text = "%s: %d stars, %d HP, %d ATK\nTargets: %s\n%s: %s\nMana: +25 on normal hits, +15 when surviving a normal hit.\nAt 100 mana: cast immediately, reset to 0, earn 10 coins.\nSkills generate no mana. Career victories add 5 coins per fight." % [hero.name, hero.stars, hero.health, hero.attack, FightRules.TARGET_LABELS[hero.target], hero.skill.name, hero.skill.description]
 		card.pressed.connect(_select_hero.bind(id))
 		%Roster.add_child(card)
 		cards.append(card)
@@ -89,7 +90,7 @@ func _build_roster() -> void:
 		crop.atlas = ART.frames(hero.unit, hero.red).get_frame_texture("idle", 0)
 		crop.region = Rect2(crop.atlas.get_size() * 0.5 - Vector2(48, 48), Vector2(96, 96))
 		portrait.texture = crop
-		portrait.custom_minimum_size.y = 62
+		portrait.custom_minimum_size.y = 44
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -97,6 +98,7 @@ func _build_roster() -> void:
 		content.add_child(_label(hero.name, 21, Color("edf1f7")))
 		content.add_child(_label("%d STAR  /  %s" % [hero.stars, hero.unit.to_upper()], 12, GOLD))
 		content.add_child(_label("%d HP   /   %d ATK" % [hero.health, hero.attack], 14))
+		content.add_child(_label(hero.skill.name, 14, Color("a7bfff")))
 		var record := _label("", 15, Color("a5ddc4"))
 		content.add_child(record)
 		card_records.append(record)
@@ -123,16 +125,21 @@ func _refresh() -> void:
 		cards[id].add_theme_stylebox_override("disabled", _panel(Color("30352f"), GOLD, 2) if id in selected else _panel(Color("131b25"), Color("293444")))
 		cards[id].modulate = Color.WHITE if id in selected else Color("9aa8ba")
 		card_records[id].text = "%d wins  /  +%d coins" % [fight.heroes[id].wins, fight.heroes[id].wins * FightRules.COINS_PER_VICTORY]
-	%Coins.text = "%d coins" % fight.coins
+	_refresh_money()
 	%Record.text = "%d fights completed" % fight.completed
 	%Selection.text = "YOUR FIGHT CARD  /  %d OF 3 BOOKED" % selected.size()
 	%Hint.text = "Stop after this fight to change your trio." if locked else "Click a booked hero to make room for another."
-	%Income.text = "Next fight: %d coins" % fight.income_for(selected) if selected.size() == 3 else "Select 3 heroes to see income"
-	%Formula.text = "100 base + 5 per career victory in your trio  /  Session-only prototype"
+	%Income.text = "Guaranteed: %d coins + skill tips" % fight.income_for(selected) if selected.size() == 3 else "Select 3 heroes to see income"
+	%Formula.text = "100 base + 5 per victory  /  +10 instantly per skill  /  Session-only"
 	%Start.disabled = selected.size() != 3 or (fight.active and not auto_fight)
 	%Start.text = "Stop after this fight" if auto_fight else "Open arena"
 	if fight.active and not auto_fight:
 		%Start.text = "Finishing current fight..."
+
+
+func _refresh_money() -> void:
+	%Coins.text = "%d coins" % fight.coins
+	%Tips.text = "CROWD TIPS  +%d" % fight.crowd_tips
 
 
 func _toggle_running() -> void:
@@ -151,8 +158,8 @@ func _begin_fight() -> void:
 	if not fight.start(selected):
 		return
 	_show_fighters(fight.participants)
-	%Status.text = "Fight %02d  /  %d coins on the card" % [fight.completed + 1, fight.payout]
-	%Commentary.text = "Every hero for themselves. Last one standing earns a career victory."
+	%Status.text = "Fight %02d  /  %d guaranteed coins" % [fight.completed + 1, fight.payout]
+	%Commentary.text = "Mana: +25 on a hit, +15 when hit. Full mana casts a skill and earns 10 coins."
 	%Tick.start(HIT_INTERVAL)
 	_refresh()
 
@@ -163,14 +170,17 @@ func _tick() -> void:
 			_begin_fight()
 		return
 	var event := fight.step()
-	_animate_hit(event)
+	_animate_action(event)
 	var attacker: Dictionary = fight.heroes[event.attacker]
-	var target: Dictionary = fight.heroes[event.target]
-	%Commentary.text = "%s hits %s for %d%s" % [attacker.name, target.name, event.damage, " / knocked out!" if fight.health[event.target] == 0 else ""]
+	if event.kind == "skill":
+		%Commentary.text = "%s casts %s / +%d crowd tip%s" % [attacker.name, attacker.skill.name, event.tip, " / heals %d HP" % event.healing if event.healing > 0 else ""]
+	else:
+		var hit: Dictionary = event.hits[0]
+		%Commentary.text = "%s hits %s for %d%s" % [attacker.name, fight.heroes[hit.target].name, hit.damage, " / knocked out!" if fight.health[hit.target] == 0 else ""]
 	if event.winner >= 0:
 		var winner: Dictionary = fight.heroes[event.winner]
 		%Status.text = "%s wins!  /  +1 career victory" % winner.name
-		%Commentary.text = "+%d coins earned  /  %s now has %d career victories" % [fight.payout, winner.name, winner.wins]
+		%Commentary.text = "%d guaranteed + %d crowd tips = %d earned / Tips already paid" % [fight.payout, fight.crowd_tips, fight.payout + fight.crowd_tips]
 		_refresh()
 		if auto_fight:
 			%Tick.start(INTERMISSION)
@@ -189,28 +199,37 @@ func _show_fighters(lineup: Array[int]) -> void:
 		%Stage.add_child(body)
 		var sprite := AnimatedSprite2D.new()
 		sprite.sprite_frames = ART.frames(hero.unit, hero.red)
+		sprite.scale = Vector2.ONE * 0.9
 		sprite.play("idle")
-		sprite.animation_finished.connect(func(): sprite.play("idle"))
+		sprite.animation_finished.connect(func():
+			if fight.health.get(id, 1) > 0:
+				sprite.play("idle")
+		)
 		body.add_child(sprite)
-		var health := ProgressBar.new()
-		health.position = Vector2(-68, 40)
-		health.max_value = hero.health
-		health.value = hero.health
-		health.show_percentage = false
-		health.add_theme_font_size_override("font_size", 1)
-		for part in ["background", "fill"]:
-			var color := Color("78c5a4") if part == "fill" else Color("0b1119")
-			var style := _panel(color, color, 0)
-			style.set_content_margin_all(0)
-			style.set_corner_radius_all(3)
-			health.add_theme_stylebox_override(part, style)
-		body.add_child(health)
-		health.set_deferred("size", Vector2(136, 9))
+		var bars := {}
+		for stat in ["health", "mana"]:
+			var bar := ProgressBar.new()
+			bar.position = Vector2(-68, 32 if stat == "health" else 45)
+			bar.max_value = hero.health if stat == "health" else FightRules.MANA_MAX
+			bar.value = hero.health if stat == "health" else 0
+			bar.show_percentage = false
+			bar.add_theme_font_size_override("font_size", 1)
+			for part in ["background", "fill"]:
+				var color := Color("78c5a4") if stat == "health" else Color("89aaff")
+				if part == "background":
+					color = Color("0b1119")
+				var style := _panel(color, color, 0)
+				style.set_content_margin_all(0)
+				style.set_corner_radius_all(3)
+				bar.add_theme_stylebox_override(part, style)
+			body.add_child(bar)
+			bar.set_deferred("size", Vector2(136, 8))
+			bars[stat] = bar
 		var nameplate := _label(hero.name, 18, Color("edf1f7"))
-		nameplate.position = Vector2(-85, 55)
+		nameplate.position = Vector2(-85, 58)
 		nameplate.size.x = 170
 		body.add_child(nameplate)
-		fighters[id] = {"body": body, "sprite": sprite, "bar": health, "name": nameplate}
+		fighters[id] = {"body": body, "sprite": sprite, "bar": bars.health, "mana": bars.mana, "name": nameplate, "tint": null}
 	_layout_fighters()
 
 
@@ -237,23 +256,69 @@ func _draw_ring() -> void:
 		%Stage.draw_style_box(_panel(Color("111d26"), Color("111d26"), 0), Rect2(pos - Vector2(34, 5), Vector2(68, 10)))
 
 
-func _animate_hit(event: Dictionary) -> void:
+func _animate_action(event: Dictionary) -> void:
+	# Update money in the same frame that starts the cast animation, before any tween.
+	_refresh_money()
 	var source: Dictionary = fighters[event.attacker]
-	var target: Dictionary = fighters[event.target]
 	var sprite: AnimatedSprite2D = source.sprite
-	var distance: Vector2 = target.body.position - source.body.position
-	sprite.flip_h = distance.x < 0
 	sprite.play("attack")
-	var motion := sprite.create_tween()
-	motion.tween_property(sprite, "position", distance * 0.65, 0.15).set_trans(Tween.TRANS_QUAD)
-	motion.tween_property(sprite, "position", Vector2.ZERO, 0.25).set_delay(0.1)
-	var flash: Tween = target.sprite.create_tween()
-	flash.tween_property(target.sprite, "modulate", Color("ffbc9e"), 0.1)
-	flash.tween_property(target.sprite, "modulate", Color("515c68") if fight.health[event.target] == 0 else Color.WHITE, 0.3)
-	target.bar.value = fight.health[event.target]
-	if fight.health[event.target] == 0:
-		target.name.text = "%s / OUT" % fight.heroes[event.target].name
-		target.sprite.stop()
+	if event.hits.size() == 1:
+		var distance: Vector2 = fighters[event.hits[0].target].body.position - source.body.position
+		sprite.flip_h = distance.x < 0
+		var motion := sprite.create_tween()
+		motion.tween_property(sprite, "position", distance * 0.65, 0.15).set_trans(Tween.TRANS_QUAD)
+		motion.tween_property(sprite, "position", Vector2.ZERO, 0.25).set_delay(0.1)
+	if event.kind == "skill":
+		_show_tip(event.attacker)
+		_tint_fighter(event.attacker, Color("a5ffd0") if event.healing > 0 else GOLD)
+	for hit in event.hits:
+		_tint_fighter(hit.target, Color("ffbc9e"))
+	for id in fighters:
+		fighters[id].bar.value = fight.health[id]
+		fighters[id].mana.value = fight.mana[id]
+		fighters[id].mana.tooltip_text = "%d / 100 mana" % fight.mana[id]
+		if fight.health[id] == 0:
+			fighters[id].name.text = "%s / OUT" % fight.heroes[id].name
+			fighters[id].sprite.stop()
 	if event.winner >= 0:
 		fighters[event.winner].name.text = "%s / WINNER" % fight.heroes[event.winner].name
 		fighters[event.winner].name.add_theme_color_override("font_color", GOLD)
+
+
+func _tint_fighter(id: int, color: Color) -> void:
+	var fighter: Dictionary = fighters[id]
+	if fighter.tint and fighter.tint.is_valid():
+		fighter.tint.kill()
+	fighter.sprite.modulate = color
+	fighter.tint = fighter.sprite.create_tween()
+	fighter.tint.tween_property(fighter.sprite, "modulate", Color("515c68") if fight.health[id] == 0 else Color.WHITE, 0.4)
+
+
+func _show_tip(id: int) -> void:
+	var popup := Node2D.new()
+	popup.name = "SkillTip"
+	popup.position = Vector2(0, -70)
+	popup.z_index = 5
+	fighters[id].body.add_child(popup)
+	var skill_name := _label(fight.heroes[id].skill.name, 17, GOLD)
+	skill_name.position = Vector2(-120, -20)
+	skill_name.size.x = 240
+	var tip := _label("+%d" % FightRules.CAST_TIP, 32, GOLD)
+	tip.position = Vector2(-120, 2)
+	tip.size.x = 240
+	for label in [skill_name, tip]:
+		label.add_theme_color_override("font_outline_color", Color("11151e"))
+		label.add_theme_constant_override("outline_size", 5)
+		popup.add_child(label)
+	var rise := popup.create_tween()
+	rise.tween_property(popup, "position:y", popup.position.y - 34, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	rise.parallel().tween_property(popup, "modulate:a", 0.0, 0.3).set_delay(0.5)
+	rise.tween_callback(popup.queue_free)
+	if coin_pulse and coin_pulse.is_valid():
+		coin_pulse.kill()
+	%Coins.pivot_offset = %Coins.size * Vector2(1, 0.5)
+	%Coins.scale = Vector2.ONE * 1.12
+	%Coins.modulate = Color(1.5, 1.3, 1.0)
+	coin_pulse = %Coins.create_tween().set_parallel(true)
+	coin_pulse.tween_property(%Coins, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	coin_pulse.tween_property(%Coins, "modulate", Color.WHITE, 0.4)

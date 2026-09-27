@@ -92,10 +92,11 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
 text = "The arena is ready"
 
-[node name="Rules" type="Label" parent="Margin/Layout/Arena/Contents/Bar"]
+[node name="Tips" type="Label" parent="Margin/Layout/Arena/Contents/Bar"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.78, 0.44, 1)
-text = "FREE-FOR-ALL  /  1 VICTOR"
+text = "CROWD TIPS  +0"
 
 [node name="Stage" type="Control" parent="Margin/Layout/Arena/Contents"]
 unique_name_in_owner = true
@@ -145,13 +146,13 @@ theme_override_constants/separation = 3
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 23
-text = "Next fight: 100 coins"
+text = "Guaranteed: 100 coins + skill tips"
 
 [node name="Formula" type="Label" parent="Margin/Layout/Footer/Estimate"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
-text = "100 base + 5 per career victory in your trio"
+text = "100 base + 5 per victory / +10 instantly per skill"
 
 [node name="Start" type="Button" parent="Margin/Layout/Footer"]
 unique_name_in_owner = true
