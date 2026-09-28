@@ -63,8 +63,8 @@ text = "F I G H T   C L U B"
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "0 coins"
-tooltip_text = "Available coins. Skill tips enter the bank immediately."
+text = "0 gold"
+tooltip_text = "Available gold. Skill tips enter the bank immediately."
 
 [node name="ExcitementMeter" type="PanelContainer" parent="HUD"]
 unique_name_in_owner = true
@@ -101,7 +101,7 @@ text = "x1.00"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 9)
 layout_mode = 2
-tooltip_text = "Crowd excitement resets each fight. +1 per second for 20 seconds, +8 per executed skill.\n25: x1.25 fight income. 60: x2.50. Instant tips remain 10 coins."
+tooltip_text = "Crowd excitement resets each fight. +1 per second for 20 seconds, +8 per executed skill.\n25: x1.25 fight income. 60: x2.50. Instant tips remain 10 gold."
 mouse_filter = 1
 step = 0.0
 show_percentage = false
@@ -178,6 +178,12 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Center arena"
 custom_minimum_size = Vector2(112, 44)
+
+[node name="MenuButton" type="Button" parent="HUD/Footer/Contents"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Menu"
+tooltip_text = "Pause and open the main menu (Escape)"
 
 [node name="Report" type="VBoxContainer" parent="HUD/Footer/Contents"]
 layout_mode = 2
@@ -340,7 +346,7 @@ text_overrun_behavior = 3
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
-text = "0 fights completed / Session progress"
+text = "0 fights completed / Saved progress"
 
 
 [node name="Columns" type="HBoxContainer" parent="HUD/ArenaDrawer/Details"]
@@ -378,7 +384,7 @@ text = "Next: 150 seats / x1.5"
 [node name="Expand" type="Button" parent="HUD/ArenaDrawer/Details/Columns/Venue"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Expand / 500 coins"
+text = "Expand / 5500 gold"
 custom_minimum_size = Vector2(0, 44)
 
 [node name="UpgradeHint" type="Label" parent="HUD/ArenaDrawer/Details/Columns/Venue"]
@@ -404,7 +410,7 @@ text = "BASE INCOME / NEXT FIGHT"
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "100 coins"
+text = "100 gold"
 
 
 [node name="Formula" type="Label" parent="HUD/ArenaDrawer/Details/Columns/BookingIncome"]
@@ -423,8 +429,101 @@ text = "Excitement boosts this base.\nTips are paid separately."
 [node name="Note" type="Label" parent="HUD/ArenaDrawer/Details"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "More seats, more spectators. Progress lasts for this session."
+text = "More seats, more spectators. Progress saves automatically."
 
+
+[node name="MainMenu" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+z_index = 3000
+
+[node name="Shade" type="ColorRect" parent="MainMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.07, 0.09, 0.85)
+
+[node name="MenuPanel" type="PanelContainer" parent="MainMenu"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -170.0
+offset_right = 220.0
+offset_bottom = 170.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Contents" type="VBoxContainer" parent="MainMenu/MenuPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="MainMenu/MenuPanel/Contents"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.78, 0.44, 1)
+theme_override_font_sizes/font_size = 30
+text = "FIGHT CLUB"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="MainMenu/MenuPanel/Contents"]
+layout_mode = 2
+text = "Build your arena. Grow your roster."
+horizontal_alignment = 1
+
+[node name="NewGame" type="Button" parent="MainMenu/MenuPanel/Contents"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "New Game"
+
+[node name="ContinueGame" type="Button" parent="MainMenu/MenuPanel/Contents"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Continue"
+
+[node name="QuitGame" type="Button" parent="MainMenu/MenuPanel/Contents"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Quit"
+
+[node name="MenuStatus" type="Label" parent="MainMenu/MenuPanel/Contents"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 12
+text = "No saved estate to continue."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="MenuNote" type="Label" parent="MainMenu/MenuPanel/Contents"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Continue loads your estate with the arena stopped"
+horizontal_alignment = 1
+
+[node name="NewGameConfirmation" type="ConfirmationDialog" parent="."]
+unique_name_in_owner = true
+title = "Start a new game?"
+size = Vector2i(440, 140)
+dialog_text = "Start a fresh estate with Bram, Ivo, and Nia?\nThis replaces your current progress."
+ok_button_text = "Start New Game"
 
 [node name="Tick" type="Timer" parent="."]
 unique_name_in_owner = true

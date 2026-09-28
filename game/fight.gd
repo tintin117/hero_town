@@ -1,12 +1,29 @@
 extends RefCounted
-## Session-only fight rules. UI and animation never decide rewards.
+## Fight and estate rules. UI and animation never decide rewards or purchases.
 
-const REST_DURATION := 8.0
+const TownGrid := preload("res://game/town_grid.gd")
+const REST_DURATION := 120.0
+const VICTORY_INCOME_CAP := 50
+const BUILDING_COSTS := {
+	"training": [250, 150000, 1000000], "infirmary": [1800, 100000, 1800000],
+	"hall": [200, 350, 900000], "tavern": [100, 300000, 7000000],
+}
+const FIGHTER_COSTS := [700000, 1200000]
+const AUTO_FILL_COST := 6000
+const RECRUIT_COSTS := [0, 0, 0, 150, 250, 400, 350000, 500000]
+# Fixed recommendations, also used by the seeded economy check. No time gates.
+const MILESTONES := [
+	["tavern", 1], ["training", 1], ["hall", 1], ["recruit", 3], ["recruit", 4],
+	["hall", 2], ["recruit", 5], ["infirmary", 1], ["seats", 1], ["auto", 1],
+	["training", 2], ["infirmary", 2], ["fighters", 1], ["tavern", 2], ["seats", 2],
+	["hall", 3], ["recruit", 6], ["recruit", 7], ["training", 3], ["fighters", 2],
+	["infirmary", 3], ["tavern", 3],
+]
 const BASE_INCOME := 100
 const COINS_PER_VICTORY := 5
 const COINS_PER_LEVEL := 5
 const ARENA_CAPACITIES := [100, 150, 200]
-const ARENA_UPGRADE_COSTS := [500, 1000]
+const ARENA_UPGRADE_COSTS := [5500, 600000]
 const MANA_MAX := 100
 const MANA_ON_HIT := 25
 const MANA_ON_HURT := 15
@@ -35,20 +52,38 @@ const RANGED_SPEED := 75.0
 const ATTACK_INTERVAL := 1.5
 const ACTION_PAUSE := 0.2
 const TARGET_INTERVAL := 0.25
+const DASH_DISTANCE := 110.0
+const DASH_DURATION := 0.22
+const APPROACH_COOLDOWN := 4.5
+const ESCAPE_COOLDOWN := 12.0
+const APPROACH_RANGE := 200.0
+const ESCAPE_RANGE := 100.0
+const PUSHBACK_DISTANCE := 65.0
+const PUSHBACK_DURATION := 0.22
+const OVERTIME_AFTER := 60.0
 
+# Short exchanges: dashes and skill pushback create breathing room between hits.
 var heroes: Array[Dictionary] = [
-	{"name": "Bram", "unit": "warrior", "red": false, "level": 1, "xp": 0, "health": 150, "attack": 17, "wins": 0,
+	{"name": "Bram", "unit": "warrior", "red": false, "level": 1, "xp": 0, "health": 225, "attack": 17, "wins": 0,
 		"ranged": false, "skill": {"name": "Heavy Strike", "kind": "strike", "power": 2.0, "description": "Deal 2x attack damage to the nearest enemy within 45 units."}},
-	{"name": "Ivo", "unit": "lancer", "red": false, "level": 1, "xp": 0, "health": 132, "attack": 21, "wins": 0,
+	{"name": "Ivo", "unit": "lancer", "red": false, "level": 1, "xp": 0, "health": 198, "attack": 21, "wins": 0,
 		"ranged": false, "skill": {"name": "Sweep", "kind": "sweep", "power": 1.0, "description": "Deal attack damage to every enemy within a 90-unit circle."}},
-	{"name": "Nia", "unit": "archer", "red": false, "level": 1, "xp": 0, "health": 110, "attack": 18, "wins": 0,
+	{"name": "Nia", "unit": "archer", "red": false, "level": 1, "xp": 0, "health": 165, "attack": 18, "wins": 0,
 		"ranged": true, "skill": {"name": "Snipe", "kind": "strike", "power": 2.5, "description": "Deal 2.5x attack damage to the nearest enemy within 160 units."}},
-	{"name": "Tuck", "unit": "monk", "red": false, "level": 1, "xp": 0, "health": 140, "attack": 13, "wins": 0,
-		"ranged": false, "skill": {"name": "Second Wind", "kind": "heal", "power": 0.3, "description": "Restore 30% of maximum HP to yourself."}},
-	{"name": "Rook", "unit": "warrior", "red": true, "level": 1, "xp": 0, "health": 105, "attack": 12, "wins": 0,
+	{"name": "Tuck", "unit": "monk", "red": false, "level": 1, "xp": 0, "health": 210, "attack": 13, "wins": 0,
+		"ranged": false, "skill": {"name": "Second Wind", "kind": "heal", "power": 0.2, "description": "Restore 20% of maximum HP to yourself."}},
+	{"name": "Rook", "unit": "warrior", "red": true, "level": 1, "xp": 0, "health": 158, "attack": 12, "wins": 0,
 		"ranged": false, "skill": {"name": "Drain", "kind": "drain", "power": 1.5, "description": "Deal 1.5x attack damage within 45 units. Heal by actual damage dealt."}},
 ]
-var rest_remaining: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0]
+var rest_remaining: Array[float] = []
+var grid := TownGrid.new()
+var building_levels := {"training": 0, "infirmary": 0, "hall": 0, "tavern": 0}
+var fighter_tier := 0
+var auto_fill_owned := false
+var auto_fill_enabled := false
+var intro_seen := false
+var tavern_payout := 0
+var settled_tavern := 0
 var rng := RandomNumberGenerator.new()
 var participants: Array[int] = []
 var health: Dictionary = {}
@@ -60,6 +95,9 @@ var targets: Dictionary = {}
 var target_timers: Dictionary = {}
 var cooldowns: Dictionary = {}
 var pauses: Dictionary = {}
+var dash_cooldowns: Dictionary = {}
+var motions: Dictionary = {}
+var pursuit_until: Dictionary = {}
 var pending_casts: Array[int] = []
 var action_order: Array[int] = []
 var active := false
@@ -74,12 +112,157 @@ var settled_income := 0
 var last_winner := -1
 
 
+func _init() -> void:
+	for template in [[1, "Aldric"], [2, "Vera"], [3, "Oswin"]]:
+		var hero: Dictionary = heroes[template[0]].duplicate(true)
+		hero.name = template[1]
+		hero.red = true
+		heroes.append(hero)
+	for id in range(heroes.size()):
+		heroes[id].owned = id < 3
+		heroes[id].stamina = 10
+		rest_remaining.append(0.0)
+
+
+func max_stamina() -> int:
+	return 10 + int(building_levels.training) * 5
+
+
+func recovery_duration() -> float:
+	return [120.0, 90.0, 60.0, 45.0][building_levels.infirmary]
+
+
+func roster_capacity() -> int:
+	return [3, 5, 6, 8][building_levels.hall]
+
+
+func owned_count() -> int:
+	return heroes.filter(func(hero: Dictionary) -> bool: return hero.owned).size()
+
+
+func fighter_capacity() -> int:
+	return 3 + fighter_tier
+
+
+func upgrade_level(id: String) -> int:
+	match id:
+		"seats": return arena_tier
+		"fighters": return fighter_tier
+		"auto": return int(auto_fill_owned)
+	return int(building_levels.get(id, -1))
+
+
+func upgrade_cost(id: String) -> int:
+	var level := upgrade_level(id)
+	var costs: Array = BUILDING_COSTS.get(id, [])
+	match id:
+		"seats": costs = ARENA_UPGRADE_COSTS
+		"fighters": costs = FIGHTER_COSTS
+		"auto": costs = [AUTO_FILL_COST]
+	return costs[level] if level >= 0 and level < costs.size() else 0
+
+
+func purchase_upgrade(id: String, cell: Vector2i = Vector2i(-1, -1)) -> bool:
+	var cost := upgrade_cost(id)
+	if cost <= 0 or coins < cost:
+		return false
+	if building_levels.has(id) and building_levels[id] == 0 and not grid.can_place(id, cell):
+		return false
+	coins -= cost
+	match id:
+		"seats": arena_tier += 1
+		"fighters": fighter_tier += 1
+		"auto":
+			auto_fill_owned = true
+			auto_fill_enabled = true
+		_:
+			if building_levels[id] == 0:
+				grid.buildings[id] = {"cell": cell, "size": TownGrid.BUILDINGS[id].size}
+			building_levels[id] += 1
+			if id == "training":
+				for hero_id in range(heroes.size()):
+					if rest_remaining[hero_id] <= 0.0:
+						heroes[hero_id].stamina += 5
+	return true
+
+
+func can_recruit(id: int) -> bool:
+	return id >= 3 and id < heroes.size() and not heroes[id].owned and owned_count() < roster_capacity() and coins >= RECRUIT_COSTS[id]
+
+
+func recruit(id: int) -> bool:
+	if not can_recruit(id):
+		return false
+	coins -= RECRUIT_COSTS[id]
+	heroes[id].owned = true
+	heroes[id].stamina = max_stamina()
+	return true
+
+
+func ready(id: int) -> bool:
+	return id >= 0 and id < heroes.size() and heroes[id].owned and heroes[id].stamina > 0 and rest_remaining[id] <= 0.0
+
+
+func next_lineup(preferred: Array[int]) -> Array[int]:
+	if not auto_fill_owned or not auto_fill_enabled:
+		return preferred.duplicate()
+	var result: Array[int] = []
+	for id in preferred:
+		if ready(id) and id not in result and result.size() < fighter_capacity():
+			result.append(id)
+	for id in ready_lineup():
+		if id not in result and result.size() < fighter_capacity():
+			result.append(id)
+	return result
+
+
+func ready_lineup() -> Array[int]:
+	var candidates: Array[int] = []
+	for id in range(heroes.size()):
+		if ready(id):
+			candidates.append(id)
+	candidates.sort_custom(func(a: int, b: int) -> bool: return heroes[a].stamina > heroes[b].stamina if heroes[a].stamina != heroes[b].stamina else a < b)
+	return candidates.slice(0, fighter_capacity())
+
+
+func upgrade_benefit(id: String) -> String:
+	var level := upgrade_level(id)
+	match id:
+		"training": return "Stamina: %d → %d / +5 to ready heroes" % [max_stamina(), mini(25, max_stamina() + 5)] if level < 3 else "25 stamina / maximum"
+		"infirmary": return "Recovery: %ds → %ds / next injury" % [recovery_duration(), [90, 60, 45, 45][level]] if level < 3 else "45s recovery / maximum"
+		"hall": return "Roster space: %d → %d / recruits sold separately" % [roster_capacity(), [5, 6, 8, 8][level]] if level < 3 else "8 roster spaces / maximum"
+		"tavern": return "Sales: +%d → +%d gold per fight" % [arena_capacity() * [0, 1, 3, 6][level], arena_capacity() * [1, 3, 6, 6][level]] if level < 3 else "Sales: +%d gold per fight" % (arena_capacity() * 6)
+		"seats": return "Seats: %d → %d / more fight income and sales" % [arena_capacity(), mini(200, arena_capacity() + 50)]
+		"fighters": return "Fighters: %d → %d / takes effect next fight" % [fighter_capacity(), mini(5, fighter_capacity() + 1)]
+		"auto": return "Automatically replace tired bookings with ready recruits"
+	return ""
+
+
+func next_milestone() -> Dictionary:
+	for step in MILESTONES:
+		var id: String = step[0]
+		var target: int = step[1]
+		if id == "recruit":
+			if not heroes[target].owned:
+				if owned_count() >= roster_capacity():
+					return {"id": "hall", "target": building_levels.hall + 1, "name": "Recruitment Hall / more roster space", "cost": upgrade_cost("hall")}
+				return {"id": id, "target": target, "name": "Recruit " + heroes[target].name, "cost": RECRUIT_COSTS[target]}
+		elif upgrade_level(id) < target:
+			var title: String = {"seats": "Spectator seats", "fighters": "Fighter capacity", "auto": "Auto-fill"}.get(id, "")
+			if title.is_empty():
+				title = TownGrid.BUILDINGS[id].name
+			return {"id": id, "target": target, "name": title + (" / level %d" % target if id != "auto" else ""), "cost": upgrade_cost(id)}
+	return {}
+
+
 func valid_lineup(lineup: Array[int]) -> bool:
-	if lineup.size() != 3:
+	if lineup.size() < 3 or lineup.size() > fighter_capacity():
 		return false
 	var unique := {}
 	for id in lineup:
 		if id < 0 or id >= heroes.size() or unique.has(id):
+			return false
+		if not heroes[id].owned:
 			return false
 		unique[id] = true
 	return true
@@ -103,7 +286,7 @@ func income_breakdown(lineup: Array[int]) -> Dictionary:
 	var victories := 0
 	var levels := 0
 	for id in lineup:
-		victories += int(heroes[id].wins)
+		victories += mini(int(heroes[id].wins), VICTORY_INCOME_CAP)
 		levels += int(heroes[id].level) - 1
 	var multiplier := float(arena_capacity()) / ARENA_CAPACITIES[0]
 	var level_bonus := levels * COINS_PER_LEVEL
@@ -132,12 +315,7 @@ func arena_upgrade_cost() -> int:
 
 
 func upgrade_arena() -> bool:
-	var cost := arena_upgrade_cost()
-	if cost == 0 or coins < cost:
-		return false
-	coins -= cost
-	arena_tier += 1
-	return true
+	return purchase_upgrade("seats")
 
 
 func xp_needed(id: int) -> int:
@@ -166,8 +344,11 @@ func _award_xp(id: int, amount: int) -> Dictionary:
 func start(lineup: Array[int]) -> bool:
 	if active or not valid_lineup(lineup) or lineup_rest(lineup) > 0.0:
 		return false
+	for id in lineup:
+		if not ready(id):
+			return false
 	participants = lineup.duplicate()
-	for state in [health, mana, battle_stats, positions, velocities, targets, target_timers, cooldowns, pauses]:
+	for state in [health, mana, battle_stats, positions, velocities, targets, target_timers, cooldowns, pauses, dash_cooldowns, motions, pursuit_until]:
 		state.clear()
 	pending_casts.clear()
 	action_order.clear()
@@ -175,6 +356,8 @@ func start(lineup: Array[int]) -> bool:
 	excitement = 0.0
 	elapsed = 0.0
 	settled_income = 0
+	settled_tavern = 0
+	tavern_payout = arena_capacity() * [0, 1, 3, 6][building_levels.tavern]
 	var remaining := participants.duplicate()
 	while not remaining.is_empty():
 		action_order.append(remaining.pop_at(rng.randi_range(0, remaining.size() - 1)))
@@ -184,12 +367,13 @@ func start(lineup: Array[int]) -> bool:
 		battle_stats[id] = stats_for(id)
 		health[id] = battle_stats[id].health
 		mana[id] = 0
-		positions[id] = Vector2.from_angle(-PI / 2.0 + TAU * slot / 3.0) * ARENA_RADIUS * 0.72
+		positions[id] = Vector2.from_angle(-PI / 2.0 + TAU * slot / participants.size()) * ARENA_RADIUS * 0.72
 		velocities[id] = Vector2.ZERO
 		targets[id] = -1
 		target_timers[id] = 0.0
 		cooldowns[id] = rng.randf_range(0.0, 0.3)
 		pauses[id] = 0.0
+		dash_cooldowns[id] = 0.5
 	payout = income_for(participants)
 	last_winner = -1
 	active = true
@@ -209,7 +393,10 @@ func advance(delta: float) -> Array[Dictionary]:
 	if delta <= 0.0 or not is_finite(delta):
 		return events
 	for id in range(rest_remaining.size()):
-		rest_remaining[id] = maxf(0.0, rest_remaining[id] - delta)
+		if rest_remaining[id] > 0.0:
+			rest_remaining[id] = maxf(0.0, rest_remaining[id] - delta)
+			if rest_remaining[id] == 0.0:
+				heroes[id].stamina = max_stamina()
 	if not active:
 		return events
 	var time_gain := minf(delta, maxf(0.0, EXCITEMENT_TIME_CAP - elapsed))
@@ -218,18 +405,19 @@ func advance(delta: float) -> Array[Dictionary]:
 	for id in survivors():
 		cooldowns[id] = maxf(0.0, cooldowns[id] - delta)
 		pauses[id] = maxf(0.0, pauses[id] - delta)
+		dash_cooldowns[id] = maxf(0.0, dash_cooldowns[id] - delta)
 		target_timers[id] -= delta
 		if target_timers[id] <= 0.0 or health.get(targets[id], 0) <= 0:
 			_target_for(id)
 			target_timers[id] = TARGET_INTERVAL
-	_move(delta)
+	_move(delta, events)
 	for id in action_order:
 		_queue_ready(id)
 	_resolve_casts(events)
 	for id in action_order:
 		if not active:
 			break
-		if health[id] <= 0 or mana[id] == MANA_MAX or cooldowns[id] > 0.0:
+		if health[id] <= 0 or mana[id] == MANA_MAX or cooldowns[id] > 0.0 or _is_dashing(id):
 			continue
 		var target := _target_for(id)
 		if not _in_range(id, target, attack_range(id)):
@@ -245,11 +433,24 @@ func attack_range(id: int) -> float:
 	return RANGED_RANGE if heroes[id].ranged else MELEE_RANGE
 
 
-func _move(delta: float) -> void:
+func _move(delta: float, events: Array[Dictionary]) -> void:
 	var before := positions.duplicate()
 	var alive := survivors()
 	for id in alive:
 		var target: int = targets[id]
+		if not motions.has(id) and pauses[id] <= 0.0 and target >= 0:
+			_try_dash(id, before, events)
+		if motions.has(id):
+			var motion: Dictionary = motions[id]
+			motion.elapsed = minf(motion.duration, motion.elapsed + delta)
+			var progress: float = motion.elapsed / motion.duration
+			if motion.kind == "pushback":
+				progress = 1.0 - pow(1.0 - progress, 2)
+			positions[id] = motion.origin.lerp(motion.destination, progress).limit_length(ARENA_RADIUS)
+			if motion.elapsed >= motion.duration:
+				motions.erase(id)
+				target_timers[id] = 0.0
+			continue
 		if target < 0 or pauses[id] > 0.0:
 			continue
 		var offset: Vector2 = before[target] - before[id]
@@ -265,7 +466,7 @@ func _move(delta: float) -> void:
 			if (before[id] + movement).length() > ARENA_RADIUS:
 				movement = Vector2.ZERO
 		positions[id] = (before[id] + movement).limit_length(ARENA_RADIUS)
-	# ponytail: pairwise separation is sufficient for three heroes; revisit for large crowds.
+	# ponytail: pairwise separation suffices for five heroes; revisit for large crowds.
 	for a in range(alive.size()):
 		for b in range(a + 1, alive.size()):
 			var first := alive[a]
@@ -280,6 +481,67 @@ func _move(delta: float) -> void:
 			positions[second] = (positions[second] + push).limit_length(ARENA_RADIUS)
 	for id in participants:
 		velocities[id] = (positions[id] - before[id]) / delta if health[id] > 0 else Vector2.ZERO
+
+
+func _is_dashing(id: int) -> bool:
+	return motions.has(id) and motions[id].kind != "pushback"
+
+
+func _try_dash(id: int, before: Dictionary, events: Array[Dictionary]) -> void:
+	if dash_cooldowns[id] > 0.0:
+		return
+	var target: int = targets[id]
+	var offset: Vector2 = before[target] - before[id]
+	var distance := offset.length()
+	var destination: Vector2 = before[id]
+	var kind := "approach"
+	if heroes[id].ranged:
+		# Escape only from a close opponent actively pursuing this hero.
+		var threat := -1
+		var nearest := ESCAPE_RANGE
+		for opponent in survivors():
+			var gap: float = before[id].distance_to(before[opponent])
+			if opponent != id and targets[opponent] == id and gap <= nearest:
+				threat = opponent
+				nearest = gap
+		if threat < 0:
+			return
+		var away: Vector2 = (before[id] - before[threat]).normalized()
+		if away.is_zero_approx():
+			away = Vector2.RIGHT
+		var clearance := INF
+		for opponent in survivors():
+			if opponent != id:
+				clearance = minf(clearance, before[id].distance_to(before[opponent]))
+		var best := clearance + 10.0
+		# Five candidate directions suffice in the obstacle-free circular arena.
+		for angle in [0.0, PI / 3, -PI / 3, PI / 2, -PI / 2]:
+			var candidate: Vector2 = (before[id] + away.rotated(angle) * DASH_DISTANCE).limit_length(ARENA_RADIUS)
+			if candidate.distance_to(before[id]) < 40.0:
+				continue
+			var safety := INF
+			for opponent in survivors():
+				if opponent != id:
+					safety = minf(safety, candidate.distance_to(before[opponent]))
+			if safety > best:
+				best = safety
+				destination = candidate
+		kind = "escape"
+	elif distance > MELEE_RANGE + 25.0 and distance <= APPROACH_RANGE:
+		destination = before[id] + offset.normalized() * minf(DASH_DISTANCE, distance - MELEE_RANGE + 4.0)
+	if destination.is_equal_approx(before[id]):
+		return
+	destination = destination.limit_length(ARENA_RADIUS)
+	motions[id] = {"kind": kind, "origin": before[id], "destination": destination, "elapsed": 0.0, "duration": DASH_DURATION}
+	dash_cooldowns[id] = ESCAPE_COOLDOWN if heroes[id].ranged else APPROACH_COOLDOWN
+	if not heroes[id].ranged:
+		# Finish the chase instead of switching to another melee hero after an escape.
+		pursuit_until[id] = elapsed + APPROACH_COOLDOWN
+	var event := _action_event(id, "move")
+	event.move_kind = kind
+	event.destination = destination
+	event.duration = DASH_DURATION
+	events.append(event)
 
 
 func _in_range(actor: int, target: int, radius: float) -> bool:
@@ -299,6 +561,9 @@ func _resolve_casts(events: Array[Dictionary]) -> void:
 	for id in waiting:
 		if health[id] <= 0 or mana[id] != MANA_MAX:
 			continue
+		if _is_dashing(id):
+			pending_casts.append(id)
+			continue
 		var target := _target_for(id)
 		var skill: Dictionary = heroes[id].skill
 		var radius := SWEEP_RANGE if skill.kind == "sweep" else attack_range(id)
@@ -310,11 +575,16 @@ func _resolve_casts(events: Array[Dictionary]) -> void:
 			return
 
 
+func _action_event(attacker: int, kind: String) -> Dictionary:
+	return {"kind": kind, "attacker": attacker,
+		"origin": positions[attacker], "radius": 0.0, "hits": [], "healing": 0, "tip": 0,
+		"excitement_gain": 0.0, "time": elapsed, "winner": -1, "progression": [],
+		"coins": coins, "crowd_tips": crowd_tips, "excitement": excitement}
+
+
 func _act(attacker: int, casting: bool) -> Dictionary:
 	var target := _target_for(attacker)
-	var event := {"kind": "skill" if casting else "attack", "attacker": attacker,
-		"origin": positions[attacker], "radius": 0.0, "hits": [], "healing": 0, "tip": 0,
-		"excitement_gain": 0.0, "time": elapsed, "winner": -1, "progression": []}
+	var event := _action_event(attacker, "skill" if casting else "attack")
 	pauses[attacker] = ACTION_PAUSE
 	if casting:
 		# Tips and excitement start with the cast, including a fight-ending cast.
@@ -339,6 +609,15 @@ func _act(attacker: int, casting: bool) -> Dictionary:
 				event.hits.append(hit)
 				if skill.kind == "drain":
 					event.healing = _heal(attacker, hit.damage)
+		# Resolve every hit first, then push survivors from the snapshotted impact.
+		for hit in event.hits:
+			if health[hit.target] > 0:
+				var direction: Vector2 = (hit.position - event.origin).normalized()
+				if direction.is_zero_approx():
+					direction = Vector2.RIGHT
+				hit.push_to = (hit.position + direction * PUSHBACK_DISTANCE).limit_length(ARENA_RADIUS)
+				motions[hit.target] = {"kind": "pushback", "origin": hit.position, "destination": hit.push_to,
+					"elapsed": 0.0, "duration": PUSHBACK_DURATION}
 	else:
 		var damage := maxi(1, int(battle_stats[attacker].attack) + rng.randi_range(-3, 3))
 		event.hits.append(_hit(target, damage))
@@ -351,14 +630,19 @@ func _act(attacker: int, casting: bool) -> Dictionary:
 	if alive.size() == 1:
 		active = false
 		pending_casts.clear()
+		motions.clear()
+		pursuit_until.clear()
 		last_winner = alive[0]
 		settled_income = income_with_excitement(excitement)
-		coins += settled_income
+		settled_tavern = tavern_payout
+		coins += settled_income + settled_tavern
 		heroes[last_winner].wins += 1
 		completed += 1
 		event.winner = last_winner
 		for id in participants:
-			rest_remaining[id] = REST_DURATION
+			heroes[id].stamina -= 1
+			if heroes[id].stamina == 0:
+				rest_remaining[id] = recovery_duration()
 			velocities[id] = Vector2.ZERO
 			event.progression.append(_award_xp(id, XP_PER_FIGHT + (XP_WIN_BONUS if id == last_winner else 0)))
 	# Snapshots let the UI consume several same-frame actions in their reward order.
@@ -369,6 +653,10 @@ func _act(attacker: int, casting: bool) -> Dictionary:
 
 
 func _target_for(attacker: int) -> int:
+	var pursued: int = targets.get(attacker, -1)
+	if pursuit_until.get(attacker, 0.0) > elapsed and health.get(pursued, 0) > 0:
+		return pursued
+	pursuit_until.erase(attacker)
 	var candidates: Array[int] = []
 	var best := INF
 	for id in survivors():
@@ -387,9 +675,17 @@ func _target_for(attacker: int) -> int:
 	return target
 
 
+func overtime_multiplier() -> float:
+	# Mirror healers otherwise sustain forever. Ordinary short matches are unchanged.
+	return 1.0 + maxf(0.0, elapsed - OVERTIME_AFTER) * 0.1
+
+
 func _hit(target: int, amount: int) -> Dictionary:
-	var damage := mini(int(health[target]), amount)
+	var damage := mini(int(health[target]), roundi(amount * overtime_multiplier()))
 	health[target] -= damage
+	if health[target] == 0:
+		motions.erase(target)
+		pursuit_until.erase(target)
 	return {"target": target, "damage": damage, "position": positions[target]}
 
 

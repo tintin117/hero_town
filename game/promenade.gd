@@ -1,5 +1,8 @@
 extends Control
 ## Fixed-size town: scenery scrolls with its native ground cells and buildings.
+signal building_clicked(id: String)
+signal construction_requested(id: String, cell: Vector2i)
+signal building_moved
 const TownGrid := preload("res://game/town_grid.gd")
 const ROOT := "res://asset/Tiny Swords (Free Pack)/"
 const TILES := preload(ROOT + "Terrain/Tileset/Tilemap_color1.png")
@@ -11,7 +14,9 @@ const WALKER := preload(ROOT + "Units/Blue Units/Pawn/Pawn_Run.png")
 const WORLD_WIDTH := TownGrid.WORLD_WIDTH
 const BUILDING_ART := {
 	"tavern": {"texture": HOUSE, "size": Vector2(96, 128)},
-	"barracks": {"texture": BARRACKS, "size": Vector2(120, 132)},
+	"hall": {"texture": BARRACKS, "size": Vector2(120, 132)},
+	"training": {"texture": preload(ROOT + "Buildings/Blue Buildings/Archery.png"), "size": Vector2(120, 132)},
+	"infirmary": {"texture": preload(ROOT + "Buildings/Blue Buildings/Monastery.png"), "size": Vector2(96, 128)},
 }
 
 var grid := TownGrid.new()
@@ -21,6 +26,7 @@ var building_layer := Node2D.new()
 var building_nodes: Dictionary = {}
 var preview := Sprite2D.new()
 var arranging := false
+var constructing := false
 var selected_building := ""
 var preview_cell := Vector2i.ZERO
 var clock := 0.0
@@ -50,7 +56,34 @@ func _ready() -> void:
 	ground_details.draw.connect(_draw_ground)
 	building_layer.y_sort_enabled = true
 	add_child(building_layer)
+	for x in [100, 1910]:
+		var sign := Label.new()
+		sign.text = "Future expansion\n100,000,000 gold\nUnavailable in this demo"
+		sign.position = Vector2(x, 150)
+		sign.size = Vector2(300, 75)
+		sign.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		sign.add_theme_font_size_override("font_size", 16)
+		sign.add_theme_color_override("font_color", Color("f4dfac"))
+		sign.add_theme_color_override("font_outline_color", Color("192631"))
+		sign.add_theme_constant_override("outline_size", 5)
+		sign.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(sign)
+	preview.centered = false
+	preview.visible = false
+	preview.z_index = 1500
+	add_child(preview)
+	resized.connect(_layout)
+	sync_buildings()
+
+
+func sync_buildings() -> void:
+	for id in building_nodes.keys():
+		if not grid.buildings.has(id):
+			building_nodes[id].queue_free()
+			building_nodes.erase(id)
 	for id in grid.buildings:
+		if building_nodes.has(id):
+			continue
 		var body := Node2D.new()
 		body.name = id.capitalize()
 		var sprite := Sprite2D.new()
@@ -61,9 +94,9 @@ func _ready() -> void:
 		sprite.position = -BUILDING_ART[id].size * Vector2(0.5, 1.0)
 		body.add_child(sprite)
 		var label := Label.new()
-		label.text = id.to_upper()
-		label.position = Vector2(-39, -18)
-		label.size = Vector2(78, 18)
+		label.text = TownGrid.BUILDINGS[id].name.to_upper()
+		label.position = Vector2(-72, -18)
+		label.size = Vector2(144, 18)
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		label.add_theme_font_size_override("font_size", 10)
@@ -73,11 +106,6 @@ func _ready() -> void:
 		body.add_child(label)
 		building_layer.add_child(body)
 		building_nodes[id] = body
-	preview.centered = false
-	preview.visible = false
-	preview.z_index = 1500
-	add_child(preview)
-	resized.connect(_layout)
 	_layout()
 
 
@@ -99,7 +127,23 @@ func point_for_cell(cell: Vector2i) -> Vector2:
 
 
 func _feet(id: String, cell: Vector2i) -> Vector2:
-	return tiles.position + Vector2(cell * TownGrid.CELL_SIZE) + Vector2(grid.buildings[id].size * TownGrid.CELL_SIZE) * Vector2(0.5, 1.0)
+	return tiles.position + Vector2(cell * TownGrid.CELL_SIZE) + Vector2(TownGrid.BUILDINGS[id].size * TownGrid.CELL_SIZE) * Vector2(0.5, 1.0)
+
+
+func begin_construction(id: String) -> void:
+	cancel_placement()
+	arranging = true
+	constructing = true
+	selected_building = id
+	preview_cell = Vector2i(10, 3)
+	# Start with an open estate cell so a first-time builder sees a valid preview.
+	for y in [3, 1, 5, 0, 2, 4]:
+		for x in range(TownGrid.OWNED.position.x, TownGrid.OWNED.end.x):
+			if grid.can_place(id, Vector2i(x, y)):
+				preview_cell = Vector2i(x, y)
+				_update_preview()
+				return
+	_update_preview()
 
 
 func set_arranging(enabled: bool) -> void:
@@ -111,6 +155,7 @@ func set_arranging(enabled: bool) -> void:
 
 func cancel_placement() -> void:
 	selected_building = ""
+	constructing = false
 	preview.visible = false
 	for body in building_nodes.values():
 		body.modulate = Color.WHITE
@@ -131,6 +176,11 @@ func _update_preview() -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if not arranging:
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			var id := _building_at_point(event.position)
+			if not id.is_empty():
+				building_clicked.emit(id)
+				accept_event()
 		return
 	if event is InputEventMouseMotion and not selected_building.is_empty():
 		preview_cell = cell_for_point(event.position)
@@ -142,24 +192,32 @@ func _gui_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			if not selected_building.is_empty():
 				preview_cell = cell_for_point(event.position)
-				if grid.try_move(selected_building, preview_cell):
+				if constructing:
+					construction_requested.emit(selected_building, preview_cell)
+				elif grid.try_move(selected_building, preview_cell):
 					cancel_placement()
 					_layout()
+					building_moved.emit()
 				else:
 					_update_preview()
 			else:
-				var candidates: Array = building_nodes.keys()
-				candidates.sort_custom(func(a: String, b: String) -> bool: return building_nodes[a].position.y > building_nodes[b].position.y)
-				for id in candidates:
-					var art: Vector2 = BUILDING_ART[id].size
-					var body: Node2D = building_nodes[id]
-					if Rect2(body.position - art * Vector2(0.5, 1.0), art).has_point(event.position) or grid.building_at(cell_for_point(event.position)) == id:
-						selected_building = id
-						preview_cell = grid.buildings[id].cell
-						body.modulate.a = 0.35
-						_update_preview()
-						break
+				var id := _building_at_point(event.position)
+				if not id.is_empty():
+					selected_building = id
+					preview_cell = grid.buildings[id].cell
+					building_nodes[id].modulate.a = 0.35
+					_update_preview()
 			accept_event()
+
+
+func _building_at_point(point: Vector2) -> String:
+	var candidates: Array = building_nodes.keys()
+	candidates.sort_custom(func(a: String, b: String) -> bool: return building_nodes[a].position.y > building_nodes[b].position.y)
+	for id in candidates:
+		var art: Vector2 = BUILDING_ART[id].size
+		if Rect2(building_nodes[id].position - art * Vector2(0.5, 1.0), art).has_point(point):
+			return id
+	return grid.building_at(cell_for_point(point))
 
 
 func _process(delta: float) -> void:
@@ -190,6 +248,11 @@ func _draw() -> void:
 
 
 func _draw_ground() -> void:
+	for x in [0, 38]:
+		ground_details.draw_rect(Rect2(tiles.position + Vector2(x * 48, 0), Vector2(480, 168)), Color(0.08, 0.15, 0.18, 0.55))
+	for x in [10, 38]:
+		var boundary := tiles.position + Vector2(x * 48, 0)
+		ground_details.draw_line(boundary, boundary + Vector2(0, 168), Color("d7b46b"), 3.0)
 	var path_y := tiles.position.y + 180.0
 	ground_details.draw_line(Vector2(0, path_y), Vector2(WORLD_WIDTH, path_y), Color("9b8962"), 24.0)
 	ground_details.draw_line(Vector2(0, path_y - 1), Vector2(WORLD_WIDTH, path_y - 1), Color("c5b17d"), 20.0)
@@ -214,7 +277,7 @@ func _draw_ground() -> void:
 		for x in range(TownGrid.SIZE.x):
 			var cell := Vector2i(x, y)
 			var rect := Rect2(point_for_cell(cell) - Vector2(TownGrid.CELL_SIZE) * 0.5, Vector2(TownGrid.CELL_SIZE))
-			if grid.is_protected(cell):
+			if grid.is_protected(cell) or not TownGrid.OWNED.has_point(cell):
 				ground_details.draw_rect(rect, Color(0.4, 0.25, 0.2, 0.22))
 			ground_details.draw_rect(rect, Color(0.85, 0.92, 0.73, 0.45), false, 1.0)
 	for id in grid.buildings:

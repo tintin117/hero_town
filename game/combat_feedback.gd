@@ -6,10 +6,13 @@ const BURST := preload("res://vfx/effects/impact/hit_burst.tscn")
 const SMOKE := preload("res://vfx/effects/utility/smoke_pop.tscn")
 const SPARKLE := preload("res://vfx/effects/ui/pickup_sparkle.tscn")
 const SHOCKWAVE := preload("res://vfx/effects/impact/shockwave.tscn")
+const FLASH := preload("res://vfx/effects/impact/hit_flash.tscn")
 const GOLD := Color("f2c771")
 const CREAM := Color("fff0cf")
 const GREEN := Color("8cf5b6")
 const RED := Color("f4768c")
+const SKILL_COLORS := [GOLD, Color("ffe6a0"), Color("8ee5ff"), GREEN, RED]
+const SKILL_DURATION := 0.85
 
 var ui: Control
 var world := Node2D.new()
@@ -84,35 +87,49 @@ func reset() -> void:
 
 func present(event: Dictionary) -> void:
 	var caster: int = event.attacker
+	if event.kind == "move":
+		effects.append({"event": event, "age": 0.0, "duration": 0.4,
+			"texture": ui.fighters[caster].sprite.sprite_frames.get_frame_texture("run", 0)})
+		_spawn(SMOKE, ui._project(event.origin), 0.25, Color("d7bc86"), {"puff_count": 4})
+		return
 	var skill: bool = event.kind == "skill"
 	var origin: Vector2 = ui._project(event.origin)
-	effects.append({"event": event, "age": 0.0})
+	effects.append({"event": event, "age": 0.0, "duration": SKILL_DURATION if skill else 0.45})
 	for hit in event.hits:
 		var target: Vector2 = ui._project(hit.position)
 		_number(str(hit.damage), target - Vector2(0, 42), 22 if skill else 16, GOLD if skill else CREAM, "damage")
 		_spawn(IMPACT, target - Vector2(0, 23), 0.36 if skill else 0.18, GOLD if skill else CREAM, {"streak_count": 8 if skill else 4})
 		_recoil(hit.target, (target - origin).normalized(), skill)
+		if hit.has("push_to"):
+			_spawn(SMOKE, target, 0.18, Color("d7bc86"), {"puff_count": 3})
 	if event.healing > 0:
 		_number("+%d" % event.healing, origin - Vector2(0, 48), 20, GREEN, "healing")
 	if not skill:
 		return
 	_number(ui.fight.heroes[caster].skill.name, origin - Vector2(0, 76), 13, GOLD, "skill_name")
 	_show_tip(event.tip)
+	_spawn(FLASH, origin - Vector2(0, 23), 0.65, SKILL_COLORS[caster])
 	match caster:
 		0:
 			var target: Vector2 = ui._project(event.hits[0].position)
-			_spawn(BURST, target - Vector2(0, 18), 0.3, GOLD, {"chunk_count": 7, "smoke_count": 3})
-			_spawn(SMOKE, target, 0.25, Color("c3a879"), {"puff_count": 4})
+			_spawn(BURST, target - Vector2(0, 18), 0.5, GOLD, {"chunk_count": 12, "smoke_count": 4})
+			_spawn(SMOKE, target, 0.4, Color("c3a879"), {"puff_count": 6})
+			_spawn(SHOCKWAVE, target, 0.65, GOLD, {"max_radius_px": 64, "squash": ui.GROUND_DEPTH})
 		1:
 			var radius: float = ui._project(event.origin + Vector2(event.radius, 0)).x - origin.x
 			_spawn(SHOCKWAVE, origin, 1.0, GOLD, {"max_radius_px": roundi(radius), "squash": ui.GROUND_DEPTH})
+			for index in range(4):
+				var edge: Vector2 = ui._project(event.origin + Vector2.from_angle(index * TAU / 4) * event.radius)
+				_spawn(SMOKE, edge, 0.18, Color("d7bc86"), {"puff_count": 3})
 		2:
-			_spawn(IMPACT, ui._project(event.hits[0].position) - Vector2(0, 23), 0.45, Color("b9eaff"), {"star_points": 6, "streak_count": 8})
+			_spawn(IMPACT, ui._project(event.hits[0].position) - Vector2(0, 23), 0.6, SKILL_COLORS[caster], {"star_points": 6, "streak_count": 14})
+			_spawn(SPARKLE, origin - Vector2(0, 23), 0.55, SKILL_COLORS[caster], {"star_count": 3})
 		3:
-			_spawn(SPARKLE, origin - Vector2(0, 22), 0.75, GREEN, {"star_count": 4})
-			_spawn(SHOCKWAVE, origin, 0.45, GREEN, {"max_radius_px": 70, "squash": 0.32})
+			_spawn(SPARKLE, origin - Vector2(0, 22), 1.0, GREEN, {"star_count": 7})
+			_spawn(SHOCKWAVE, origin, 0.7, GREEN, {"max_radius_px": 70, "squash": 0.32})
 		4:
-			_spawn(SPARKLE, origin - Vector2(0, 22), 0.5, RED, {"star_count": 3})
+			_spawn(SPARKLE, origin - Vector2(0, 22), 0.8, RED, {"star_count": 5})
+			_spawn(BURST, ui._project(event.hits[0].position) - Vector2(0, 23), 0.25, RED, {"chunk_count": 6, "smoke_count": 0})
 	if event.excitement_gain > 0.0:
 		gains.append({"time": event.time, "amount": event.excitement_gain})
 		gains = gains.filter(func(gain: Dictionary): return event.time - gain.time <= 2.0)
@@ -237,7 +254,7 @@ func _process(delta: float) -> void:
 		effect.age += delta
 	for firework in fireworks:
 		firework.age += delta
-	effects = effects.filter(func(effect: Dictionary): return effect.age < 0.45)
+	effects = effects.filter(func(effect: Dictionary): return effect.age < effect.duration)
 	fireworks = fireworks.filter(func(firework: Dictionary): return firework.age < 1.2)
 	world.queue_redraw()
 	sky.queue_redraw()
@@ -246,35 +263,105 @@ func _process(delta: float) -> void:
 func _draw_actions() -> void:
 	for effect in effects:
 		var event: Dictionary = effect.event
-		var progress: float = effect.age / 0.45
+		if event.kind == "move":
+			_draw_dash(effect)
+			continue
+		var progress: float = effect.age / effect.duration
 		var alpha := 1.0 - progress
-		var skill: bool = event.kind == "skill"
 		var origin: Vector2 = ui._project(event.origin)
-		if event.radius > 0.0:
-			# Exact footprint stays visible underneath the rotating sweep.
+		if event.kind == "skill":
+			_draw_skill(event, progress)
+			continue
+		for hit in event.hits:
+			var start := origin - Vector2(0, 23)
+			var target: Vector2 = ui._project(hit.position) - Vector2(0, 23)
+			if event.attacker == 2:
+				world.draw_line(start, target, Color("b9eaff", alpha), 1.5, true)
+				world.draw_line(start, target, Color(CREAM, alpha), 1.0, true)
+			else:
+				var direction := (target - start).angle()
+				world.draw_arc(target, 12, direction - 1.8 + progress, direction + 0.7 + progress, 18, Color(CREAM, alpha), 2.0, true)
+
+
+func _draw_dash(effect: Dictionary) -> void:
+	var event: Dictionary = effect.event
+	var progress: float = minf(1.0, effect.age / event.duration)
+	var alpha: float = 1.0 - effect.age / effect.duration
+	var color := Color("8ee5ff") if event.move_kind == "escape" else GOLD
+	var start: Vector2 = ui._project(event.origin) - Vector2(0, 23)
+	var destination: Vector2 = ui._project(event.destination) - Vector2(0, 23)
+	var head := start.lerp(destination, progress)
+	var side := (destination - start).normalized().orthogonal()
+	for index in range(3):
+		var at := start.lerp(destination, maxf(0.0, progress - 0.16 * (index + 1)))
+		var size: Vector2 = effect.texture.get_size() * 0.78
+		world.draw_set_transform(at, 0.0, Vector2(-1, 1) if destination.x < start.x else Vector2.ONE)
+		world.draw_texture_rect(effect.texture, Rect2(-size * 0.5, size), false, Color(color, alpha * (0.28 - index * 0.06)))
+		world.draw_set_transform(Vector2.ZERO)
+		var offset := side * (index - 1) * 5
+		world.draw_line(at + offset, head + offset, Color(color, alpha * 0.7), 1.5, true)
+
+
+func _draw_skill(event: Dictionary, progress: float) -> void:
+	var alpha := 1.0 - progress
+	var origin: Vector2 = ui._project(event.origin)
+	var start := origin - Vector2(0, 23)
+	var color: Color = SKILL_COLORS[event.attacker]
+	# A brief floor pulse makes the caster readable without covering HP or numbers.
+	world.draw_polyline(ui._circle_points(event.origin, 24 + progress * 28), Color(color, alpha * 0.65), 2.0, true)
+	match event.attacker:
+		0:
+			var target: Vector2 = ui._project(event.hits[0].position) - Vector2(0, 23)
+			var direction := (target - start).angle() + progress * 1.4
+			for ribbon in range(3):
+				world.draw_arc(target, 26 + ribbon * 7 + progress * 12, direction - 2.2, direction + 0.7, 28, Color(color, alpha * (1.0 - ribbon * 0.25)), 7 - ribbon * 2, true)
+			world.draw_line(target - Vector2(16, 26) * alpha, target + Vector2(16, 26) * alpha, Color(CREAM, alpha), 3.0, true)
+		1:
 			var area: PackedVector2Array = ui._circle_points(event.origin, event.radius)
-			world.draw_colored_polygon(area.slice(0, 64), Color(GOLD, alpha * 0.16))
-			world.draw_polyline(area, Color(GOLD, alpha), 2.0, true)
-			var arc := PackedVector2Array()
-			for index in range(20):
-				arc.append(ui._project(event.origin + Vector2.from_angle(progress * TAU * 1.5 + index * 0.07) * event.radius))
-			world.draw_polyline(arc, Color(CREAM, alpha), 5.0, true)
-		elif event.hits.is_empty():
-			world.draw_arc(origin - Vector2(0, 12 + progress * 28), 18 + progress * 9, 0, TAU, 24, Color(GREEN, alpha), 2.0, true)
-		else:
-			for hit in event.hits:
-				var start := origin - Vector2(0, 23)
-				var target: Vector2 = ui._project(hit.position) - Vector2(0, 23)
-				if skill and event.attacker == 4:
-					world.draw_line(target, start, Color(RED, alpha * 0.6), 3.0, true)
-					for mote in range(3):
-						world.draw_circle(target.lerp(start, fmod(progress + mote * 0.25, 1.0)), 3.0, Color(RED, alpha))
-				elif event.attacker == 2:
-					world.draw_line(start, target, Color("b9eaff", alpha), 4.0 if skill else 1.5, true)
-					world.draw_line(start, target, Color(CREAM, alpha), 1.0, true)
-				else:
-					var direction := (target - start).angle()
-					world.draw_arc(target, 20.0 if skill else 12.0, direction - 1.8 + progress, direction + 0.7 + progress, 18, Color(GOLD if skill else CREAM, alpha), 5.0 if skill else 2.0, true)
+			world.draw_colored_polygon(area.slice(0, 64), Color(color, alpha * 0.12))
+			world.draw_polyline(area, Color(color, alpha), 2.0, true)
+			for ribbon in range(3):
+				var arc := PackedVector2Array()
+				for index in range(24):
+					var angle := progress * TAU * 1.5 + ribbon * TAU / 3 + index * 0.075
+					arc.append(ui._project(event.origin + Vector2.from_angle(angle) * (event.radius - ribbon * 8)))
+				world.draw_polyline(arc, Color(CREAM if ribbon == 0 else color, alpha), 5 - ribbon, true)
+		2:
+			var target: Vector2 = ui._project(event.hits[0].position) - Vector2(0, 23)
+			var side := (target - start).normalized().orthogonal()
+			world.draw_line(start, target, Color(color, alpha * 0.18), 16 * alpha + 2, true)
+			world.draw_line(start, target, Color(color, alpha), 5 * alpha + 1, true)
+			world.draw_line(start, target, Color(CREAM, alpha), 2.0, true)
+			for sign_value in [-1, 1]:
+				world.draw_line(start + side * 10 * alpha, target + side * 3 * alpha, Color(color, alpha * 0.5), 1.5, true)
+			world.draw_arc(target, 10 + progress * 24, 0, TAU, 24, Color(color, alpha), 2.0, true)
+		3:
+			for ring in range(2):
+				var rise := fmod(progress + ring * 0.35, 1.0)
+				var points: PackedVector2Array = ui._circle_points(event.origin, 28 + rise * 22)
+				for index in range(points.size()):
+					points[index].y -= rise * 48
+				world.draw_polyline(points, Color(GREEN, alpha * (1.0 - rise)), 3.0, true)
+			for mote in range(7):
+				var at := origin + Vector2(sin(mote * 2.4) * 28, -8 - fmod(progress + mote * 0.13, 1.0) * 54)
+				world.draw_line(at - Vector2(3, 0), at + Vector2(3, 0), Color(GREEN, alpha), 2.0)
+				world.draw_line(at - Vector2(0, 3), at + Vector2(0, 3), Color(GREEN, alpha), 2.0)
+		4:
+			var target: Vector2 = ui._project(event.hits[0].position) - Vector2(0, 23)
+			var side := (start - target).normalized().orthogonal()
+			for sign_value in [-1, 1]:
+				var ribbon := PackedVector2Array()
+				for index in range(25):
+					var along := index / 24.0
+					ribbon.append(target.lerp(start, along) + side * sin(along * PI) * 18 * sign_value)
+				world.draw_polyline(ribbon, Color(RED, alpha * 0.25), 8.0, true)
+				world.draw_polyline(ribbon, Color(RED, alpha), 2.0, true)
+				for mote in range(4):
+					var along := fmod(progress * 1.6 + mote * 0.25, 1.0)
+					var at: Vector2 = target.lerp(start, along) + side * sin(along * PI) * 18 * sign_value
+					world.draw_circle(at, 3.0, Color(CREAM.lerp(RED, 0.6), alpha))
+			if event.healing > 0:
+				world.draw_arc(start, 15 + progress * 14, 0, TAU, 24, Color(GREEN, alpha * minf(1.0, progress * 4)), 2.0, true)
 
 
 func _draw_fireworks() -> void:

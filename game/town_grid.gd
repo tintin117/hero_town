@@ -3,16 +3,20 @@ extends RefCounted
 const SIZE := Vector2i(48, 8)
 const CELL_SIZE := Vector2i(48, 24)
 const ARENA := Rect2i(16, 0, 16, 8)
+const OWNED := Rect2i(10, 0, 28, 8)
 const WORLD_WIDTH := 2304
-
-var buildings := {
-	"tavern": {"cell": Vector2i(12, 2), "size": Vector2i(2, 2)},
-	"barracks": {"cell": Vector2i(34, 2), "size": Vector2i(3, 2)},
+const BUILDINGS := {
+	"training": {"name": "Training Yard", "size": Vector2i(3, 2)},
+	"infirmary": {"name": "Infirmary", "size": Vector2i(2, 2)},
+	"hall": {"name": "Recruitment Hall", "size": Vector2i(3, 2)},
+	"tavern": {"name": "Tavern", "size": Vector2i(2, 2)},
 }
+
+var buildings: Dictionary = {}
 
 
 func footprint(id: String, cell: Vector2i) -> Rect2i:
-	return Rect2i(cell, buildings[id].size)
+	return Rect2i(cell, BUILDINGS[id].size)
 
 
 func is_protected(cell: Vector2i) -> bool:
@@ -20,10 +24,10 @@ func is_protected(cell: Vector2i) -> bool:
 
 
 func can_place(id: String, cell: Vector2i) -> bool:
-	if not buildings.has(id):
+	if not BUILDINGS.has(id):
 		return false
 	var proposed := footprint(id, cell)
-	if not Rect2i(Vector2i.ZERO, SIZE).encloses(proposed):
+	if not OWNED.encloses(proposed):
 		return false
 	if proposed.intersects(ARENA) or proposed.end.y > 7:
 		return false
@@ -34,9 +38,9 @@ func can_place(id: String, cell: Vector2i) -> bool:
 
 
 func try_move(id: String, cell: Vector2i) -> bool:
-	if not can_place(id, cell):
+	if not buildings.has(id) or not can_place(id, cell):
 		return false
-	# The two building records are the occupancy source of truth: no partial updates.
+	# Occupancy changes only after the entire footprint passes validation.
 	buildings[id].cell = cell
 	return true
 
