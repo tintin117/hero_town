@@ -4,20 +4,22 @@ A Godot 4.6 idle arena game. Open `project.godot` and press **F5**.
 
 ## Play the core loop
 
-**Fight → earn gold and XP → recover and rotate heroes → recruit reserves → build support facilities.**
+**Book an event → fight 10 rounds → review rewards and hero condition → prepare the next event.**
 
 - **New Game** starts with Bram and Ivo in a two-fighter arena. **Continue** preserves an existing estate and loads with combat stopped. New Game asks before replacing a save.
-- Open the arena to repeat automatic fights, separated by three-second intermissions. **Stop after fight** pays the current fight and stops repetition. During recovery, **Close arena** cancels the next fight without resetting recovery.
+- **Start event / 10 fights** books a finite event with your preferred lineup. Fights repeat with three-second intermissions until ten fights have completed. The arena then waits for a manual booking; the previous lineup remains selected.
+- **End after fight** finishes and pays the current fight, then ends the event early. **End event** stops immediately during intermission or recovery without resetting recovery. Starting another event resets only the event counters.
+- The event button above the arena shows completed rounds. Open it to review total gold and fight XP, each participant's XP, and current levels, stamina, injury and recovery. It highlights **Review results** when the event ends. Rewards are already paid; reviewing never grants a second payout. **Manage heroes** opens lineup preparation.
 - The first completed fight can fund **Nia for 100 gold**. The starting Hall capacity is three, so no building is needed for that first reserve.
 - **Heroes** contains recruitment, readiness, stamina, injury meters, XP, stats, and preferred lineup controls. Click an unavailable preferred hero to remove the preference; unavailable heroes cannot be added to bookings.
-- Without Auto-fill, the entire preferred lineup must be available before another fight starts. **Use rested heroes** replaces the preferences with available reserves and keeps an already-running arena open.
-- **Auto-fill**, purchased for 6,000 gold, retains ready preferences and fills vacancies from ready reserves, ordered by stamina then roster order. It never selects injured, exhausted, or training heroes. It can run with two ready heroes up to the purchased fighter capacity.
-- If the arena lacks eligible fighters, it waits and automatically resumes when recovery permits. Basic recovery never requires a building, food, or gold.
+- Without Auto-fill, the entire preferred lineup must be available before another fight starts. **Use rested heroes** replaces the preferences with available reserves and keeps the current event running.
+- **Auto-fill**, purchased for 6,000 gold, retains ready preferences and fills vacancies from ready reserves within the booked event, ordered by stamina then roster order. It never selects injured, exhausted, or training heroes. It can run with two ready heroes up to the purchased fighter capacity, but never books another event.
+- If an active event lacks eligible fighters, it waits and automatically resumes when recovery permits. Waiting does not consume a round. Recovery and training continue after an event ends. Basic recovery never requires a building, food, or gold.
 - **Build** constructs and upgrades facilities. Click a built facility or its **Manage** button for training, patients, or meals. The Recruitment Hall opens the roster.
 - **Arrange** moves buildings freely on owned ground. Construction charges only after valid placement. Escape or right-click cancels a preview without spending.
 - Opening management panels does not stop combat, recovery, or training. **Menu** pauses simulation and saves; Continue resumes the session. Closing the game grants no offline progress.
 
-There are no fight packs, event goals, betting, title progression, production chains, or permanent hero deaths in this update.
+This prototype adds finite events without event goals, pre-fight buffs, betting, title progression, production chains, or permanent hero deaths.
 
 ## Fatigue and injury
 
@@ -107,12 +109,15 @@ The existing `user://arena_tycoon_v1.json` path now stores **version 2**, with f
 
 The launch menu never overwrites an unread save. Saving validates the state, writes a temporary file, and keeps a backup; corrupted-primary recovery remains available. Interrupted fights are discarded without additional settlement, XP, wins, stamina consumption, or injury credit. Already-saved skill tips remain. Menu time and closed-game time do not advance simulation. Test fixtures use isolated `.godot/` saves, never the player's file.
 
+Event counters and the results panel last for the current session, until the next booking. Closing and reopening retains earned progress and the preferred lineup, but loads with no active event or prior event report. Menu/Continue within the same session preserves the paused event.
+
 ## Verification and measured pacing
 
 Run with a Godot 4.6 executable:
 
 ```text
 godot --headless --path . --script res://game/check_core_loop.gd
+godot --headless --path . --script res://game/check_arena_event.gd
 godot --headless --path . --script res://game/check_fight.gd
 godot --headless --path . --script res://game/check_tycoon.gd
 godot --headless --path . --script res://game/check_tycoon.gd -- --opening
@@ -121,7 +126,17 @@ godot --headless --path . --script res://game/check_tycoon.gd -- --economy
 
 Checks cover all 420 two–five-fighter combinations at seeded max/mixed levels, focused duels, one-time combat rewards, fatigue and injury boundaries, Hospital overflow/large time steps, Gym eligibility/recall/caps, meal validation/cooldown, unavailable bookings, continuous recovery, v1/v2 saves, backups, facility UI, and menu pause. The longest checked matchup was **80.08 seconds**. Rendered layout checks cover 960×420, 1280×420, and 1600×560. Logs and captures belong under `.godot/`.
 
-Three complete progression simulations (seeds 7, 42, 123) used live rules at sixty simulation steps per second, purchasing recommended milestones when affordable and manually rotating before Auto-fill. They did not require meals or Gym assignments to finish.
+The event prototype uses a fixed **ten-fight** booking. A pacing probe at sixty simulation steps per second (seeds 7, 42, 123) includes recovery and intermissions:
+
+| Roster and management | Ten-fight event duration |
+| --- | --- |
+| Three heroes, manually rotating available reserves | 4:31–4:35 |
+| Six heroes at Auto-fill unlock, three fighter places, level-1 Hospital | 2:56–3:08 |
+| Unchanged starter duo, waiting through injuries | 8:16–11:12 |
+
+Recruitment and roster changes remain available during events, with each fight paying immediately. These durations are playtest references, not guarantees; injuries and lineup choices change the pace.
+
+The following three complete progression simulations predate finite events and assume continuous bookings (seeds 7, 42, 123). They used live combat rules at sixty simulation steps per second, purchasing recommended milestones when affordable and manually rotating before Auto-fill, without meals or Gym assignments. They remain a baseline for the unchanged prices, not a measured completion time for manual event booking.
 
 | Milestone | Measured running time |
 | --- | --- |
@@ -135,7 +150,7 @@ Three complete progression simulations (seeds 7, 42, 123) used live rules at six
 | Five-fighter capacity | 8.34–8.43 hours |
 | All demo purchases | **16.14–16.60 hours / 2,819–2,853 fights** |
 
-Total progression remains within the **12–18 running-hour target**. Five-fighter capacity arrives slightly later than the old six–eight-hour reference, which is now diagnostic rather than an acceptance gate. Actual players may take longer while reading, placing buildings, or leaving the arena closed. The prior economy measurements have been replaced by these runs.
+The continuous-booking baseline fits the previous **12–18 running-hour target**. Manual booking adds downtime; economy balance needs another playtest before treating that target as validated for events. This prototype leaves existing rewards and prices intact.
 
 ## Reusable assets
 

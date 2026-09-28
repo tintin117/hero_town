@@ -7,13 +7,14 @@ const TownGrid := preload("res://game/town_grid.gd")
 const Actor := preload("res://resources/art/sunnyside_actor.gd")
 const TILES := preload("res://asset/Sunnyside_World_Assets/Tileset/spr_tileset_sunnysideworld_16px.png")
 const TREE := preload("res://asset/Sunnyside_World_Assets/Elements/Plants/spr_deco_tree_01_strip4.png")
+const PINE := preload("res://asset/Sunnyside_World_Assets/Elements/Plants/spr_deco_tree_02_strip4.png")
 const SMOKE := preload("res://asset/Sunnyside_World_Assets/Elements/VFX/Chimney Smoke/chimneysmoke_01_strip30.png")
 const WORLD_WIDTH := TownGrid.WORLD_WIDTH
 const BUILDING_ART := {
-	"tavern": {"size": Vector2(64, 112), "roof_y": 552},
-	"hall": {"size": Vector2(96, 112), "roof_y": 168},
-	"training": {"size": Vector2(96, 68), "roof_y": 424},
-	"infirmary": {"size": Vector2(64, 112), "roof_y": 296},
+	"tavern": {"size": Vector2(64, 88), "roof_y": 448},
+	"hall": {"size": Vector2(96, 80), "roof_y": 192},
+	"training": {"size": Vector2(96, 72), "roof_y": 416},
+	"infirmary": {"size": Vector2(64, 80), "roof_y": 320},
 }
 
 var grid := TownGrid.new()
@@ -48,6 +49,11 @@ func _ready() -> void:
 	tiles.scale = Vector2(2, 2)
 	tiles.collision_enabled = false
 	tiles.navigation_enabled = false
+	var ground_palette := Shader.new()
+	ground_palette.code = "shader_type canvas_item; void fragment() { vec4 c = texture(TEXTURE, UV); if (c.g > c.r * 1.15 && c.g > c.b * 1.3) { c.rgb = mix(vec3(0.27, 0.39, 0.25), vec3(0.52, 0.66, 0.36), c.g); } COLOR = c; }"
+	var ground_material := ShaderMaterial.new()
+	ground_material.shader = ground_palette
+	tiles.material = ground_material
 	add_child(tiles)
 	for y in range(TownGrid.SIZE.y):
 		for x in range(TownGrid.SIZE.x):
@@ -106,55 +112,109 @@ func sync_buildings() -> void:
 func _draw_building(canvas: CanvasItem, id: String) -> void:
 	var art: Dictionary = BUILDING_ART[id]
 	var width: float = art.size.x
-	canvas.draw_rect(Rect2(-width * 0.5, -36, width, 36), Color("b89460"))
+	var half_width := width * 0.5
+	canvas.draw_rect(Rect2(-half_width, -12, width, 12), Color("425439"))
+	canvas.draw_rect(Rect2(-half_width + 4, -8, width - 8, 8), Color("687c49"))
 	if id == "training":
 		for y in range(2):
 			for x in range(3):
-				canvas.draw_texture_rect_region(TILES, Rect2(-48 + x * 32, -64 + y * 32, 32, 32), Rect2(160, 112, 16, 16))
-		canvas.draw_line(Vector2(-46, -57), Vector2(46, -57), Color("d0a777"), 5)
-		canvas.draw_line(Vector2(-46, -49), Vector2(46, -49), Color("9e7450"), 4)
-		for x in [-46, -16, 16, 46]:
-			canvas.draw_rect(Rect2(x - 2, -68, 5, 28), Color("835b43"))
-			canvas.draw_rect(Rect2(x - 2, -68, 5, 5), Color("e1be86"))
-		for x in [-24, 24]:
-			canvas.draw_rect(Rect2(x - 3, -31, 6, 27), Color("805a3e"))
-			canvas.draw_rect(Rect2(x - 14, -26, 28, 5), Color("b78b57"))
-			canvas.draw_circle(Vector2(x, -34), 10, Color("67523e"))
-			canvas.draw_circle(Vector2(x, -34), 8, Color("dfbd72"))
-			canvas.draw_circle(Vector2(x, -34), 5, Color("ad684a"))
-			canvas.draw_circle(Vector2(x, -34), 2, Color("f6df9b"))
+				_building_sprite(canvas, Vector2(-48 + x * 32, -64 + y * 32), Rect2(160, 112, 16, 16))
+		canvas.draw_rect(Rect2(-46, -60, 92, 6), Color("624b3a"))
+		canvas.draw_rect(Rect2(-46, -58, 92, 2), Color("d8b67c"))
+		canvas.draw_rect(Rect2(-46, -46, 92, 4), Color("9b714c"))
+		for x in [-46, -16, 14, 42]:
+			canvas.draw_rect(Rect2(x, -72, 6, 34), Color("624b3a"))
+			canvas.draw_rect(Rect2(x, -72, 6, 4), Color("e0be86"))
+			canvas.draw_rect(Rect2(x + 2, -66, 2, 24), Color("ad8457"))
+		for x in [-22, 22]:
+			canvas.draw_rect(Rect2(x - 4, -32, 8, 26), Color("77523d"))
+			canvas.draw_rect(Rect2(x - 14, -22, 28, 4), Color("b98b58"))
+			# Stepped targets share the world's two-pixel grid.
+			for ring in range(4):
+				var radius: int = [12, 10, 6, 4][ring]
+				var color: Color = [Color("61493b"), Color("e1bc78"), Color("b86748"), Color("f1d9a2")][ring]
+				canvas.draw_rect(Rect2(x - radius + 2, -38 - radius, radius * 2 - 4, radius * 2), color)
+				canvas.draw_rect(Rect2(x - radius, -38 - radius + 2, radius * 2, radius * 2 - 4), color)
+		for x in [-46, 40]:
+			canvas.draw_rect(Rect2(x, -34, 6, 30), Color("79583e"))
+			canvas.draw_rect(Rect2(x, -34, 6, 4), Color("dcbc84"))
+		canvas.draw_rect(Rect2(-46, -8, 24, 4), Color("ae8758"))
+		canvas.draw_rect(Rect2(22, -8, 24, 4), Color("ae8758"))
 		return
-	# Atlas modules retain their native pixels at exactly 2x.
-	canvas.draw_texture_rect_region(TILES, Rect2(-width * 0.5, -48, width, 48), Rect2(16, 144, width * 0.5, 24))
-	if id == "hall":
-		for offset in [-16, 16]:
-			canvas.draw_texture_rect_region(TILES, Rect2(offset - 32, -112, 64, 80), Rect2(520, art.roof_y, 32, 40))
-	else:
-		canvas.draw_texture_rect_region(TILES, Rect2(-32, -112, 64, 80), Rect2(520, art.roof_y, 32, 40))
-	canvas.draw_rect(Rect2(-8, -25, 16, 25), Color("694333"))
-	canvas.draw_rect(Rect2(-5, -23, 10, 21), Color("996743"))
-	canvas.draw_rect(Rect2(2, -13, 2, 2), Color("f5cf7b"))
-	canvas.draw_rect(Rect2(-25, -25, 10, 12), Color("563f37"))
-	canvas.draw_rect(Rect2(-23, -23, 6, 8), Color("8fd1cc"))
-	canvas.draw_rect(Rect2(15, -25, 10, 12), Color("563f37"))
-	canvas.draw_rect(Rect2(17, -23, 6, 8), Color("8fd1cc"))
+	# Timber walls, stone footings, and atlas shingles all retain a native 2x grid.
+	canvas.draw_rect(Rect2(-half_width + 4, -48, width - 8, 44), Color("664c3d"))
+	canvas.draw_rect(Rect2(-half_width + 8, -44, width - 16, 36), Color("ddbb84"))
+	for y in [-36, -28, -20, -12]:
+		canvas.draw_rect(Rect2(-half_width + 8, y, width - 16, 2), Color("bb9564"))
+	for x in [-half_width + 8, half_width - 12]:
+		canvas.draw_rect(Rect2(x, -44, 4, 38), Color("8b6245"))
+	canvas.draw_rect(Rect2(-half_width + 4, -6, width - 8, 4), Color("989a7d"))
+	canvas.draw_rect(Rect2(-half_width + 4, -6, width - 8, 2), Color("c4c6a0"))
+	for row in range(3):
+		var inset := (2 - row) * 4
+		var roof_left := -half_width + inset
+		var roof_width := width - inset * 2
+		var roof_top := -78 + row * 12
+		canvas.draw_rect(Rect2(roof_left, roof_top, roof_width, 16), Color("654d41"))
+		var segment := 0.0
+		while segment < roof_width - 8:
+			var part := minf(16, (roof_width - 8 - segment) * 0.5)
+			_building_sprite(canvas, Vector2(roof_left + 4 + segment, roof_top + 2), Rect2(256, art.roof_y + row % 2 * 6, part, 6))
+			segment += part * 2
+		canvas.draw_rect(Rect2(roof_left, roof_top + 2, 4, 12), Color("be9269"))
+		canvas.draw_rect(Rect2(-roof_left - 4, roof_top + 2, 4, 12), Color("97704f"))
+	canvas.draw_rect(Rect2(-half_width + 8, -80, width - 16, 4), Color("d2ae7d"))
+	canvas.draw_rect(Rect2(-half_width, -42, width, 6), Color("624a3d"))
+	canvas.draw_rect(Rect2(-half_width, -42, width, 2), Color("d1a46f"))
+	canvas.draw_rect(Rect2(-10, -32, 20, 30), Color("624737"))
+	canvas.draw_rect(Rect2(-6, -28, 12, 24), Color("9e714c"))
+	canvas.draw_rect(Rect2(-4, -26, 8, 6), Color("485e57"))
+	canvas.draw_rect(Rect2(2, -14, 2, 2), Color("efd599"))
+	canvas.draw_rect(Rect2(-12, -4, 24, 4), Color("bfbea0"))
+	for x in [-half_width + 14, half_width - 26]:
+		canvas.draw_rect(Rect2(x, -32, 12, 18), Color("735240"))
+		canvas.draw_rect(Rect2(x + 2, -30, 8, 12), Color("628e88"))
+		canvas.draw_rect(Rect2(x + 2, -30, 2, 10), Color("b3d8bf"))
+		canvas.draw_rect(Rect2(x, -18, 12, 4), Color("a4784f"))
 	if id == "infirmary":
-		canvas.draw_rect(Rect2(-8, -48, 16, 12), Color("fff2d1"))
-		canvas.draw_rect(Rect2(-2, -47, 4, 10), Color("59a36e"))
-		canvas.draw_rect(Rect2(-5, -44, 10, 4), Color("59a36e"))
+		canvas.draw_rect(Rect2(-12, -54, 24, 20), Color("735e48"))
+		canvas.draw_rect(Rect2(-10, -52, 20, 16), Color("f2e1b5"))
+		canvas.draw_rect(Rect2(-2, -50, 4, 12), Color("51855a"))
+		canvas.draw_rect(Rect2(-6, -46, 12, 4), Color("51855a"))
+		for x in [-30, 14]:
+			_building_sprite(canvas, Vector2(x, -22), Rect2(432, 32, 8, 8))
+			canvas.draw_rect(Rect2(x, -10, 16, 8), Color("956b4e"))
+			canvas.draw_rect(Rect2(x, -10, 16, 2), Color("cfac79"))
+			canvas.draw_rect(Rect2(x + 6, -18, 4, 4), Color("c6ca87"))
 	elif id == "tavern":
-		canvas.draw_rect(Rect2(14, -10, 28, 5), Color("8b623f"))
-		canvas.draw_rect(Rect2(17, -20, 4, 20), Color("77513c"))
-		canvas.draw_rect(Rect2(35, -20, 4, 20), Color("77513c"))
-		canvas.draw_rect(Rect2(12, -22, 32, 9), Color("d0a56b"))
-		canvas.draw_circle(Vector2(23, -20), 4, Color("ece4c6"))
-		canvas.draw_circle(Vector2(35, -20), 3, Color("a9533f"))
-		canvas.draw_rect(Rect2(14, -87, 10, 20), Color("977766"))
-		canvas.draw_texture_rect_region(SMOKE, Rect2(4, -151, 30, 74), Rect2(int(clock * 8) % 30 * 15, 0, 15, 37), Color(1, 1, 1, 0.65))
+		for stripe in range(7):
+			canvas.draw_rect(Rect2(-28 + stripe * 8, -38, 8, 12), Color("e7c892") if stripe % 2 == 0 else Color("ab5d43"))
+		canvas.draw_rect(Rect2(-28, -26, 56, 2), Color("694c3b"))
+		canvas.draw_rect(Rect2(16, -14, 4, 12), Color("78563d"))
+		canvas.draw_rect(Rect2(26, -14, 4, 12), Color("78563d"))
+		canvas.draw_rect(Rect2(14, -18, 18, 6), Color("cca16a"))
+		canvas.draw_rect(Rect2(18, -20, 6, 2), Color("f1dfb5"))
+		canvas.draw_rect(Rect2(-30, -18, 16, 16), Color("77553f"))
+		canvas.draw_rect(Rect2(-28, -16, 12, 12), Color("b9915c"))
+		canvas.draw_rect(Rect2(-28, -12, 12, 2), Color("77553f"))
+		canvas.draw_rect(Rect2(-24, -16, 2, 12), Color("dfbb79"))
+		canvas.draw_rect(Rect2(12, -86, 12, 22), Color("785e50"))
+		canvas.draw_rect(Rect2(14, -84, 8, 18), Color("ab8a70"))
+		canvas.draw_rect(Rect2(10, -88, 16, 4), Color("cfb695"))
+		canvas.draw_texture_rect_region(SMOKE, Rect2(2, -156, 30, 74), Rect2(int(clock * 8) % 30 * 15, 0, 15, 37), Color(1, 1, 1, 0.55))
 	else:
-		canvas.draw_rect(Rect2(34, -29, 3, 29), Color("725242"))
-		canvas.draw_rect(Rect2(28, -30, 18, 13), Color("e5ca86"))
-		canvas.draw_rect(Rect2(34, -27, 6, 6), Color("527aaa"))
+		canvas.draw_rect(Rect2(-12, -56, 24, 20), Color("70533f"))
+		canvas.draw_rect(Rect2(-10, -54, 20, 16), Color("d8bc80"))
+		canvas.draw_rect(Rect2(-4, -52, 8, 10), Color("547b8c"))
+		canvas.draw_rect(Rect2(-2, -42, 4, 2), Color("547b8c"))
+		for x in [-42, 30]:
+			canvas.draw_rect(Rect2(x, -34, 12, 26), Color("547b8c"))
+			canvas.draw_rect(Rect2(x + 2, -32, 8, 2), Color("d2bb7f"))
+			canvas.draw_rect(Rect2(x + 4, -28, 4, 10), Color("d2bb7f"))
+
+
+func _building_sprite(canvas: CanvasItem, position: Vector2, source: Rect2) -> void:
+	canvas.draw_texture_rect_region(TILES, Rect2(position, source.size * 2), source)
 
 
 func _layout() -> void:
@@ -315,12 +375,11 @@ func _process(delta: float) -> void:
 		var actor := visitors[index]
 		var walk_x := fmod(clock * (8 + index % 3 * 3) + index * WORLD_WIDTH / 10.0, WORLD_WIDTH + 48) - 24
 		actor.flip_h = index % 2 == 1
-		actor.position = tiles.position + Vector2(WORLD_WIDTH - walk_x if actor.flip_h else walk_x, 247 + index % 2 * 3)
+		actor.position = (tiles.position + Vector2(WORLD_WIDTH - walk_x if actor.flip_h else walk_x, 246 + index % 2 * 4)).snapped(Vector2(2, 2))
 	redraw_time += delta
 	if redraw_time < 0.125: return
 	redraw_time = 0.0
 	queue_redraw()
-	ground_details.queue_redraw()
 	for body in building_nodes.values(): body.queue_redraw()
 	for id in hero_states:
 		if hero_states[id] == "training" and int(clock * 8) % 16 == id % 16: hero_nodes[id].play("attack")
@@ -328,31 +387,81 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), Color("2c4948"))
 	var y := tiles.position.y
-	draw_rect(Rect2(0, y - 24, WORLD_WIDTH, 280), Color("64aa49"))
-	for index in range(40):
-		var x := index * 40 + 12
-		draw_texture_rect_region(TREE, Rect2(x, y - 62 + index % 3 * 6, 64, 68), Rect2(int(clock * 3 + index) % 4 * 32, 0, 32, 34), Color("b7d599"))
+	var backdrop_width := maxf(size.x, get_viewport_rect().size.x)
+	draw_rect(Rect2(0, 0, backdrop_width, size.y), Color("abc4b0"))
+	# Stepped distant ridges give taller windows a quiet backdrop behind the HUD.
+	for layer in range(3):
+		var ridge := PackedVector2Array([Vector2(0, y + 16)])
+		for x in range(0, int(backdrop_width) + 32, 32):
+			var ridge_y := snappedf(y - 54 - (2 - layer) * 68 - sin(x * 0.006 + layer * 2) * (24 + layer * 8), 8)
+			ridge.append(Vector2(x, ridge_y))
+			ridge.append(Vector2(x + 32, ridge_y))
+		ridge.append(Vector2(backdrop_width + 32, y + 16))
+		draw_colored_polygon(ridge, [Color("8fab99"), Color("728f7e"), Color("4d7263")][layer])
+	draw_rect(Rect2(0, y - 12, WORLD_WIDTH, 268), Color("607f44"))
+	for index in range(66):
+		var pine := index % 5 == 0 or index % 7 == 0
+		var frame_size := Vector2(28, 43) if pine else Vector2(32, 34)
+		var x := index * 24 - 18 + (index * 17 % 7) * 2
+		var bottom := y + 2 + (index * 11 % 5) * 2
+		draw_texture_rect_region(PINE if pine else TREE, Rect2(Vector2(x, bottom) - Vector2(0, frame_size.y * 2), frame_size * 2), Rect2(Vector2(int(clock * 3 + index) % 4 * frame_size.x, 0), frame_size), Color("becda6") if index % 3 == 0 else Color.WHITE)
 	for x in range(0, WORLD_WIDTH, 32): draw_texture_rect_region(TILES, Rect2(x, y + 256, 32, 32), Rect2(144, 48, 16, 16))
 
 
 func _draw_ground() -> void:
+	var origin := tiles.position
+	# Local seed: scenery stays fixed and never consumes combat randomness.
+	var scenery := RandomNumberGenerator.new()
+	scenery.seed = 481516
+	var grass_colors := [Color("607f46"), Color("819c53"), Color("91aa60"), Color("5e8249")]
+	for index in range(2200):
+		var p := origin + Vector2(scenery.randi_range(0, WORLD_WIDTH / 2 - 1) * 2, scenery.randi_range(1, 110) * 2)
+		var color: Color = grass_colors[index % grass_colors.size()]
+		ground_details.draw_rect(Rect2(p, Vector2(2 + index % 3 * 2, 2)), color)
+		if index % 4 == 0:
+			ground_details.draw_rect(Rect2(p + Vector2(2, -2), Vector2(2, 2)), color)
+	# Pebbles and tiny flower patches collect along the path and forest edges.
+	for index in range(100):
+		var p := origin + Vector2(scenery.randi_range(2, WORLD_WIDTH / 2 - 4) * 2, scenery.randi_range(4, 18) * 2 if index % 2 == 0 else scenery.randi_range(94, 101) * 2)
+		var detail := Rect2(432 + index % 4 * 16, 64, 16, 16)
+		if index % 3 == 0: detail = Rect2(496 + index % 4 * 16, 16 + (index % 9) / 3 * 16, 16, 16)
+		ground_details.draw_texture_rect_region(TILES, Rect2(p, Vector2(32, 32)), detail)
+	# Grass nibbles into the straight public path; a dark verge seats it in the lawn.
+	ground_details.draw_rect(Rect2(origin + Vector2(0, 222), Vector2(WORLD_WIDTH, 2)), Color("627548"))
+	for x in range(0, WORLD_WIDTH, 8):
+		ground_details.draw_rect(Rect2(origin + Vector2(x, 222), Vector2(4, 2 + (x % 3) * 2)), Color("829652"))
 	for id in building_nodes:
 		var feet: Vector2 = building_nodes[id].position
 		var path_y: float = tiles.position.y + 224
 		var segment_y: float = feet.y
 		while segment_y < path_y:
-			ground_details.draw_texture_rect_region(TILES, Rect2(feet.x - 16, segment_y, 32, minf(32, path_y - segment_y)), Rect2(160, 112, 16, minf(16, (path_y - segment_y) / 2)))
+			ground_details.draw_texture_rect_region(TILES, Rect2(feet.x - 12, segment_y, 24, minf(24, path_y - segment_y)), Rect2(160, 112, 12, minf(12, (path_y - segment_y) / 2)))
+			ground_details.draw_rect(Rect2(feet.x - 12, segment_y, 2, minf(24, path_y - segment_y)), Color("b28d64"))
 			segment_y += 32
-	for x in [0, 38]: ground_details.draw_rect(Rect2(tiles.position + Vector2(x * 32, 0), Vector2(320, 224)), Color(0.12, 0.22, 0.2, 0.35))
+	# Small garden plots furnish the preview land, leaving every owned plot usable.
+	for side in [0, 1]:
+		var plot := origin + Vector2(64 if side == 0 else 1376, 66)
+		ground_details.draw_rect(Rect2(plot + Vector2(-4, -4), Vector2(104, 70)), Color("4f693c"))
+		ground_details.draw_rect(Rect2(plot, Vector2(96, 62)), Color("846647"))
+		for row in range(3):
+			ground_details.draw_rect(Rect2(plot + Vector2(2, row * 20 + 16), Vector2(92, 4)), Color("5f503d"))
+			for column in range(5):
+				ground_details.draw_texture_rect_region(TILES, Rect2(plot + Vector2(column * 18 + 2, row * 20 - 8), Vector2(24, 32)), Rect2(864 + side * 16, 232, 12, 16))
+		for prop in range(3):
+			ground_details.draw_texture_rect_region(TILES, Rect2(plot + Vector2(4 + prop * 32, 82), Vector2(32, 32)), Rect2(576 + prop % 2 * 16, 144, 16, 16))
+	for x in [0, 38]: ground_details.draw_rect(Rect2(tiles.position + Vector2(x * 32, 0), Vector2(320, 224)), Color(0.12, 0.22, 0.2, 0.16))
 	for x in [10, 38]:
 		var boundary := tiles.position + Vector2(x * 32, 0)
-		ground_details.draw_line(boundary, boundary + Vector2(0, 224), Color("d7bd78"), 2)
+		for fence_y in range(8, 224, 32):
+			ground_details.draw_texture_rect_region(TILES, Rect2(boundary + Vector2(-8, fence_y), Vector2(16, 32)), Rect2(672, 16, 8, 16))
+		if arranging: ground_details.draw_line(boundary, boundary + Vector2(0, 224), Color("d7bd78"), 2)
 	for x in [5, 42]:
 		var pos := tiles.position + Vector2(x * 32, 132)
-		ground_details.draw_rect(Rect2(pos + Vector2(-3, 0), Vector2(6, 38)), Color("73533d"))
-		ground_details.draw_rect(Rect2(pos + Vector2(-48, -10), Vector2(96, 34)), Color("b18856"))
+		ground_details.draw_rect(Rect2(pos + Vector2(-4, 0), Vector2(8, 38)), Color("5b513b"))
+		ground_details.draw_rect(Rect2(pos + Vector2(-48, -10), Vector2(96, 34)), Color("554b38"))
+		ground_details.draw_rect(Rect2(pos + Vector2(-46, -8), Vector2(92, 28)), Color("a58252"))
+		ground_details.draw_rect(Rect2(pos + Vector2(-44, -6), Vector2(88, 2)), Color("d3b475"))
 		ground_details.draw_string(ThemeDB.fallback_font, pos + Vector2(-37, 5), "FUTURE LAND", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("fff0ba"))
 	if not arranging: return
 	for y in range(TownGrid.SIZE.y):

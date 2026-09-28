@@ -7,8 +7,8 @@ const Actor := preload("res://resources/art/sunnyside_actor.gd")
 const GOLD := Color("f2c771")
 const MUTED := Color("a5b2c3")
 const INTERMISSION := 3.0
+const EVENT_ROUNDS := 10
 const GROUND_DEPTH := 1.0
-const SUN_TILES := preload("res://asset/Sunnyside_World_Assets/Tileset/spr_tileset_sunnysideworld_16px.png")
 const SPECTATOR := preload("res://asset/Sunnyside_World_Assets/Characters/Human/IDLE/base_idle_strip9.png")
 const SPECTATOR_HAIR := preload("res://asset/Sunnyside_World_Assets/Characters/Human/IDLE/mophair_idle_strip9.png")
 const SPECTATOR_HAIRS := [SPECTATOR_HAIR, preload("res://asset/Sunnyside_World_Assets/Characters/Human/IDLE/curlyhair_idle_strip9.png"), preload("res://asset/Sunnyside_World_Assets/Characters/Human/IDLE/shorthair_idle_strip9.png")]
@@ -16,6 +16,9 @@ const SPECTATOR_HAIRS := [SPECTATOR_HAIR, preload("res://asset/Sunnyside_World_A
 var fight := FightRules.new()
 var selected: Array[int] = [0, 1]
 var auto_fight := false
+var event_rounds := 0
+var event_gold := 0
+var event_progression: Dictionary = {}
 var cards: Array[Button] = []
 var card_records: Array[Label] = []
 var card_details: Array[Dictionary] = []
@@ -97,7 +100,14 @@ func _ready() -> void:
 	_build_roster()
 	%HeroesButton.pressed.connect(_toggle_drawer.bind(%HeroesDrawer))
 	%ArenaButton.pressed.connect(_toggle_drawer.bind(%ArenaDrawer))
-	for button in [%CloseHeroes, %CloseArena, %Dismiss]:
+	%EventButton.pressed.connect(_toggle_drawer.bind(%EventDrawer))
+	%ManageEventHeroes.pressed.connect(_toggle_drawer.bind(%HeroesDrawer))
+	var event_scroll := %EventHeroes.get_parent().get_v_scroll_bar()
+	event_scroll.focus_mode = Control.FOCUS_ALL
+	event_scroll.custom_step = 24
+	event_scroll.focus_neighbor_top = NodePath(".")
+	event_scroll.focus_neighbor_bottom = NodePath(".")
+	for button in [%CloseHeroes, %CloseArena, %CloseEvent, %Dismiss]:
 		button.pressed.connect(_close_drawers)
 	%Start.pressed.connect(_toggle_running)
 	%MenuButton.pressed.connect(_open_main_menu)
@@ -176,6 +186,9 @@ func _start_new_game() -> void:
 	%NewGameConfirmation.hide()
 	%Tick.stop()
 	auto_fight = false
+	event_rounds = 0
+	event_gold = 0
+	event_progression.clear()
 	_set_arranging(false)
 	_close_drawers()
 	fight = fresh
@@ -194,7 +207,7 @@ func _start_new_game() -> void:
 	%Status.tooltip_text = ""
 	%Commentary.text = "Bram and Ivo / Recruit Nia after your first fight"
 	%Commentary.tooltip_text = %Commentary.text
-	welcome_start.text = "Start first fight"
+	welcome_start.text = "Start first event"
 	_show_fighters(selected)
 	session_started = true
 	_continue_game()
@@ -356,7 +369,7 @@ func _build_management() -> void:
 	%Arrange.tooltip_text = "Move built structures within your estate. Combat keeps running."
 	rotate_button = Button.new()
 	rotate_button.text = "Use rested heroes"
-	rotate_button.tooltip_text = "Choose the ready heroes with the most stamina. This changes your booking once; Auto-fill handles future fights automatically."
+	rotate_button.tooltip_text = "Choose the ready heroes with the most stamina. Auto-fill handles substitutions during a booked event."
 	rotate_button.pressed.connect(_book_rested)
 	var roster_heading := %HeroesDrawer.get_node("Details/Heading")
 	roster_heading.add_child(rotate_button)
@@ -505,7 +518,7 @@ func _build_welcome() -> void:
 	guide.pressed.connect(func():
 		_close_drawers()
 		welcome.show()
-		welcome_start.text = "Return to arena" if fight.active or auto_fight else ("Start first fight" if fight.completed == 0 else "Open arena")
+		welcome_start.text = "Return to arena" if fight.active or auto_fight else "Start %d-fight event" % EVENT_ROUNDS
 		welcome_start.grab_focus())
 	%Footer.get_node("Contents").add_child(guide)
 	%Footer.get_node("Contents").move_child(guide, 5)
@@ -529,7 +542,7 @@ func _build_welcome() -> void:
 	content.add_theme_constant_override("separation", 12)
 	panel.add_child(content)
 	content.add_child(_label("WELCOME TO YOUR ARENA", 22, GOLD))
-	var body := _label("Book heroes to fight and earn gold. Spend that gold on recruits, buildings, and a bigger crowd.\n\nFatigue costs stamina. Three defeats cause injury. Recruit Nia after your first fight, rotate reserves, and build facilities to help them recover and train.", 15, Color("edf1f7"))
+	var body := _label("Book heroes for a %d-fight event. Fights run automatically, then the arena waits for you to prepare the next event. Rewards are paid as you go.\n\nRecruit Nia after your first fight. Rotate tired heroes, train reserves, and use meals or recovery before your next booking. Three defeats cause injury." % EVENT_ROUNDS, 15, Color("edf1f7"))
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(body)
@@ -542,7 +555,7 @@ func _build_welcome() -> void:
 	skip.pressed.connect(_dismiss_welcome)
 	actions.add_child(skip)
 	welcome_start = Button.new()
-	welcome_start.text = "Start first fight"
+	welcome_start.text = "Start first event"
 	welcome_start.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	welcome_start.pressed.connect(func():
 		_dismiss_welcome()
@@ -569,7 +582,7 @@ func _book_rested() -> void:
 	%Tick.stop()
 	selected = fight.ready_lineup()
 	_show_fighters(selected)
-	%Status.text = "Rested heroes booked" + (" / arena running" if auto_fight else " / open the arena")
+	%Status.text = "Rested heroes booked" + (" / event running" if auto_fight else " / start an event")
 	%Commentary.text = "Reserves replace unavailable heroes. Auto-fill can handle future swaps."
 	%Commentary.tooltip_text = %Commentary.text
 	_refresh()
@@ -663,7 +676,7 @@ func _refresh_objective() -> void:
 	var text := ""
 	var hint := ""
 	if fight.completed == 0:
-		text = "Watch your first fight / heroes earn gold from fights and skill tips" if fight.active else "FIRST: Open the arena to earn your first gold"
+		text = "Watch your first fight / heroes earn gold from fights and skill tips" if fight.active else "FIRST: Book an event to earn your first gold"
 		hint = "Your first completed fight pays for Nia, your first reserve. Three defeats cause injury; a minute on the bench removes one injury-meter point."
 	elif _needs_rotation():
 		text = "A preferred hero is unavailable / use rested heroes to keep fighting"
@@ -680,7 +693,7 @@ func _refresh_objective() -> void:
 		elif next.id == "seats" and next.target == 1:
 			action = "Grow your crowd: expand to 150 seats"
 		elif next.id == "auto":
-			action = "Keep matches running: buy Auto-fill"
+			action = "Rotate reserves during events: buy Auto-fill"
 		text = "NEXT: %s / %d gold / %s" % [action, next.cost, "Ready to buy" if fight.coins >= next.cost else "%d more needed" % (next.cost - fight.coins)]
 		hint = "Reserves fight while injured heroes rest. Click an unowned hero to recruit." if next.id == "recruit" else fight.upgrade_benefit(next.id)
 	objective.text = text
@@ -704,7 +717,7 @@ func _refresh_management() -> void:
 	fighter_upgrade.disabled = cost == 0 or fight.coins < cost
 	auto_upgrade.text = "Auto-fill: %s" % ("On" if fight.auto_fill_enabled else "Off") if fight.auto_fill_owned else "Auto-fill / %d gold" % FightRules.AUTO_FILL_COST
 	auto_upgrade.disabled = not fight.auto_fill_owned and fight.coins < FightRules.AUTO_FILL_COST
-	auto_upgrade.tooltip_text = "Retain ready bookings and fill with ready recruits, up to arena capacity. Runs with at least two ready heroes."
+	auto_upgrade.tooltip_text = "Retain ready bookings and fill with ready recruits during this event. Needs two ready heroes. Never books the next event."
 	for id in range(cards.size()):
 		if not fight.heroes[id].owned:
 			cards[id].disabled = not fight.can_recruit(id)
@@ -754,7 +767,7 @@ func _world_input_allowed(point: Vector2) -> bool:
 		return false
 	if %Dismiss.visible or not Rect2(Vector2.ZERO, Vector2(size.x, size.y - 88.0)).has_point(point):
 		return false
-	for panel in [%Bank, %ExcitementMeter, %Earnings]:
+	for panel in [%Bank, %ExcitementMeter, %Earnings, %EventButton]:
 		if panel.get_global_rect().has_point(point):
 			return false
 	if objective != null and objective.get_global_rect().has_point(point):
@@ -789,21 +802,24 @@ func _toggle_drawer(drawer: Control) -> void:
 	%Dismiss.visible = opening
 	%HeroesButton.set_pressed_no_signal(%HeroesDrawer.visible)
 	%ArenaButton.set_pressed_no_signal(%ArenaDrawer.visible)
+	%EventButton.set_pressed_no_signal(%EventDrawer.visible)
 	build_button.set_pressed_no_signal(build_drawer.visible)
 	if opening:
-		(%CloseHeroes if drawer == %HeroesDrawer else (close_build if drawer == build_drawer else %CloseArena)).grab_focus()
+		(%CloseHeroes if drawer == %HeroesDrawer else (close_build if drawer == build_drawer else (%CloseEvent if drawer == %EventDrawer else %CloseArena))).grab_focus()
 
 
 func _close_drawers() -> void:
-	var button: Button = %HeroesButton if %HeroesDrawer.visible else (build_button if build_drawer.visible else %ArenaButton)
-	var was_open: bool = %HeroesDrawer.visible or %ArenaDrawer.visible or build_drawer.visible
+	var button: Button = %HeroesButton if %HeroesDrawer.visible else (build_button if build_drawer.visible else (%EventButton if %EventDrawer.visible else %ArenaButton))
+	var was_open: bool = %Dismiss.visible
 	%HeroesDrawer.hide()
 	%ArenaDrawer.hide()
+	%EventDrawer.hide()
 	build_drawer.hide()
 	build_button.set_pressed_no_signal(false)
 	%Dismiss.hide()
 	%HeroesButton.set_pressed_no_signal(false)
 	%ArenaButton.set_pressed_no_signal(false)
+	%EventButton.set_pressed_no_signal(false)
 	if was_open:
 		button.grab_focus()
 
@@ -852,9 +868,9 @@ func _apply_theme() -> void:
 	theme.set_stylebox("disabled", "Button", _panel(Color("131b25"), Color("293444")))
 	var focus := _panel(Color.TRANSPARENT, Color("ffffff"), 2)
 	theme.set_stylebox("focus", "Button", focus)
-	for panel in [%Bank, %Earnings, %ExcitementMeter, %Footer, %HeroesDrawer, %ArenaDrawer, %MenuPanel]:
+	for panel in [%Bank, %Earnings, %ExcitementMeter, %Footer, %HeroesDrawer, %ArenaDrawer, %EventDrawer, %MenuPanel]:
 		panel.add_theme_stylebox_override("panel", _panel(Color("172937f5"), Color("6e7c7c")))
-	for drawer in [%HeroesDrawer, %ArenaDrawer]:
+	for drawer in [%HeroesDrawer, %ArenaDrawer, %EventDrawer]:
 		drawer.get_theme_stylebox("panel").bg_color = Color("172937")
 	for label in [%Coins, %FightIncome, %Multiplier, %Income, %Capacity, %Status]:
 		label.add_theme_color_override("font_color", GOLD)
@@ -1005,7 +1021,8 @@ func _refresh() -> void:
 	%Formula.text = "%d base\n+%d hero levels\n+%d career victories\nx%.1f arena capacity" % [quote.base, quote.levels, quote.victories, quote.multiplier] if not quote.is_empty() else "Book at least two heroes to see\nthe income breakdown."
 	%Formula.tooltip_text = "Base = (100 + 5 per level above 1 + 5 per victory, first 50 per hero) x seats / 100. Excitement multiplies the fight reward. Tips and Restaurant sales are separate."
 	%Start.disabled = not auto_fight and ((not fight.valid_lineup(selected) and not (fight.auto_fill_owned and fight.auto_fill_enabled)) or fight.active)
-	%Start.text = ("Stop after fight" if fight.active else "Close arena") if auto_fight else "Open arena"
+	%Start.text = ("End after fight" if fight.active else "End event") if auto_fight else "Start event / %d fights" % EVENT_ROUNDS
+	%Start.tooltip_text = "End this event and keep all earned rewards." if auto_fight else "Book %d automatic fights with your preferred heroes. Review their condition in Heroes. The next event needs a new booking." % EVENT_ROUNDS
 	if fight.active and not auto_fight:
 		%Start.text = "Finishing fight..."
 	_refresh_recovery()
@@ -1033,11 +1050,37 @@ func _refresh_recovery() -> void:
 			%Status.text = "Waiting / " + " / ".join(waiting)
 		elif fight.next_lineup(selected).size() < 2:
 			%Status.text = "Waiting for two available heroes"
-		%Start.text = "Close arena"
-		%Start.tooltip_text = "Choose at least two preferred heroes to continue." if selected.size() < 2 and not (fight.auto_fill_owned and fight.auto_fill_enabled) else "Recovery is free. The next fight starts automatically when the lineup is available."
+		%Start.text = "End event"
+		%Start.tooltip_text = "End the current event; completed fights stay paid. Recovery is free and does not use a round."
+	_refresh_event()
 	if not fight.active:
 		for id in fighters:
 			fighters[id].body.visible = fight.ready(id)
+
+
+func _refresh_event() -> void:
+	var running := auto_fight or fight.active
+	var title := "EVENT IN PROGRESS" if running else ("EVENT COMPLETE" if event_rounds >= EVENT_ROUNDS else ("EVENT ENDED EARLY" if event_rounds > 0 else "PREPARE AN EVENT"))
+	%EventTitle.text = title
+	%EventButton.text = ("Event / %d of %d fights" % [event_rounds, EVENT_ROUNDS]) if running else ("Event complete / Review results" if event_rounds >= EVENT_ROUNDS else ("Event ended / Review results" if event_rounds > 0 else "Prepare event / %d fights" % EVENT_ROUNDS))
+	%EventButton.tooltip_text = "Review this event's rewards and hero condition. Recovery and training continue between events."
+	%EventButton.add_theme_color_override("font_color", GOLD if not running and event_rounds > 0 else Color("edf1f7"))
+	var total_xp := 0
+	var lines := PackedStringArray()
+	var ids: Array = event_progression.keys()
+	if ids.is_empty():
+		ids = fight.participants if fight.active else (fight.next_lineup(selected) if fight.auto_fill_owned and fight.auto_fill_enabled else selected)
+	for id in ids:
+		var hero: Dictionary = fight.heroes[id]
+		var earned: Dictionary = event_progression.get(id, {"xp": 0, "before": hero.level})
+		total_xp += int(earned.xp)
+		var level := "Lv.%d" % hero.level if hero.level == earned.before else "Lv.%d → %d" % [earned.before, hero.level]
+		lines.append("%s / +%d fight XP / %s now\n%s / stamina %d/%d / injury %d/3" % [hero.name, earned.xp, level, _hero_condition(id), hero.stamina, fight.max_stamina(), fight.defeat_strain[id]])
+	%EventHeroes.text = "\n\n".join(lines) if not lines.is_empty() else ("Auto-fill is waiting for two ready heroes." if fight.auto_fill_owned and fight.auto_fill_enabled else "Choose heroes or enable Auto-fill in Arena.")
+	%EventSummary.text = "%d / %d fights completed / %d gold earned / %d fight XP\nRewards from completed fights are already paid." % [event_rounds, EVENT_ROUNDS, event_gold, total_xp]
+	%EventNote.text = "Fights and recovery run automatically within this event. Auto-fill uses ready reserves." if running else "Review your heroes, rotate reserves or visit facilities, then start the next event."
+	if not running and event_rounds == 0:
+		%EventSummary.text = "%d automatic fights, then the arena waits for your next booking.\nEach fight pays immediately. Recovery does not use a round." % EVENT_ROUNDS
 
 
 func _refresh_money() -> void:
@@ -1108,8 +1151,11 @@ func _toggle_running() -> void:
 		auto_fight = false
 		if not fight.active:
 			%Tick.stop()
-			%Status.text = "Arena closed / change bookings"
+			%Status.text = "Event ended / %d fights completed" % event_rounds
 	elif not fight.active and (fight.valid_lineup(selected) or (fight.auto_fill_owned and fight.auto_fill_enabled)):
+		event_rounds = 0
+		event_gold = 0
+		event_progression.clear()
 		auto_fight = true
 		_close_drawers()
 		_try_begin_fight()
@@ -1117,7 +1163,7 @@ func _toggle_running() -> void:
 
 
 func _begin_fight() -> void:
-	if not fight.start(fight.next_lineup(selected)):
+	if event_rounds >= EVENT_ROUNDS or not fight.start(fight.next_lineup(selected)):
 		return
 	_show_fighters(fight.participants)
 	cheer = 0.0
@@ -1125,7 +1171,7 @@ func _begin_fight() -> void:
 		excitement_pulse.kill()
 	%ExcitementMeter.modulate = Color.WHITE
 	displayed_tier = 0
-	%Status.text = "Fight %02d  /  %d base gold" % [fight.completed + 1, fight.payout]
+	%Status.text = "Event fight %d/%d / %d base gold" % [event_rounds + 1, EVENT_ROUNDS, fight.payout]
 	%Commentary.text = "Defeats build injury risk / rotate reserves before three defeats"
 	%Commentary.tooltip_text = %Commentary.text
 	%Status.tooltip_text = %Status.text
@@ -1136,7 +1182,7 @@ func _begin_fight() -> void:
 func _try_begin_fight() -> void:
 	if not (fight.auto_fill_owned and fight.auto_fill_enabled) and selected.any(func(id: int): return not fight.ready(id)):
 		return
-	if not in_main_menu and auto_fight and not fight.active and %Tick.is_stopped():
+	if not in_main_menu and auto_fight and event_rounds < EVENT_ROUNDS and not fight.active and %Tick.is_stopped():
 		_begin_fight()
 
 
@@ -1201,6 +1247,15 @@ func _present_action(event: Dictionary) -> void:
 		%Commentary.text = "%s hits %s for %d%s" % [attacker.name, fight.heroes[hit.target].name, hit.damage, " / knocked out!" if fight.health[hit.target] == 0 else ""]
 	%Commentary.tooltip_text = %Commentary.text
 	if event.winner >= 0:
+		event_rounds += 1
+		event_gold += fight.settled_income + fight.crowd_tips + fight.settled_tavern
+		for progress in event.progression:
+			if not event_progression.has(progress.hero):
+				event_progression[progress.hero] = {"xp": 0, "before": progress.before}
+			event_progression[progress.hero].xp += progress.xp
+		if event_rounds >= EVENT_ROUNDS:
+			auto_fight = false
+			%Tick.stop()
 		var winner: Dictionary = fight.heroes[event.winner]
 		%Status.text = "%s wins!  /  +1 career victory" % winner.name
 		var multiplier: float = FightRules.EXCITEMENT_MULTIPLIERS[FightRules.excitement_tier(event.excitement)]
@@ -1222,6 +1277,10 @@ func _present_action(event: Dictionary) -> void:
 		%Hint.tooltip_text = %Hint.text
 		if not leveled.is_empty():
 			%Status.text += " / Level up: " + ", ".join(leveled)
+		if event_rounds >= EVENT_ROUNDS:
+			%Status.text = "Event complete / %d fights / %d gold earned" % [event_rounds, event_gold]
+			%Commentary.text = "Review results and prepare your next event"
+			%Commentary.tooltip_text = "Open Review results above the arena to inspect event rewards and hero condition. Start event books the next %d fights." % EVENT_ROUNDS
 		%Status.tooltip_text = %Status.text + "\n" + " / ".join(xp_results)
 		if auto_fight:
 			%Tick.start(INTERMISSION)
@@ -1328,34 +1387,46 @@ func _circle_points(origin: Vector2, radius: float) -> PackedVector2Array:
 
 func _draw_ring() -> void:
 	var center := _project(Vector2.ZERO)
-	# Square-pixel court and side stands share the actors' uniform projection.
-	var points := _circle_points(Vector2.ZERO, FightRules.ARENA_RADIUS)
-	%Stage.draw_colored_polygon(points.slice(0, 64), Color("cba06b"))
-	for y in range(-2, 3):
-		for x in range(-2, 3):
-			var tile_at := Vector2(x * 32, y * 32)
-			if (tile_at.abs() + Vector2(16, 16)).length() < 87:
-				%Stage.draw_texture_rect_region(SUN_TILES, Rect2(center + tile_at - Vector2(16,16), Vector2(32,32)), Rect2(160,112,16,16))
-	%Stage.draw_polyline(points, Color("644735"), 6.0, false)
-	%Stage.draw_polyline(_circle_points(Vector2.ZERO, FightRules.ARENA_RADIUS - 14), Color("ecd6a2"), 2.0, false)
-	for i in range(70):
-		var ground := Vector2.from_angle(i * 2.399) * sqrt(float(i) / 70.0) * (FightRules.ARENA_RADIUS - 22)
-		var at := _project(ground).round()
-		%Stage.draw_rect(Rect2(at, Vector2(2 + i % 3, 2)), Color("b88b5c"))
-	for i in range(20):
-		if i in [5, 15]:
-			continue
-		var at := _project(Vector2.from_angle(TAU * i / 20.0) * (FightRules.ARENA_RADIUS + 4)).round()
-		%Stage.draw_rect(Rect2(at - Vector2(3, 7), Vector2(6, 12)), Color("654c36"))
-		%Stage.draw_rect(Rect2(at - Vector2(3, 7), Vector2(6, 3)), Color("c39965"))
+	# Two-pixel scanlines give the circular court the same pixel size as the atlas.
+	for layer in [[96, 4, "344b43"], [96, 0, "485a53"], [94, -2, "a6aa85"], [90, 0, "e2bf80"], [86, 0, "d4ae73"]]:
+		var radius: int = layer[0]
+		for y in range(-radius, radius, 2):
+			var half_width := floorf(sqrt(maxf(0.0, radius * radius - (y + 1) * (y + 1))) / 2.0) * 2.0
+			%Stage.draw_rect(Rect2(center + Vector2(-half_width, y + layer[1]), Vector2(half_width * 2, 2)), Color(layer[2]))
+	for i in range(28):
+		var direction := Vector2.from_angle(TAU * i / 28.0)
+		var outer := (center + direction * 94).snapped(Vector2(2, 2))
+		var inner := (center + direction * 90).snapped(Vector2(2, 2))
+		%Stage.draw_line(inner, outer, Color("61705c"), 2, false)
+	for i in range(54):
+		var at := (center + Vector2.from_angle(i * 2.399) * sqrt(float(i) / 54.0) * 80).snapped(Vector2(2, 2))
+		%Stage.draw_rect(Rect2(at, Vector2(4 if i % 4 == 0 else 2, 2)), Color("bb955f") if i % 3 == 0 else Color("e0ba7c"))
+	# A short stone threshold connects the court to the public path.
+	for step in range(3):
+		%Stage.draw_rect(Rect2(center.x - 14 - step * 2, 216 + step * 4, 28 + step * 4, 4), Color("667463"))
+		%Stage.draw_rect(Rect2(center.x - 12 - step * 2, 216 + step * 4, 24 + step * 4, 2), Color("b4b58e"))
 	# Each wing uses representative spectators; purchased seats remain economic capacity.
 	var columns := 2 + fight.arena_tier
 	for side in [-1, 1]:
+		var wing_left: float = center.x + (100 if side > 0 else -132 - (columns - 1) * 27)
+		var wing_width := columns * 27 + 5
+		%Stage.draw_rect(Rect2(wing_left - 2, 42, wing_width + 4, 176), Color("344b43"))
+		%Stage.draw_rect(Rect2(wing_left, 38, wing_width, 174), Color("654b39"))
+		%Stage.draw_rect(Rect2(wing_left + 2, 40, wing_width - 4, 168), Color("aa7c49"))
+		for plank in range(10):
+			%Stage.draw_rect(Rect2(wing_left + 2, 44 + plank * 16, wing_width - 4, 2), Color("805d3e"))
+		for edge in [wing_left, wing_left + wing_width - 4]:
+			%Stage.draw_rect(Rect2(edge, 34, 4, 180), Color("594b39"))
+			%Stage.draw_rect(Rect2(edge, 34, 2, 176), Color("c59858"))
+			%Stage.draw_rect(Rect2(edge - 2, 34, 8, 4), Color("e1bc77"))
+		%Stage.draw_rect(Rect2(wing_left - 2, 208, wing_width + 4, 4), Color("d0a365"))
+		%Stage.draw_rect(Rect2(wing_left + 4, 214, wing_width - 8, 4), Color("af8852"))
 		for column in range(columns):
 			var x: float = center.x + side * (116 + column * 27)
-			%Stage.draw_rect(Rect2(x - 12, 43, 24, 164), Color("654735"))
-			%Stage.draw_rect(Rect2(x - 10, 44, 20, 161), Color("b2814b"))
 			for seat in range(7):
+				var bench_y := 54 + seat * 23
+				%Stage.draw_rect(Rect2(x - 12, bench_y, 24, 6), Color("70523a"))
+				%Stage.draw_rect(Rect2(x - 12, bench_y, 24, 2), Color("dfb373"))
 				var frame := (int(crowd_clock * 5) + seat + column) % 9
 				var bounce := roundf(maxf(0.0, sin(crowd_clock * 7 + seat)) * cheer * 4)
 				var foot := Vector2(x, 58 + seat * 23 - bounce)
@@ -1364,14 +1435,20 @@ func _draw_ring() -> void:
 				%Stage.draw_texture_rect_region(SPECTATOR, target, source, Color("ead8bc") if (seat + column) % 2 == 0 else Color.WHITE)
 				%Stage.draw_texture_rect_region(SPECTATOR_HAIRS[(seat + column) % 3], target, source, [Color("dca583"), Color("ffdf99"), Color("766776")][(seat + column) % 3])
 		var flag_at := center + Vector2(side * (120 + columns * 27), -72)
-		%Stage.draw_rect(Rect2(flag_at, Vector2(3, 50)), Color("705038"))
-		%Stage.draw_rect(Rect2(flag_at + Vector2(3, 0), Vector2(17, 23)), Color("458aad") if side < 0 else Color("bf6a51"))
-		%Stage.draw_rect(Rect2(flag_at + Vector2(9, 4), Vector2(3, 12)), GOLD)
+		%Stage.draw_rect(Rect2(flag_at + Vector2(-4, 50), Vector2(12, 4)), Color("485a53"))
+		%Stage.draw_rect(Rect2(flag_at, Vector2(4, 50)), Color("705038"))
+		%Stage.draw_rect(Rect2(flag_at, Vector2(2, 48)), Color("cba66b"))
+		%Stage.draw_rect(Rect2(flag_at + Vector2(4, -2), Vector2(20, 28)), Color("354f50") if side < 0 else Color("794c40"))
+		%Stage.draw_rect(Rect2(flag_at + Vector2(6, 0), Vector2(16, 22)), Color("548e88") if side < 0 else Color("b9684e"))
+		%Stage.draw_rect(Rect2(flag_at + Vector2(6, 0), Vector2(16, 2)), Color("a5c3a1") if side < 0 else Color("e49b66"))
+		%Stage.draw_rect(Rect2(flag_at + Vector2(12, 6), Vector2(4, 10)), Color("e6c77d"))
+		%Stage.draw_rect(Rect2(flag_at + Vector2(10, 10), Vector2(8, 2)), Color("e6c77d"))
+		%Stage.draw_rect(Rect2(flag_at + Vector2(-2, -8), Vector2(8, 8)), Color("485a53"))
+		%Stage.draw_rect(Rect2(flag_at + Vector2(0, -6), Vector2(4, 4)), Color("ffe3a0"))
 	for id in fighters:
-		var at: Vector2 = fighters[id].body.position
-		%Stage.draw_set_transform(at, 0.0, Vector2(1.0, 0.35))
-		%Stage.draw_circle(Vector2.ZERO, 11.0, Color(0.2, 0.14, 0.1, 0.25))
-		%Stage.draw_set_transform(Vector2.ZERO)
+		var at: Vector2 = fighters[id].body.position.snapped(Vector2(2, 2))
+		%Stage.draw_rect(Rect2(at - Vector2(10, 2), Vector2(20, 4)), Color("a48a60"))
+		%Stage.draw_rect(Rect2(at - Vector2(6, 4), Vector2(12, 8)), Color("a48a60"))
 
 
 func _sync_fighters() -> void:

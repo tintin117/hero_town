@@ -210,7 +210,7 @@ text_overrun_behavior = 3
 [node name="Start" type="Button" parent="HUD/Footer/Contents"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Open arena"
+text = "Start event / 10 fights"
 custom_minimum_size = Vector2(190, 44)
 
 [node name="TownScroll" type="HScrollBar" parent="HUD"]
@@ -245,6 +245,18 @@ theme_override_font_sizes/font_size = 12
 text = "Select a building / click green cells to place / Esc cancels"
 horizontal_alignment = 1
 mouse_filter = 2
+
+[node name="EventButton" type="Button" parent="HUD"]
+unique_name_in_owner = true
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -320.0
+offset_top = 91.0
+offset_right = -16.0
+offset_bottom = 121.0
+theme_override_font_sizes/font_size = 12
+text = "Prepare event"
+toggle_mode = true
 
 [node name="Dismiss" type="Button" parent="HUD"]
 unique_name_in_owner = true
@@ -431,6 +443,67 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "More seats, more spectators. Progress saves automatically."
 
+
+[node name="EventDrawer" type="PanelContainer" parent="HUD"]
+unique_name_in_owner = true
+visible = false
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -410.0
+offset_right = 562.0
+offset_bottom = -76.0
+
+[node name="Details" type="VBoxContainer" parent="HUD/EventDrawer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Heading" type="HBoxContainer" parent="HUD/EventDrawer/Details"]
+layout_mode = 2
+
+[node name="EventTitle" type="Label" parent="HUD/EventDrawer/Details/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.78, 0.44, 1)
+text = "PREPARE AN EVENT"
+
+[node name="CloseEvent" type="Button" parent="HUD/EventDrawer/Details/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Close"
+tooltip_text = "Close (Escape)"
+
+[node name="EventSummary" type="Label" parent="HUD/EventDrawer/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.93, 0.95, 0.97, 1)
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="HUD/EventDrawer/Details"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="EventHeroes" type="Label" parent="HUD/EventDrawer/Details/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3
+
+[node name="EventNote" type="Label" parent="HUD/EventDrawer/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+
+[node name="ManageEventHeroes" type="Button" parent="HUD/EventDrawer/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Manage heroes / prepare lineup"
 
 [node name="MainMenu" type="Control" parent="."]
 unique_name_in_owner = true
