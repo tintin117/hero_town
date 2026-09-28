@@ -1,15 +1,15 @@
 extends RefCounted
 ## Integer-cell footprints; the view owns pixels and input.
 const SIZE := Vector2i(48, 8)
-const CELL_SIZE := Vector2i(48, 24)
+const CELL_SIZE := Vector2i(32, 32)
 const ARENA := Rect2i(16, 0, 16, 8)
 const OWNED := Rect2i(10, 0, 28, 8)
-const WORLD_WIDTH := 2304
+const WORLD_WIDTH := SIZE.x * CELL_SIZE.x
 const BUILDINGS := {
-	"training": {"name": "Training Yard", "size": Vector2i(3, 2)},
-	"infirmary": {"name": "Infirmary", "size": Vector2i(2, 2)},
+	"training": {"name": "Gym", "size": Vector2i(3, 2)},
+	"infirmary": {"name": "Hospital", "size": Vector2i(2, 2)},
 	"hall": {"name": "Recruitment Hall", "size": Vector2i(3, 2)},
-	"tavern": {"name": "Tavern", "size": Vector2i(2, 2)},
+	"tavern": {"name": "Restaurant", "size": Vector2i(2, 2)},
 }
 
 var buildings: Dictionary = {}

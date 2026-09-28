@@ -2,21 +2,26 @@ extends RefCounted
 ## Fight and estate rules. UI and animation never decide rewards or purchases.
 
 const TownGrid := preload("res://game/town_grid.gd")
-const REST_DURATION := 120.0
+const REST_DURATION := 60.0
+const INJURY_DURATION := 180.0
+const DEFEAT_LIMIT := 3
+const BENCH_DECAY_INTERVAL := 60.0
+const TRAINING_INTERVAL := 30.0
+const TRAINING_XP := 5
 const VICTORY_INCOME_CAP := 50
 const BUILDING_COSTS := {
-	"training": [250, 150000, 1000000], "infirmary": [1800, 100000, 1800000],
+	"training": [250, 150000, 1000000], "infirmary": [450, 100000, 1800000],
 	"hall": [200, 350, 900000], "tavern": [100, 300000, 7000000],
 }
-const FIGHTER_COSTS := [700000, 1200000]
+const FIGHTER_COSTS := [1500, 700000, 1200000]
 const AUTO_FILL_COST := 6000
-const RECRUIT_COSTS := [0, 0, 0, 150, 250, 400, 350000, 500000]
+const RECRUIT_COSTS := [0, 0, 100, 150, 250, 400, 350000, 500000]
 # Fixed recommendations, also used by the seeded economy check. No time gates.
 const MILESTONES := [
-	["tavern", 1], ["training", 1], ["hall", 1], ["recruit", 3], ["recruit", 4],
-	["hall", 2], ["recruit", 5], ["infirmary", 1], ["seats", 1], ["auto", 1],
-	["training", 2], ["infirmary", 2], ["fighters", 1], ["tavern", 2], ["seats", 2],
-	["hall", 3], ["recruit", 6], ["recruit", 7], ["training", 3], ["fighters", 2],
+	["recruit", 2], ["tavern", 1], ["hall", 1], ["recruit", 3], ["training", 1], ["recruit", 4],
+	["hall", 2], ["recruit", 5], ["infirmary", 1], ["fighters", 1], ["seats", 1], ["auto", 1],
+	["training", 2], ["infirmary", 2], ["fighters", 2], ["tavern", 2], ["seats", 2],
+	["hall", 3], ["recruit", 6], ["recruit", 7], ["training", 3], ["fighters", 3],
 	["infirmary", 3], ["tavern", 3],
 ]
 const BASE_INCOME := 100
@@ -76,6 +81,15 @@ var heroes: Array[Dictionary] = [
 		"ranged": false, "skill": {"name": "Drain", "kind": "drain", "power": 1.5, "description": "Deal 1.5x attack damage within 45 units. Heal by actual damage dealt."}},
 ]
 var rest_remaining: Array[float] = []
+var injury_remaining: Array[float] = []
+var defeat_strain: Array[int] = []
+var bench_elapsed: Array[float] = []
+var injury_order: Array[int] = []
+var next_injury_order := 1
+var training_elapsed: Dictionary = {}
+var restaurant_cooldown := 0.0
+# Management changes are separate from the combat event stream.
+var management_revision := 0
 var grid := TownGrid.new()
 var building_levels := {"training": 0, "infirmary": 0, "hall": 0, "tavern": 0}
 var fighter_tier := 0
@@ -119,9 +133,13 @@ func _init() -> void:
 		hero.red = true
 		heroes.append(hero)
 	for id in range(heroes.size()):
-		heroes[id].owned = id < 3
+		heroes[id].owned = id < 2
 		heroes[id].stamina = 10
 		rest_remaining.append(0.0)
+		injury_remaining.append(0.0)
+		defeat_strain.append(0)
+		bench_elapsed.append(0.0)
+		injury_order.append(0)
 
 
 func max_stamina() -> int:
@@ -129,7 +147,7 @@ func max_stamina() -> int:
 
 
 func recovery_duration() -> float:
-	return [120.0, 90.0, 60.0, 45.0][building_levels.infirmary]
+	return REST_DURATION
 
 
 func roster_capacity() -> int:
@@ -141,7 +159,7 @@ func owned_count() -> int:
 
 
 func fighter_capacity() -> int:
-	return 3 + fighter_tier
+	return 2 + fighter_tier
 
 
 func upgrade_level(id: String) -> int:
@@ -183,11 +201,12 @@ func purchase_upgrade(id: String, cell: Vector2i = Vector2i(-1, -1)) -> bool:
 				for hero_id in range(heroes.size()):
 					if rest_remaining[hero_id] <= 0.0:
 						heroes[hero_id].stamina += 5
+	management_revision += 1
 	return true
 
 
 func can_recruit(id: int) -> bool:
-	return id >= 3 and id < heroes.size() and not heroes[id].owned and owned_count() < roster_capacity() and coins >= RECRUIT_COSTS[id]
+	return id >= 2 and id < heroes.size() and not heroes[id].owned and owned_count() < roster_capacity() and coins >= RECRUIT_COSTS[id]
 
 
 func recruit(id: int) -> bool:
@@ -196,20 +215,150 @@ func recruit(id: int) -> bool:
 	coins -= RECRUIT_COSTS[id]
 	heroes[id].owned = true
 	heroes[id].stamina = max_stamina()
+	management_revision += 1
 	return true
 
 
 func ready(id: int) -> bool:
-	return id >= 0 and id < heroes.size() and heroes[id].owned and heroes[id].stamina > 0 and rest_remaining[id] <= 0.0
+	return availability(id).ready
+
+
+func availability(id: int) -> Dictionary:
+	var result := {"ready": false, "state": "unowned", "reason": "Not recruited", "seconds": 0.0}
+	if id < 0 or id >= heroes.size() or not heroes[id].owned:
+		return result
+	if active and id in participants:
+		result.merge({"state": "fighting", "reason": "In the current fight"}, true)
+	elif injury_remaining[id] > 0.0:
+		result.merge({"state": "injured", "reason": "Recovering from injury", "seconds": injury_remaining[id] / (hospital_rate() if id in hospital_patients() else 1.0)}, true)
+	elif rest_remaining[id] > 0.0 or heroes[id].stamina <= 0:
+		result.merge({"state": "resting", "reason": "Resting after exhaustion", "seconds": rest_remaining[id]}, true)
+	elif training_elapsed.has(id):
+		result.merge({"state": "training", "reason": "Training in the Gym", "seconds": TRAINING_INTERVAL - float(training_elapsed[id])}, true)
+	else:
+		result.merge({"ready": true, "state": "ready", "reason": "Ready"}, true)
+	return result
+
+
+func hospital_capacity() -> int:
+	return int(building_levels.infirmary)
+
+
+func hospital_rate() -> float:
+	return 1.0 + float(building_levels.infirmary)
+
+
+func _injury_queue() -> Array[int]:
+	var queue: Array[int] = []
+	for id in range(heroes.size()):
+		if heroes[id].owned and injury_remaining[id] > 0.0:
+			queue.append(id)
+	queue.sort_custom(func(a: int, b: int) -> bool: return injury_order[a] < injury_order[b] if injury_order[a] != injury_order[b] else a < b)
+	return queue
+
+
+func hospital_patients() -> Array[int]:
+	return _injury_queue().slice(0, hospital_capacity())
+
+
+func hospital_waiting() -> Array[int]:
+	return _injury_queue().slice(hospital_capacity())
+
+
+func training_capacity() -> int:
+	return int(building_levels.training)
+
+
+func training_reason(id: int, booked: Array[int] = []) -> String:
+	if id < 0 or id >= heroes.size() or not heroes[id].owned:
+		return "Recruit this hero first"
+	if training_elapsed.has(id):
+		return "Already training"
+	if training_capacity() == 0:
+		return "Build a Gym first"
+	if training_elapsed.size() >= training_capacity():
+		return "All Gym slots are occupied"
+	if heroes[id].level >= LEVEL_CAP:
+		return "Already at maximum level"
+	if not ready(id):
+		return availability(id).reason
+	if id in booked:
+		return "Unbook this hero before training"
+	var reserves := 0
+	for other in range(heroes.size()):
+		if other != id and heroes[other].owned and injury_remaining[other] <= 0.0 and not training_elapsed.has(other):
+			reserves += 1
+	if reserves < 2:
+		return "Keep two healthy heroes outside the Gym"
+	return ""
+
+
+func training_assign(id: int, booked: Array[int] = []) -> bool:
+	if not training_reason(id, booked).is_empty():
+		return false
+	training_elapsed[id] = 0.0
+	management_revision += 1
+	return true
+
+
+func training_recall(id: int) -> bool:
+	if not training_elapsed.has(id):
+		return false
+	training_elapsed.erase(id)
+	management_revision += 1
+	return true
+
+
+func meal_cooldown_duration() -> float:
+	return [30.0, 30.0, 20.0, 10.0][building_levels.tavern]
+
+
+func meal_quote(id: int, kind: String) -> Dictionary:
+	var quote := {"allowed": false, "reason": "", "cost": 20 if kind == "light" else 50, "restored": 0, "cooldown": restaurant_cooldown}
+	if kind not in ["light", "feast"]:
+		quote.reason = "Unknown meal"
+	elif building_levels.tavern == 0:
+		quote.reason = "Build a Restaurant first"
+	elif id < 0 or id >= heroes.size() or not heroes[id].owned:
+		quote.reason = "Recruit this hero first"
+	elif active and id in participants:
+		quote.reason = "Wait until this fight ends"
+	elif injury_remaining[id] > 0.0:
+		quote.reason = "Food cannot heal an injury"
+	elif training_elapsed.has(id):
+		quote.reason = "Recall this hero from the Gym first"
+	elif heroes[id].stamina >= max_stamina():
+		quote.reason = "Stamina is already full"
+	else:
+		quote.restored = mini(5 if kind == "light" else max_stamina(), max_stamina() - int(heroes[id].stamina))
+		if restaurant_cooldown > 0.0:
+			quote.reason = "Restaurant is preparing the next meal"
+		elif coins < int(quote.cost):
+			quote.reason = "Not enough gold"
+		else:
+			quote.allowed = true
+	return quote
+
+
+func feed(id: int, kind: String) -> bool:
+	var quote := meal_quote(id, kind)
+	if not quote.allowed:
+		return false
+	coins -= int(quote.cost)
+	heroes[id].stamina += int(quote.restored)
+	rest_remaining[id] = 0.0
+	restaurant_cooldown = meal_cooldown_duration()
+	management_revision += 1
+	return true
 
 
 func next_lineup(preferred: Array[int]) -> Array[int]:
-	if not auto_fill_owned or not auto_fill_enabled:
-		return preferred.duplicate()
 	var result: Array[int] = []
 	for id in preferred:
 		if ready(id) and id not in result and result.size() < fighter_capacity():
 			result.append(id)
+	if not auto_fill_owned or not auto_fill_enabled:
+		return result
 	for id in ready_lineup():
 		if id not in result and result.size() < fighter_capacity():
 			result.append(id)
@@ -228,10 +377,10 @@ func ready_lineup() -> Array[int]:
 func upgrade_benefit(id: String) -> String:
 	var level := upgrade_level(id)
 	match id:
-		"training": return "Stamina: %d → %d / +5 to ready heroes" % [max_stamina(), mini(25, max_stamina() + 5)] if level < 3 else "25 stamina / maximum"
-		"infirmary": return "Recovery: %ds → %ds / next injury" % [recovery_duration(), [90, 60, 45, 45][level]] if level < 3 else "45s recovery / maximum"
+		"training": return "Stamina: %d → %d / training slots: %d → %d" % [max_stamina(), mini(25, max_stamina() + 5), level, mini(3, level + 1)] if level < 3 else "25 stamina / 3 training slots / 5 XP each 30s"
+		"infirmary": return "Beds: %d → %d / injury recovery: x%d → x%d" % [level, mini(3, level + 1), level + 1, mini(4, level + 2)] if level < 3 else "3 beds / injury recovery x4"
 		"hall": return "Roster space: %d → %d / recruits sold separately" % [roster_capacity(), [5, 6, 8, 8][level]] if level < 3 else "8 roster spaces / maximum"
-		"tavern": return "Sales: +%d → +%d gold per fight" % [arena_capacity() * [0, 1, 3, 6][level], arena_capacity() * [1, 3, 6, 6][level]] if level < 3 else "Sales: +%d gold per fight" % (arena_capacity() * 6)
+		"tavern": return "Sales: +%d → +%d gold per fight / meals every %ds" % [arena_capacity() * [0, 1, 3, 6][level], arena_capacity() * [1, 3, 6, 6][level], [30, 20, 10, 10][level]] if level < 3 else "Sales: +%d gold per fight / meals every 10s" % (arena_capacity() * 6)
 		"seats": return "Seats: %d → %d / more fight income and sales" % [arena_capacity(), mini(200, arena_capacity() + 50)]
 		"fighters": return "Fighters: %d → %d / takes effect next fight" % [fighter_capacity(), mini(5, fighter_capacity() + 1)]
 		"auto": return "Automatically replace tired bookings with ready recruits"
@@ -256,7 +405,7 @@ func next_milestone() -> Dictionary:
 
 
 func valid_lineup(lineup: Array[int]) -> bool:
-	if lineup.size() < 3 or lineup.size() > fighter_capacity():
+	if lineup.size() < 2 or lineup.size() > fighter_capacity():
 		return false
 	var unique := {}
 	for id in lineup:
@@ -273,6 +422,7 @@ func lineup_rest(lineup: Array[int]) -> float:
 	for id in lineup:
 		if id >= 0 and id < rest_remaining.size():
 			remaining = maxf(remaining, rest_remaining[id])
+			remaining = maxf(remaining, injury_remaining[id] / (hospital_rate() if id in hospital_patients() else 1.0))
 	return remaining
 
 
@@ -348,6 +498,8 @@ func start(lineup: Array[int]) -> bool:
 		if not ready(id):
 			return false
 	participants = lineup.duplicate()
+	for id in participants:
+		bench_elapsed[id] = 0.0
 	for state in [health, mana, battle_stats, positions, velocities, targets, target_timers, cooldowns, pauses, dash_cooldowns, motions, pursuit_until]:
 		state.clear()
 	pending_casts.clear()
@@ -377,6 +529,7 @@ func start(lineup: Array[int]) -> bool:
 	payout = income_for(participants)
 	last_winner = -1
 	active = true
+	management_revision += 1
 	return true
 
 
@@ -392,11 +545,7 @@ func advance(delta: float) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	if delta <= 0.0 or not is_finite(delta):
 		return events
-	for id in range(rest_remaining.size()):
-		if rest_remaining[id] > 0.0:
-			rest_remaining[id] = maxf(0.0, rest_remaining[id] - delta)
-			if rest_remaining[id] == 0.0:
-				heroes[id].stamina = max_stamina()
+	_advance_management(delta)
 	if not active:
 		return events
 	var time_gain := minf(delta, maxf(0.0, EXCITEMENT_TIME_CAP - elapsed))
@@ -427,6 +576,73 @@ func advance(delta: float) -> Array[Dictionary]:
 		# A hit's attacker and surviving defender cast before another normal hit.
 		_resolve_casts(events)
 	return events
+
+
+func _advance_management(delta: float) -> void:
+	if restaurant_cooldown > 0.0:
+		restaurant_cooldown = maxf(0.0, restaurant_cooldown - delta)
+		if restaurant_cooldown == 0.0:
+			management_revision += 1
+	for id in range(heroes.size()):
+		if not heroes[id].owned or (active and id in participants):
+			continue
+		if rest_remaining[id] > 0.0:
+			rest_remaining[id] = maxf(0.0, rest_remaining[id] - delta)
+			if rest_remaining[id] == 0.0:
+				heroes[id].stamina = max_stamina()
+				management_revision += 1
+		if injury_remaining[id] <= 0.0 and defeat_strain[id] > 0:
+			bench_elapsed[id] += delta
+			while bench_elapsed[id] >= BENCH_DECAY_INTERVAL and defeat_strain[id] > 0:
+				bench_elapsed[id] -= BENCH_DECAY_INTERVAL
+				defeat_strain[id] -= 1
+				management_revision += 1
+			if defeat_strain[id] == 0:
+				bench_elapsed[id] = 0.0
+		elif injury_remaining[id] > 0.0 or defeat_strain[id] == 0:
+			bench_elapsed[id] = 0.0
+	# Split large deltas at treatment completions, so a newly available bed
+	# accelerates the next patient for the remainder of the same time step.
+	var remaining_time := delta
+	while remaining_time > 0.000001:
+		var queue := _injury_queue()
+		if queue.is_empty():
+			break
+		var patients := queue.slice(0, hospital_capacity())
+		var step := remaining_time
+		for id in queue:
+			var rate := hospital_rate() if id in patients else 1.0
+			step = minf(step, injury_remaining[id] / rate)
+		for id in queue:
+			var rate := hospital_rate() if id in patients else 1.0
+			injury_remaining[id] = maxf(0.0, injury_remaining[id] - step * rate)
+			if injury_remaining[id] < 0.000001:
+				injury_remaining[id] = 0.0
+				defeat_strain[id] = 0
+				injury_order[id] = 0
+				bench_elapsed[id] = 0.0
+				management_revision += 1
+		remaining_time = maxf(0.0, remaining_time - step)
+	for key in training_elapsed.keys():
+		var id := int(key)
+		training_elapsed[id] = float(training_elapsed[id]) + delta
+		while float(training_elapsed[id]) >= TRAINING_INTERVAL:
+			training_elapsed[id] = float(training_elapsed[id]) - TRAINING_INTERVAL
+			_award_xp(id, TRAINING_XP)
+			management_revision += 1
+			if heroes[id].level >= LEVEL_CAP:
+				training_elapsed.erase(id)
+				break
+
+
+func _record_defeat(id: int) -> void:
+	defeat_strain[id] = mini(DEFEAT_LIMIT, defeat_strain[id] + 1)
+	bench_elapsed[id] = 0.0
+	if defeat_strain[id] == DEFEAT_LIMIT:
+		injury_remaining[id] = INJURY_DURATION
+		injury_order[id] = next_injury_order
+		next_injury_order += 1
+	management_revision += 1
 
 
 func attack_range(id: int) -> float:
@@ -643,8 +859,11 @@ func _act(attacker: int, casting: bool) -> Dictionary:
 			heroes[id].stamina -= 1
 			if heroes[id].stamina == 0:
 				rest_remaining[id] = recovery_duration()
+			if id != last_winner:
+				_record_defeat(id)
 			velocities[id] = Vector2.ZERO
 			event.progression.append(_award_xp(id, XP_PER_FIGHT + (XP_WIN_BONUS if id == last_winner else 0)))
+		management_revision += 1
 	# Snapshots let the UI consume several same-frame actions in their reward order.
 	event.coins = coins
 	event.crowd_tips = crowd_tips

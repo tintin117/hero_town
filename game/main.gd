@@ -3,15 +3,18 @@ extends Control
 const FightRules := preload("res://game/fight.gd")
 const CombatFeedback := preload("res://game/combat_feedback.gd")
 const SaveGame := preload("res://game/save_game.gd")
-const ART := preload("res://resources/art/unit_library.tres")
+const Actor := preload("res://resources/art/sunnyside_actor.gd")
 const GOLD := Color("f2c771")
 const MUTED := Color("a5b2c3")
 const INTERMISSION := 3.0
-const GROUND_DEPTH := 0.32
-const SPECTATOR := preload("res://asset/Tiny Swords (Free Pack)/Units/Blue Units/Pawn/Pawn_Idle.png")
+const GROUND_DEPTH := 1.0
+const SUN_TILES := preload("res://asset/Sunnyside_World_Assets/Tileset/spr_tileset_sunnysideworld_16px.png")
+const SPECTATOR := preload("res://asset/Sunnyside_World_Assets/Characters/Human/IDLE/base_idle_strip9.png")
+const SPECTATOR_HAIR := preload("res://asset/Sunnyside_World_Assets/Characters/Human/IDLE/mophair_idle_strip9.png")
+const SPECTATOR_HAIRS := [SPECTATOR_HAIR, preload("res://asset/Sunnyside_World_Assets/Characters/Human/IDLE/curlyhair_idle_strip9.png"), preload("res://asset/Sunnyside_World_Assets/Characters/Human/IDLE/shorthair_idle_strip9.png")]
 
 var fight := FightRules.new()
-var selected: Array[int] = [0, 1, 2]
+var selected: Array[int] = [0, 1]
 var auto_fight := false
 var cards: Array[Button] = []
 var card_records: Array[Label] = []
@@ -44,6 +47,17 @@ var rotate_button: Button
 var in_main_menu := false
 var session_started := true
 var has_saved_game := false
+var management_revision := -1
+var management_tick := 0.0
+var facility_id := ""
+var facility_title: Label
+var facility_summary: Label
+var facility_note: Label
+var facility_back: Button
+var facility_upgrade: Button
+var build_list: VBoxContainer
+var facility_list: VBoxContainer
+var facility_rows: Dictionary = {}
 
 
 func _ready() -> void:
@@ -96,7 +110,7 @@ func _ready() -> void:
 	%Stage.draw.connect(_draw_ring)
 	%Stage.resized.connect(_layout_fighters)
 	%Excitement.draw.connect(_draw_excitement_markers)
-	_show_fighters(selected)
+	_show_fighters(selected.filter(func(id: int): return fight.ready(id)))
 	_refresh()
 	welcome.visible = not fight.intro_seen
 	if welcome.visible:
@@ -152,7 +166,7 @@ func _request_new_game() -> void:
 
 func _start_new_game() -> void:
 	var fresh := FightRules.new()
-	var starters: Array[int] = [0, 1, 2]
+	var starters: Array[int] = [0, 1]
 	if saving_enabled:
 		var error := SaveGame.save_game(fresh, starters, save_path)
 		if error != OK:
@@ -178,7 +192,7 @@ func _start_new_game() -> void:
 	save_message = ""
 	%Status.text = "Your arena is ready"
 	%Status.tooltip_text = ""
-	%Commentary.text = "Bram / Ivo / Nia"
+	%Commentary.text = "Bram and Ivo / Recruit Nia after your first fight"
 	%Commentary.tooltip_text = %Commentary.text
 	welcome_start.text = "Start first fight"
 	_show_fighters(selected)
@@ -230,9 +244,15 @@ func _build_management() -> void:
 	var heading := HBoxContainer.new()
 	list.add_child(heading)
 	var title := _label("BUILD YOUR ESTATE", 16, GOLD)
+	facility_title = title
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	heading.add_child(title)
+	facility_back = Button.new()
+	facility_back.text = "All buildings"
+	facility_back.pressed.connect(_show_build_overview)
+	facility_back.hide()
+	heading.add_child(facility_back)
 	close_build = Button.new()
 	close_build.text = "Close"
 	close_build.pressed.connect(_close_drawers)
@@ -242,10 +262,14 @@ func _build_management() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.follow_focus = true
 	list.add_child(scroll)
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
 	var rows := VBoxContainer.new()
+	build_list = rows
 	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rows.add_theme_constant_override("separation", 10)
-	scroll.add_child(rows)
+	content.add_child(rows)
 	for id in FightRules.TownGrid.BUILDINGS:
 		var row := HBoxContainer.new()
 		rows.add_child(row)
@@ -253,13 +277,50 @@ func _build_management() -> void:
 		info.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
+		var manage := Button.new()
+		manage.text = "Manage"
+		manage.pressed.connect(_open_building.bind(id))
+		row.add_child(manage)
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(166, 48)
 		button.pressed.connect(_building_purchase.bind(id))
 		row.add_child(button)
-		build_rows[id] = {"info": info, "button": button}
+		build_rows[id] = {"info": info, "button": button, "manage": manage}
+	facility_list = VBoxContainer.new()
+	facility_list.add_theme_constant_override("separation", 8)
+	content.add_child(facility_list)
+	facility_summary = _label("", 12)
+	facility_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	facility_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	facility_list.add_child(facility_summary)
+	facility_upgrade = Button.new()
+	facility_upgrade.pressed.connect(func(): _building_purchase(facility_id))
+	facility_list.add_child(facility_upgrade)
+	facility_note = _label("", 12, GOLD)
+	facility_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	facility_list.add_child(facility_note)
+	for id in range(fight.heroes.size()):
+		var row := HBoxContainer.new()
+		row.custom_minimum_size.y = 48
+		facility_list.add_child(row)
+		var portrait := _hero_portrait(id)
+		row.add_child(portrait)
+		var info := _label("", 12)
+		info.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(info)
+		var primary := Button.new()
+		primary.pressed.connect(_facility_action.bind(id, false))
+		row.add_child(primary)
+		var secondary := Button.new()
+		secondary.pressed.connect(_facility_action.bind(id, true))
+		row.add_child(secondary)
+		facility_rows[id] = {"row": row, "info": info, "primary": primary, "secondary": secondary}
+	facility_list.hide()
 	list.add_child(_label("One of each / move freely with Arrange / outer land is a preview", 11))
-	build_button.pressed.connect(_toggle_drawer.bind(build_drawer))
+	build_button.pressed.connect(func():
+		_show_build_overview()
+		_toggle_drawer(build_drawer))
 	var upgrades := HBoxContainer.new()
 	%ArenaDrawer.get_node("Details").add_child(upgrades)
 	fighter_upgrade = Button.new()
@@ -278,9 +339,9 @@ func _build_management() -> void:
 	objective.add_theme_font_size_override("font_size", 12)
 	$HUD.add_child(objective)
 	$HUD.move_child(objective, $HUD.get_children().find(%Dismiss))
-	objective.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	objective.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	objective.offset_left = 16
-	objective.offset_right = -16
+	objective.offset_right = 320
 	objective.offset_top = 91
 	objective.offset_bottom = 121
 	objective.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -294,13 +355,148 @@ func _build_management() -> void:
 	%CenterArena.custom_minimum_size.x = 66
 	%Arrange.tooltip_text = "Move built structures within your estate. Combat keeps running."
 	rotate_button = Button.new()
-	rotate_button.text = "Book rested heroes"
+	rotate_button.text = "Use rested heroes"
 	rotate_button.tooltip_text = "Choose the ready heroes with the most stamina. This changes your booking once; Auto-fill handles future fights automatically."
 	rotate_button.pressed.connect(_book_rested)
 	var roster_heading := %HeroesDrawer.get_node("Details/Heading")
 	roster_heading.add_child(rotate_button)
 	roster_heading.move_child(rotate_button, 1)
 	_build_welcome()
+
+
+func _hero_portrait(id: int) -> Control:
+	var portrait := Control.new()
+	portrait.custom_minimum_size = Vector2(36, 42)
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var actor := Actor.new()
+	portrait.add_child(actor)
+	actor.setup(id, fight.heroes[id].unit, fight.heroes[id].red)
+	actor.position = Vector2(18, 38)
+	actor.scale = Vector2.ONE * 0.85
+	actor.play("idle")
+	return portrait
+
+
+func _show_build_overview() -> void:
+	facility_id = ""
+	build_list.show()
+	facility_list.hide()
+	facility_back.hide()
+	facility_title.text = "BUILD YOUR ESTATE"
+
+
+func _show_facility(id: String) -> void:
+	facility_id = id
+	build_list.hide()
+	facility_list.show()
+	facility_back.show()
+	facility_title.text = FightRules.TownGrid.BUILDINGS[id].name.to_upper()
+	facility_note.text = ""
+	_refresh_facility()
+
+
+func _facility_action(id: int, secondary: bool) -> void:
+	var success := false
+	if facility_id == "training":
+		if fight.training_elapsed.has(id):
+			success = fight.training_recall(id)
+			facility_note.text = "%s recalled / incomplete training interval discarded" % fight.heroes[id].name
+		else:
+			success = fight.training_assign(id, selected)
+			facility_note.text = "%s started training / +5 XP every 30s" % fight.heroes[id].name
+	elif facility_id == "tavern":
+		var kind := "feast" if secondary else "light"
+		var quote: Dictionary = fight.meal_quote(id, kind)
+		success = fight.feed(id, kind)
+		facility_note.text = "%s +%d stamina / %d gold" % [fight.heroes[id].name, quote.restored, quote.cost] if success else quote.reason
+	if success:
+		_refresh()
+		%World.sync_management(fight)
+		_save()
+	else:
+		if facility_id == "training":
+			facility_note.text = fight.training_reason(id, selected)
+		_refresh_facility()
+
+
+func _refresh_facility() -> void:
+	if facility_id.is_empty() or facility_list == null:
+		return
+	var level: int = fight.building_levels[facility_id]
+	var cost: int = fight.upgrade_cost(facility_id)
+	facility_upgrade.text = "%s / %d gold" % ["Build" if level == 0 else "Upgrade", cost] if cost > 0 else "Maximum level"
+	facility_upgrade.disabled = cost == 0 or fight.coins < cost
+	facility_upgrade.visible = cost > 0
+	facility_note.visible = not facility_note.text.is_empty()
+	facility_upgrade.tooltip_text = fight.upgrade_benefit(facility_id)
+	var patients: Array = fight.hospital_patients()
+	match facility_id:
+		"training":
+			facility_summary.text = "%d / %d training slots / 5 XP every 30s\nAssign unbooked reserves. Recall is free." % [fight.training_elapsed.size(), fight.training_capacity()]
+		"infirmary":
+			facility_summary.text = "%d / %d beds / %.0fx treatment / %d waiting\nOldest injury first. Free recovery continues outside." % [patients.size(), fight.hospital_capacity(), fight.hospital_rate(), fight.hospital_waiting().size()]
+		"tavern":
+			facility_summary.text = "%s / meals never heal injuries\nLight: 20 gold / +5 stamina. Full: 50 gold / refill." % ("Next serving in %ds" % ceili(fight.restaurant_cooldown) if fight.restaurant_cooldown > 0.0 else "Ready to serve")
+	var ordered: Array = facility_rows.keys()
+	ordered.sort_custom(func(a: int, b: int):
+		var first := _facility_priority(a)
+		var second := _facility_priority(b)
+		return first < second if first != second else a < b)
+	var index := 3
+	for id in ordered:
+		var row: Dictionary = facility_rows[id]
+		facility_list.move_child(row.row, index)
+		index += 1
+		var hero: Dictionary = fight.heroes[id]
+		row.row.visible = hero.owned and (facility_id != "infirmary" or fight.injury_remaining[id] > 0 or fight.rest_remaining[id] > 0)
+		row.primary.visible = facility_id != "infirmary"
+		row.secondary.visible = facility_id == "tavern"
+		if not hero.owned:
+			continue
+		row.info.text = "%s / Lv.%d\n%s" % [hero.name, hero.level, _hero_condition(id)]
+		match facility_id:
+			"training":
+				var assigned: bool = fight.training_elapsed.has(id)
+				var reason: String = fight.training_reason(id, selected)
+				row.primary.text = "Recall" if assigned else "Train"
+				row.primary.disabled = not assigned and not reason.is_empty()
+				row.primary.tooltip_text = "Return to the reserve roster immediately" if assigned else ("Assign for 5 XP every 30s" if reason.is_empty() else reason)
+				if assigned:
+					row.info.text = "%s / Lv.%d / %d XP\nNext +5 XP in %ds" % [hero.name, hero.level, hero.xp, ceili(30.0 - float(fight.training_elapsed[id]))]
+			"infirmary":
+				if fight.injury_remaining[id] > 0.0:
+					var rate: float = fight.hospital_rate() if id in patients else 1.0
+					row.info.text = "%s / %s / injury ~%ds\n%s" % [hero.name, "In treatment" if id in patients else "Recovering outside", ceili(fight.injury_remaining[id] / rate), "Also resting: %ds" % ceili(fight.rest_remaining[id]) if fight.rest_remaining[id] > 0 else "Fatigue recovered" ]
+			"tavern":
+				for kind in ["light", "feast"]:
+					var quote: Dictionary = fight.meal_quote(id, kind)
+					var button: Button = row.primary if kind == "light" else row.secondary
+					button.text = "+%d / %dg" % [quote.restored, quote.cost]
+					button.disabled = not quote.allowed
+					button.tooltip_text = ("Light meal" if kind == "light" else "Full meal") + (" / " + quote.reason if not quote.allowed else " / restore %d stamina" % quote.restored)
+
+
+func _facility_priority(id: int) -> int:
+	if not fight.heroes[id].owned:
+		return 9
+	match facility_id:
+		"training":
+			return 0 if fight.training_elapsed.has(id) else (1 if fight.training_reason(id, selected).is_empty() else 2)
+		"infirmary":
+			return 0 if id in fight.hospital_patients() else (1 if fight.injury_remaining[id] > 0.0 else 2)
+		"tavern":
+			return 0 if fight.meal_quote(id, "light").restored > 0 else 2
+	return 0
+
+
+func _hero_condition(id: int) -> String:
+	var state: Dictionary = fight.availability(id)
+	var result: String = state.state.capitalize()
+	if state.seconds > 0.0 and state.seconds < INF:
+		result += " %ds" % ceili(state.seconds)
+	if fight.injury_remaining[id] > 0.0 and fight.rest_remaining[id] > 0.0:
+		result += " / fatigue %ds" % ceili(fight.rest_remaining[id])
+	return result
 
 
 func _build_welcome() -> void:
@@ -333,11 +529,11 @@ func _build_welcome() -> void:
 	content.add_theme_constant_override("separation", 12)
 	panel.add_child(content)
 	content.add_child(_label("WELCOME TO YOUR ARENA", 22, GOLD))
-	var body := _label("Book heroes to fight and earn gold. Spend that gold on recruits, buildings, and a bigger crowd.\n\nHeroes need rest after fighting. Train them for longer runs and recruit reserves to keep the matches going.", 15, Color("edf1f7"))
+	var body := _label("Book heroes to fight and earn gold. Spend that gold on recruits, buildings, and a bigger crowd.\n\nFatigue costs stamina. Three defeats cause injury. Recruit Nia after your first fight, rotate reserves, and build facilities to help them recover and train.", 15, Color("edf1f7"))
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(body)
-	content.add_child(_label("Follow the objective above the arena. Progress saves automatically.\nGold and recovery advance only while the game is running.", 12))
+	content.add_child(_label("Follow the objective above the arena. Progress saves automatically.\nGold and recovery require the game to run. Sunnyside World art by Daniel Diggle.", 12))
 	var actions := HBoxContainer.new()
 	content.add_child(actions)
 	var skip := Button.new()
@@ -364,21 +560,22 @@ func _dismiss_welcome() -> void:
 
 
 func _needs_rotation() -> bool:
-	return not fight.active and not (fight.auto_fill_owned and fight.auto_fill_enabled) and fight.lineup_rest(selected) > 0.0 and fight.ready_lineup().size() >= 3
+	return not fight.active and not (fight.auto_fill_owned and fight.auto_fill_enabled) and selected.any(func(id: int): return not fight.ready(id)) and fight.ready_lineup().size() >= 2
 
 
 func _book_rested() -> void:
-	if fight.active or fight.ready_lineup().size() < 3:
+	if fight.active or fight.ready_lineup().size() < 2:
 		return
-	auto_fight = false
 	%Tick.stop()
 	selected = fight.ready_lineup()
 	_show_fighters(selected)
-	%Status.text = "Rested heroes booked / open the arena"
-	%Commentary.text = "Injured heroes recover on the bench. Auto-fill can handle future swaps."
+	%Status.text = "Rested heroes booked" + (" / arena running" if auto_fight else " / open the arena")
+	%Commentary.text = "Reserves replace unavailable heroes. Auto-fill can handle future swaps."
 	%Commentary.tooltip_text = %Commentary.text
 	_refresh()
 	_save()
+	if auto_fight:
+		_try_begin_fight()
 
 
 func _open_objective() -> void:
@@ -398,6 +595,7 @@ func _open_objective() -> void:
 	if not drawer.visible:
 		_toggle_drawer(drawer)
 	if fight.building_levels.has(next.id):
+		_show_build_overview()
 		build_rows[next.id].button.grab_focus()
 	elif next.id == "recruit":
 		%Scroll.ensure_control_visible(cards[next.target])
@@ -405,9 +603,13 @@ func _open_objective() -> void:
 
 
 func _open_building(id: String) -> void:
+	if id == "hall":
+		if not %HeroesDrawer.visible:
+			_toggle_drawer(%HeroesDrawer)
+		return
 	if not build_drawer.visible:
 		_toggle_drawer(build_drawer)
-	build_rows[id].button.grab_focus()
+	_show_facility(id)
 
 
 func _building_purchase(id: String) -> void:
@@ -418,7 +620,7 @@ func _building_purchase(id: String) -> void:
 		%World.begin_construction(id)
 		var cell: Vector2i = %World.preview_cell
 		var left: float = %World.point_for_cell(cell).x - 24.0
-		var right: float = left + FightRules.TownGrid.BUILDINGS[id].size.x * 48.0
+		var right: float = left + FightRules.TownGrid.BUILDINGS[id].size.x * float(FightRules.TownGrid.CELL_SIZE.x)
 		%TownScroll.value = clampf(%TownScroll.value, right - size.x + 24.0, left - 24.0)
 		%World.preview_cell = cell
 		%World._update_preview()
@@ -462,19 +664,19 @@ func _refresh_objective() -> void:
 	var hint := ""
 	if fight.completed == 0:
 		text = "Watch your first fight / heroes earn gold from fights and skill tips" if fight.active else "FIRST: Open the arena to earn your first gold"
-		hint = "Your first completed fight pays for a Tavern. Build it to earn another 100 gold each fight."
+		hint = "Your first completed fight pays for Nia, your first reserve. Three defeats cause injury; a minute on the bench removes one injury-meter point."
 	elif _needs_rotation():
-		text = "Your booked heroes need rest / click here, book rested heroes, then open the arena"
-		hint = "Heroes lose one stamina per fight, then recover on the bench. Ready reserves can fight now."
+		text = "A preferred hero is unavailable / use rested heroes to keep fighting"
+		hint = "Fatigue, injury and training block bookings. Ready reserves can fight now; basic recovery is always free."
 	var next := fight.next_milestone()
 	if text.is_empty() and next.is_empty():
 		text = "Demo complete / your estate is fully upgraded / keep fighting!"
 	elif text.is_empty():
 		var action: String = next.name
 		if fight.building_levels.has(next.id) and fight.building_levels[next.id] == 0:
-			action = {"tavern": "Spend your earnings: build a Tavern", "training": "Fight longer: build a Training Yard", "hall": "Hire reserves: build a Recruitment Hall", "infirmary": "Recover faster: build an Infirmary"}[next.id]
+			action = {"tavern": "Serve food and earn sales: build a Restaurant", "training": "Develop reserves: build a Gym", "hall": "Hire reserves: build a Recruitment Hall", "infirmary": "Treat injuries: build a Hospital"}[next.id]
 		elif next.id == "hall" and next.target == 2:
-			action = "Expand the Hall for a full replacement trio"
+			action = "Expand the Hall for more reserves"
 		elif next.id == "seats" and next.target == 1:
 			action = "Grow your crowd: expand to 150 seats"
 		elif next.id == "auto":
@@ -496,12 +698,13 @@ func _refresh_management() -> void:
 		build_rows[id].button.text = "%s / %d gold" % ["Build" if level == 0 else "Upgrade", cost] if cost > 0 else "Fully upgraded"
 		build_rows[id].button.disabled = cost == 0 or fight.coins < cost
 		build_rows[id].button.tooltip_text = fight.upgrade_benefit(id)
+		build_rows[id].manage.disabled = level == 0
 	var cost := fight.upgrade_cost("fighters")
 	fighter_upgrade.text = "%d fighters / +1: %d gold" % [fight.fighter_capacity(), cost] if cost > 0 else "5 fighters / maximum"
 	fighter_upgrade.disabled = cost == 0 or fight.coins < cost
 	auto_upgrade.text = "Auto-fill: %s" % ("On" if fight.auto_fill_enabled else "Off") if fight.auto_fill_owned else "Auto-fill / %d gold" % FightRules.AUTO_FILL_COST
 	auto_upgrade.disabled = not fight.auto_fill_owned and fight.coins < FightRules.AUTO_FILL_COST
-	auto_upgrade.tooltip_text = "Retain ready bookings and fill with ready recruits, up to arena capacity. Runs with at least three ready heroes."
+	auto_upgrade.tooltip_text = "Retain ready bookings and fill with ready recruits, up to arena capacity. Runs with at least two ready heroes."
 	for id in range(cards.size()):
 		if not fight.heroes[id].owned:
 			cards[id].disabled = not fight.can_recruit(id)
@@ -510,6 +713,8 @@ func _refresh_management() -> void:
 func _layout_town() -> void:
 	var center: float = %TownScroll.value + town_view_width * 0.5
 	%World.size = Vector2(%World.WORLD_WIDTH, size.y)
+	%Stage.position = Vector2(FightRules.TownGrid.ARENA.position.x * FightRules.TownGrid.CELL_SIZE.x, size.y - 340.0)
+	%Stage.size = Vector2(FightRules.TownGrid.ARENA.size.x * FightRules.TownGrid.CELL_SIZE.x, 256)
 	%TownScroll.max_value = %World.WORLD_WIDTH
 	%TownScroll.page = minf(size.x, %World.WORLD_WIDTH)
 	%TownScroll.value = clampf(center - size.x * 0.5, 0.0, %TownScroll.max_value - %TownScroll.page) if town_view_width > 0.0 else 0.0
@@ -530,7 +735,7 @@ func _sync_placement_pointer(point: Vector2) -> void:
 
 
 func _center_arena() -> void:
-	%TownScroll.value = 1152.0 - size.x * 0.5
+	%TownScroll.value = float(FightRules.TownGrid.WORLD_WIDTH) * 0.5 - size.x * 0.5
 
 
 func _set_arranging(enabled: bool) -> void:
@@ -689,7 +894,7 @@ func _build_roster() -> void:
 		var hero := fight.heroes[id]
 		var card := Button.new()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.custom_minimum_size.y = 43
+		card.custom_minimum_size.y = 62
 		card.toggle_mode = true
 		card.pressed.connect(_select_hero.bind(id))
 		%Roster.add_child(card)
@@ -702,16 +907,7 @@ func _build_roster() -> void:
 		row.offset_bottom = -2
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(row)
-		var portrait := TextureRect.new()
-		var crop := AtlasTexture.new()
-		crop.atlas = ART.frames(hero.unit, hero.red).get_frame_texture("idle", 0)
-		crop.region = Rect2(crop.atlas.get_size() * 0.5 - Vector2(40, 40), Vector2(80, 80))
-		portrait.texture = crop
-		portrait.custom_minimum_size.x = 44
-		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(portrait)
+		row.add_child(_hero_portrait(id))
 		var content := VBoxContainer.new()
 		content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		content.add_theme_constant_override("separation", 0)
@@ -757,74 +953,91 @@ func _select_hero(id: int) -> void:
 			_refresh()
 			_save()
 		return
-	if auto_fight or fight.active:
-		return
 	if id in selected:
 		selected.erase(id)
-	elif selected.size() < fight.fighter_capacity():
+	elif not fight.active and fight.ready(id) and selected.size() < fight.fighter_capacity():
 		selected.append(id)
-	_show_fighters(selected)
-	%Status.text = "The arena is ready" if fight.valid_lineup(selected) else "Choose at least three heroes"
-	%Commentary.text = "Book 3–%d heroes, then open the arena." % fight.fighter_capacity()
+	else:
+		return
+	if not fight.active:
+		_show_fighters(selected.filter(func(hero_id: int): return fight.ready(hero_id)))
+	%Status.text = "Preferred lineup updated / next fight" if fight.active else ("The arena is ready" if fight.valid_lineup(selected) else "Choose at least two heroes")
+	%Commentary.text = "Book 2–%d available heroes. Unavailable preferences wait on the bench." % fight.fighter_capacity()
 	%Commentary.tooltip_text = %Commentary.text
 	_refresh()
 	_save()
 
 
 func _refresh() -> void:
-	var locked := auto_fight or fight.active
 	for id in range(cards.size()):
-		cards[id].set_pressed_no_signal(id in selected)
-		cards[id].disabled = (locked or (selected.size() == fight.fighter_capacity() and id not in selected)) if fight.heroes[id].owned else not fight.can_recruit(id)
-		cards[id].add_theme_stylebox_override("disabled", _panel(Color("30352f"), GOLD, 2) if id in selected else _panel(Color("131b25"), Color("293444")))
-		cards[id].modulate = Color.WHITE if id in selected else Color("9aa8ba")
-		card_records[id].text = " / %d wins" % fight.heroes[id].wins
+		var preferred: bool = id in selected
+		var state: Dictionary = fight.availability(id)
+		cards[id].set_pressed_no_signal(preferred and (state.ready or (fight.active and id in fight.participants)))
+		cards[id].disabled = (not preferred and (fight.active or not state.ready or selected.size() >= fight.fighter_capacity())) if fight.heroes[id].owned else not fight.can_recruit(id)
+		cards[id].add_theme_stylebox_override("disabled", _panel(Color("30352f"), GOLD, 2) if preferred else _panel(Color("131b25"), Color("293444")))
+		cards[id].modulate = Color.WHITE if preferred or state.ready else Color("a8adb0")
 		var hero: Dictionary = fight.heroes[id]
 		var stats := fight.stats_for(id)
 		var needed := fight.xp_needed(id)
-		var details := card_details[id]
-		details.level.text = "LV %d  /  %s" % [hero.level, "%d/%d XP" % [hero.xp, needed] if needed > 0 else "MAX"]
+		var details: Dictionary = card_details[id]
+		card_records[id].text = " / %d wins" % hero.wins
+		details.level.text = "LV %d / %s" % [hero.level, "%d/%d XP" % [hero.xp, needed] if needed > 0 else "MAX"]
 		details.xp.max_value = needed if needed > 0 else 1
 		details.xp.value = hero.xp if needed > 0 else 1
-		details.stats.text = "%d HP   /   %d ATK" % [stats.health, stats.attack]
-		details.skill.text = "%s / %d gold" % [hero.skill.name, FightRules.CAST_TIP]
-		var movement := "Keeps 110-160 units of distance; escape dash has a %.0f-second cooldown." % FightRules.ESCAPE_COOLDOWN if hero.ranged else "Chases into melee range (45 units); approach dash has a %.1f-second cooldown and keeps its target for that time, unless the target dies." % FightRules.APPROACH_COOLDOWN
-		cards[id].tooltip_text = "%s / Level %d / %s\n%d HP, %d ATK / %d gold instantly per skill\nChooses the nearest opponent. %s\n%s: %s\nMana: +25 on normal hits, +15 when surviving a normal hit; cast at 100. Skills generate no mana. Damaging skills push surviving enemies back 65 units. Dashes generate no mana, tips, or excitement.\n10 XP per completed fight, +10 for winning. Each level: +5%% base HP/ATK and +5 base gold.\nFirst 50 career victories each add 5 base gold. Spectator seats multiply base income. Each cast adds 8 excitement; final excitement boosts fight income, not tips.\nOne stamina per completed fight. At zero, rest to recover. Infirmary shortens recovery; Training Yard increases stamina." % [hero.name, hero.level, hero.unit.capitalize(), stats.health, stats.attack, FightRules.CAST_TIP, movement, hero.skill.name, hero.skill.description]
+		details.stats.text = "%d HP / %d ATK" % [stats.health, stats.attack]
+		details.skill.text = hero.skill.name
+		cards[id].tooltip_text = "%s / %s\n%s\n%d HP / %d ATK / %d career wins\nOne stamina per fight. Three defeats cause injury. A minute on the bench removes one injury point.\nFatigue recovers in 60s. Injuries recover freely; Hospital beds accelerate treatment.\n10 XP per fight, +10 for winning. Each level adds 5%% base HP/ATK.\n%s" % [hero.name, _hero_condition(id), state.reason, stats.health, stats.attack, hero.wins, hero.skill.description]
+		if preferred:
+			cards[id].tooltip_text += "\nPreferred lineup / click to remove this preference."
 		if not hero.owned:
 			details.level.text = "Recruit / %d gold" % FightRules.RECRUIT_COSTS[id]
-			cards[id].tooltip_text += "\nPurchase this hero. Recruitment Hall capacity: %d / %d." % [fight.owned_count(), fight.roster_capacity()]
+			cards[id].tooltip_text = "%s / %s\nRecruit for %d gold. Hall capacity: %d/%d.\n%s" % [hero.name, hero.unit.capitalize(), FightRules.RECRUIT_COSTS[id], fight.owned_count(), fight.roster_capacity(), hero.skill.description]
 	_refresh_money()
 	_refresh_excitement(fight.excitement)
-	%Record.text = "%d fights / %d of %d recruited / saves automatically" % [fight.completed, fight.owned_count(), fight.roster_capacity()]
-	%Selection.text = "HEROES / %d OF %d BOOKED" % [selected.size(), fight.fighter_capacity()]
-	%HeroesButton.text = "Heroes %d/%d" % [selected.size(), fight.fighter_capacity()]
-	%Hint.text = "Stop to change bookings. Unowned cards recruit new heroes." if locked else "Book 3–%d heroes. Click an unowned card to recruit." % fight.fighter_capacity()
+	%Record.text = "%d fights / %d of %d recruited / %d available" % [fight.completed, fight.owned_count(), fight.roster_capacity(), range(fight.heroes.size()).filter(func(id: int): return fight.ready(id)).size()]
+	var eligible: Array = selected.filter(func(id: int): return fight.ready(id))
+	%Selection.text = "HEROES / %d PREFERRED" % selected.size()
+	%HeroesButton.text = "Heroes %d/%d" % [fight.participants.size() if fight.active else eligible.size(), fight.fighter_capacity()]
+	%Hint.text = "Click a preferred hero to unbook. Stop the fight to add heroes." if fight.active else "Choose 2–%d ready heroes. Unavailable preferences wait; Auto-fill uses reserves." % fight.fighter_capacity()
 	%Hint.tooltip_text = %Hint.text
-	var quote := fight.income_breakdown(fight.next_lineup(selected))
-	%Income.text = "%d gold" % quote.guaranteed if not quote.is_empty() else "Choose 3 heroes"
-	%Formula.text = "%d base\n+%d hero levels\n+%d career victories\nx%.1f arena capacity" % [quote.base, quote.levels, quote.victories, quote.multiplier] if not quote.is_empty() else "Book at least three heroes to see\nthe income breakdown."
-	%Formula.tooltip_text = "Base income = round((100 + 5 x sum(level - 1) + 5 x sum(min(wins, 50))) x seats / 100).\nBase locked at fight start; later upgrades and level-ups affect the next booking.\nFinal fight income = round(base income x excitement multiplier). Tips are paid separately."
-	%Start.disabled = (not fight.valid_lineup(selected) and not (fight.auto_fill_owned and fight.auto_fill_enabled)) or (fight.active and not auto_fight)
-	%Start.text = ("Stop after this fight" if fight.active else "Cancel next fight") if auto_fight else "Open arena"
+	var quote := fight.income_breakdown(fight.next_lineup(selected) if not fight.active and fight.auto_fill_owned and fight.auto_fill_enabled else selected)
+	%Income.text = "%d gold" % quote.guaranteed if not quote.is_empty() else "Choose 2 heroes"
+	%Formula.text = "%d base\n+%d hero levels\n+%d career victories\nx%.1f arena capacity" % [quote.base, quote.levels, quote.victories, quote.multiplier] if not quote.is_empty() else "Book at least two heroes to see\nthe income breakdown."
+	%Formula.tooltip_text = "Base = (100 + 5 per level above 1 + 5 per victory, first 50 per hero) x seats / 100. Excitement multiplies the fight reward. Tips and Restaurant sales are separate."
+	%Start.disabled = not auto_fight and ((not fight.valid_lineup(selected) and not (fight.auto_fill_owned and fight.auto_fill_enabled)) or fight.active)
+	%Start.text = ("Stop after fight" if fight.active else "Close arena") if auto_fight else "Open arena"
 	if fight.active and not auto_fight:
 		%Start.text = "Finishing fight..."
 	_refresh_recovery()
+	_refresh_facility()
+	management_revision = fight.management_revision
 
 
 func _refresh_recovery() -> void:
 	if rotate_button != null:
-		rotate_button.disabled = fight.active or fight.ready_lineup().size() < 3 or fight.ready_lineup() == selected
+		rotate_button.disabled = fight.active or fight.ready_lineup().size() < 2 or fight.ready_lineup() == selected
 	_refresh_objective()
 	for id in range(card_details.size()):
-		var remaining: float = fight.rest_remaining[id]
-		card_details[id].rest.text = ("Injured · %ds  " % ceili(remaining) if remaining > 0.0 else "%d/%d stamina  " % [fight.heroes[id].stamina, fight.max_stamina()]) if fight.heroes[id].owned else "Unowned  "
-		card_details[id].rest.add_theme_color_override("font_color", GOLD if remaining > 0.0 else Color("a5ddc4"))
+		var owned: bool = fight.heroes[id].owned
+		var state: Dictionary = fight.availability(id)
+		card_details[id].rest.text = ("%s / %d/%d stamina / injury %d/3" % [_hero_condition(id), fight.heroes[id].stamina, fight.max_stamina(), fight.defeat_strain[id]]) if owned else "Not recruited"
+		card_details[id].rest.add_theme_color_override("font_color", Color("efa68d") if fight.injury_remaining[id] > 0 else (GOLD if not state.ready and state.state != "fighting" else Color("a5ddc4")))
 	if auto_fight and not fight.active:
-		var remaining := maxf(fight.lineup_rest(fight.next_lineup(selected)), %Tick.time_left)
-		%Start.text = "Cancel / next in %ds" % ceili(remaining)
-		if fight.auto_fill_enabled and fight.next_lineup(selected).size() < 3:
-			%Start.text = "Cancel / waiting for heroes"
-		%Start.tooltip_text = "One stamina per fight. Injured heroes recover before returning. Auto-fill uses ready recruits when unlocked and enabled."
+		var waiting := PackedStringArray()
+		for id in selected:
+			if not fight.ready(id):
+				waiting.append("%s: %s" % [fight.heroes[id].name, _hero_condition(id)])
+		if selected.size() < 2 and not (fight.auto_fill_owned and fight.auto_fill_enabled):
+			%Status.text = "Book at least two heroes / open Heroes to choose"
+		elif not waiting.is_empty() and not (fight.auto_fill_enabled and fight.next_lineup(selected).size() >= 2):
+			%Status.text = "Waiting / " + " / ".join(waiting)
+		elif fight.next_lineup(selected).size() < 2:
+			%Status.text = "Waiting for two available heroes"
+		%Start.text = "Close arena"
+		%Start.tooltip_text = "Choose at least two preferred heroes to continue." if selected.size() < 2 and not (fight.auto_fill_owned and fight.auto_fill_enabled) else "Recovery is free. The next fight starts automatically when the lineup is available."
+	if not fight.active:
+		for id in fighters:
+			fighters[id].body.visible = fight.ready(id)
 
 
 func _refresh_money() -> void:
@@ -857,10 +1070,10 @@ func _refresh_excitement(score: float) -> void:
 	elif fight.completed > 0:
 		%FightIncome.text = "%d paid / last fight" % fight.settled_income
 	else:
-		%FightIncome.text = "%d base / next fight" % fight.income_for(selected) if fight.valid_lineup(selected) else "Book three heroes"
+		%FightIncome.text = "%d base / next fight" % fight.income_for(selected) if fight.valid_lineup(selected) else "Book two heroes"
 	%FightIncome.tooltip_text = "Fight payout excludes tips already in your bank. Base income is locked at fight start; excitement multiplies it. Open Arena for the next booking's breakdown."
 	if tavern_income != null:
-		tavern_income.text = "Tavern: %d %s" % [fight.tavern_payout if fight.active else fight.settled_tavern, "at finish" if fight.active else "paid / last fight"]
+		tavern_income.text = "Restaurant: %d %s" % [fight.tavern_payout if fight.active else fight.settled_tavern, "at finish" if fight.active else "paid / last fight"]
 	%ExcitementHint.text = ["25: Excited x1.25 / Skills +8", "60: Wild x2.50 / Skills +8", "Wild crowd! / Maximum multiplier"][tier]
 	if tier > displayed_tier:
 		feedback.tier_crossed(tier)
@@ -913,7 +1126,7 @@ func _begin_fight() -> void:
 	%ExcitementMeter.modulate = Color.WHITE
 	displayed_tier = 0
 	%Status.text = "Fight %02d  /  %d base gold" % [fight.completed + 1, fight.payout]
-	%Commentary.text = "Nearest opponent / Melee heroes chase / Nia keeps her distance"
+	%Commentary.text = "Defeats build injury risk / rotate reserves before three defeats"
 	%Commentary.tooltip_text = %Commentary.text
 	%Status.tooltip_text = %Status.text
 	%Tick.stop()
@@ -921,6 +1134,8 @@ func _begin_fight() -> void:
 
 
 func _try_begin_fight() -> void:
+	if not (fight.auto_fill_owned and fight.auto_fill_enabled) and selected.any(func(id: int): return not fight.ready(id)):
+		return
 	if not in_main_menu and auto_fight and not fight.active and %Tick.is_stopped():
 		_begin_fight()
 
@@ -935,6 +1150,9 @@ func _physics_process(delta: float) -> void:
 		return
 	var was_active := fight.active
 	var events := fight.advance(delta)
+	if management_revision != fight.management_revision:
+		_refresh()
+		%World.sync_management(fight)
 	_refresh_recovery()
 	if not was_active:
 		_try_begin_fight()
@@ -950,6 +1168,11 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	if in_main_menu:
 		return
+	management_tick += delta
+	if management_tick >= 0.25:
+		management_tick = 0.0
+		_refresh_facility()
+		%World.sync_management(fight)
 	save_elapsed += delta
 	if save_elapsed >= 30.0:
 		save_elapsed = 0.0
@@ -981,8 +1204,8 @@ func _present_action(event: Dictionary) -> void:
 		var winner: Dictionary = fight.heroes[event.winner]
 		%Status.text = "%s wins!  /  +1 career victory" % winner.name
 		var multiplier: float = FightRules.EXCITEMENT_MULTIPLIERS[FightRules.excitement_tier(event.excitement)]
-		%Commentary.text = "%d fight + %d tips + %d Tavern = %d gold" % [fight.settled_income, fight.crowd_tips, fight.settled_tavern, fight.settled_income + fight.crowd_tips + fight.settled_tavern]
-		%Commentary.tooltip_text = "%d base x%.2f = %d fight income. Tips already paid: %d. Tavern sales: %d. Total: %d gold." % [fight.payout, multiplier, fight.settled_income, fight.crowd_tips, fight.settled_tavern, fight.settled_income + fight.crowd_tips + fight.settled_tavern]
+		%Commentary.text = "%d fight + %d tips + %d Restaurant = %d gold" % [fight.settled_income, fight.crowd_tips, fight.settled_tavern, fight.settled_income + fight.crowd_tips + fight.settled_tavern]
+		%Commentary.tooltip_text = "%d base x%.2f = %d fight income. Tips already paid: %d. Restaurant sales: %d. Total: %d gold." % [fight.payout, multiplier, fight.settled_income, fight.crowd_tips, fight.settled_tavern, fight.settled_income + fight.crowd_tips + fight.settled_tavern]
 		_refresh()
 		_save()
 		var xp_results := PackedStringArray()
@@ -1015,17 +1238,17 @@ func _show_fighters(lineup: Array[int]) -> void:
 		var stats: Dictionary = fight.battle_stats[id] if fight.active else fight.stats_for(id)
 		var body := Node2D.new()
 		%Stage.add_child(body)
-		var sprite := AnimatedSprite2D.new()
-		sprite.sprite_frames = ART.frames(hero.unit, hero.red)
-		sprite.scale = Vector2.ONE * 0.78
-		sprite.position.y = -23
-		sprite.play("idle")
-		sprite.animation_finished.connect(func(): sprite.play("idle"))
+		var sprite := Actor.new()
 		body.add_child(sprite)
+		sprite.setup(id, hero.unit, hero.red)
+		sprite.play("idle")
+		sprite.animation_finished.connect(func():
+			if not fight.health.has(id) or fight.health[id] > 0:
+				sprite.play("idle"))
 		var bars := {}
 		for stat in ["health", "mana"]:
 			var bar := ProgressBar.new()
-			bar.position = Vector2(-27, -65 if stat == "health" else -58)
+			bar.position = Vector2(-15, -43 if stat == "health" else -38)
 			bar.max_value = stats.health if stat == "health" else FightRules.MANA_MAX
 			bar.value = stats.health if stat == "health" else 0
 			bar.show_percentage = false
@@ -1039,14 +1262,23 @@ func _show_fighters(lineup: Array[int]) -> void:
 				style.set_corner_radius_all(3)
 				bar.add_theme_stylebox_override(part, style)
 			body.add_child(bar)
-			bar.set_deferred("size", Vector2(54, 5))
+			bar.set_deferred("size", Vector2(30, 3))
 			bars[stat] = bar
-		var nameplate := _label(hero.name, 13, Color("edf1f7"))
+		var nameplate := _label(hero.name, 11, Color("edf1f7"))
 		nameplate.add_theme_color_override("font_outline_color", Color("18222f"))
 		nameplate.add_theme_constant_override("outline_size", 4)
 		nameplate.position = Vector2(-60, 6)
 		nameplate.size.x = 120
 		body.add_child(nameplate)
+		nameplate.hide()
+		var hover := Control.new()
+		hover.position = Vector2(-16, -36)
+		hover.size = Vector2(32, 42)
+		hover.mouse_filter = Control.MOUSE_FILTER_PASS
+		hover.tooltip_text = "%s / Lv.%d / %s" % [hero.name, hero.level, hero.skill.name]
+		hover.mouse_entered.connect(nameplate.show)
+		hover.mouse_exited.connect(nameplate.hide)
+		body.add_child(hover)
 		fighters[id] = {"body": body, "sprite": sprite, "bar": bars.health, "mana": bars.mana, "name": nameplate, "tint": null}
 	_layout_fighters()
 
@@ -1060,17 +1292,31 @@ func _layout_fighters() -> void:
 		fighters[id].body.position = _project(ground)
 		fighters[id].body.z_index = roundi(ground.y) + 300
 		index += 1
+	# Fan small health/mana pairs when fighters overlap, without moving combatants.
+	var occupied: Array[Rect2] = []
+	for id in fighters:
+		var fighter: Dictionary = fighters[id]
+		var at: Vector2 = fighter.body.position
+		var chosen := Vector2(-15, -43)
+		for offset in [Vector2.ZERO, Vector2(-18, -10), Vector2(18, -10), Vector2(-36, -20), Vector2(36, -20), Vector2(0, -30)]:
+			var candidate: Vector2 = at + Vector2(-15, -43) + offset
+			candidate.y = maxf(10, candidate.y)
+			var rect := Rect2(candidate - Vector2(2, 2), Vector2(34, 12))
+			if occupied.all(func(other: Rect2): return not other.intersects(rect)):
+				chosen = candidate - at
+				occupied.append(rect)
+				break
+		fighter.bar.position = chosen.round()
+		fighter.mana.position = chosen.round() + Vector2(0, 5)
 	%Stage.queue_redraw()
 
 
 func _ground_scale() -> float:
-	return maxf(0.1, (%Stage.size.x - 48.0) / (FightRules.ARENA_RADIUS * 2.0))
+	return 90.0 / FightRules.ARENA_RADIUS
 
 
 func _project(ground: Vector2) -> Vector2:
-	var scale_x := _ground_scale()
-	var scale_y := minf(scale_x * GROUND_DEPTH, 80.0 / FightRules.ARENA_RADIUS)
-	return Vector2(%Stage.size.x * 0.5, %Stage.size.y - 90.0) + ground * Vector2(scale_x, scale_y)
+	return Vector2(%Stage.size.x * 0.5, 124.0) + ground * _ground_scale()
 
 
 func _circle_points(origin: Vector2, radius: float) -> PackedVector2Array:
@@ -1081,60 +1327,50 @@ func _circle_points(origin: Vector2, radius: float) -> PackedVector2Array:
 
 
 func _draw_ring() -> void:
-	# Each row represents 50 filled seats; expansion adds seating, not combat space.
-	for row in range(fight.arena_capacity() / 50 - 1, -1, -1):
-		var radius := FightRules.ARENA_RADIUS + 28.0 + row * 22.0
-		var bench := PackedVector2Array()
-		for seat in range(50):
-			bench.append(_project(Vector2.from_angle(PI + 0.1 + (PI - 0.2) * seat / 49.0) * radius))
-		%Stage.draw_polyline(bench, Color("39464a"), 23.0, false)
-		%Stage.draw_polyline(bench, Color("70503a"), 18.0, false)
-		%Stage.draw_polyline(bench, Color("b48a54"), 3.0, false)
-		for seat in range(bench.size()):
-			var pos := bench[seat]
-			var bounce := maxf(0.0, sin(crowd_clock * 7.0 + seat * 0.7)) * cheer * 6.0
-			var frame := (int(crowd_clock * 5) + seat) % 6
-			var tint := Color("ead3a0") if (seat + row) % 3 == 0 else Color.WHITE
-			%Stage.draw_texture_rect_region(SPECTATOR, Rect2(pos - Vector2(7, 23 + bounce), Vector2(14, 21)), Rect2(frame * 192 + 64, 48, 64, 88), tint)
-			if seat % 5 == 0:
-				%Stage.draw_line(pos + Vector2(0, 5), pos + Vector2(0, 17), Color("54452f"), 5.0)
+	var center := _project(Vector2.ZERO)
+	# Square-pixel court and side stands share the actors' uniform projection.
 	var points := _circle_points(Vector2.ZERO, FightRules.ARENA_RADIUS)
-	%Stage.draw_polyline(points, Color("324c53"), 24.0, false)
-	%Stage.draw_polyline(points, Color("72918b"), 17.0, false)
-	%Stage.draw_colored_polygon(points.slice(0, 64), Color("d8bc80"))
-	%Stage.draw_polyline(points, Color("ad8754"), 5.0, false)
-	%Stage.draw_polyline(_circle_points(Vector2.ZERO, FightRules.ARENA_RADIUS - 16.0), Color("ead099"), 2.0, false)
-	# Sparse sand marks, deterministic and purely visual; never consume combat RNG.
-	for i in range(90):
-		var ground := Vector2.from_angle(i * 2.399) * sqrt(float(i) / 90.0) * (FightRules.ARENA_RADIUS - 25)
-		var pos := _project(ground)
-		%Stage.draw_line(pos, pos + Vector2(3 + i % 4, 0), Color("cbae76"), 1.0)
-	for i in range(24):
-		var pos := _project(Vector2.from_angle(TAU * i / 24.0) * (FightRules.ARENA_RADIUS + 2.0))
-		%Stage.draw_rect(Rect2(pos - Vector2(3, 8), Vector2(6, 15)), Color("6b5137"))
-		%Stage.draw_rect(Rect2(pos - Vector2(4, 9), Vector2(8, 4)), Color("c29a61"))
+	%Stage.draw_colored_polygon(points.slice(0, 64), Color("cba06b"))
+	for y in range(-2, 3):
+		for x in range(-2, 3):
+			var tile_at := Vector2(x * 32, y * 32)
+			if (tile_at.abs() + Vector2(16, 16)).length() < 87:
+				%Stage.draw_texture_rect_region(SUN_TILES, Rect2(center + tile_at - Vector2(16,16), Vector2(32,32)), Rect2(160,112,16,16))
+	%Stage.draw_polyline(points, Color("644735"), 6.0, false)
+	%Stage.draw_polyline(_circle_points(Vector2.ZERO, FightRules.ARENA_RADIUS - 14), Color("ecd6a2"), 2.0, false)
+	for i in range(70):
+		var ground := Vector2.from_angle(i * 2.399) * sqrt(float(i) / 70.0) * (FightRules.ARENA_RADIUS - 22)
+		var at := _project(ground).round()
+		%Stage.draw_rect(Rect2(at, Vector2(2 + i % 3, 2)), Color("b88b5c"))
+	for i in range(20):
+		if i in [5, 15]:
+			continue
+		var at := _project(Vector2.from_angle(TAU * i / 20.0) * (FightRules.ARENA_RADIUS + 4)).round()
+		%Stage.draw_rect(Rect2(at - Vector2(3, 7), Vector2(6, 12)), Color("654c36"))
+		%Stage.draw_rect(Rect2(at - Vector2(3, 7), Vector2(6, 3)), Color("c39965"))
+	# Each wing uses representative spectators; purchased seats remain economic capacity.
+	var columns := 2 + fight.arena_tier
 	for side in [-1, 1]:
-		var post := _project(Vector2(side * 275, -165))
-		%Stage.draw_line(post, post - Vector2(0, 53), Color("5e4935"), 5.0)
-		%Stage.draw_circle(post - Vector2(0, 55), 4.0, GOLD)
-		var sway := sin(crowd_clock * 2 + side) * 2.0
-		var flag := PackedVector2Array([post + Vector2(2, -49), post + Vector2(26, -47 + sway), post + Vector2(26, -12 + sway), post + Vector2(14, -18), post + Vector2(2, -14)])
-		%Stage.draw_colored_polygon(flag, Color("3c698b") if side < 0 else Color("a55345"))
-		%Stage.draw_line(post + Vector2(13, -41), post + Vector2(13, -24), GOLD, 3)
-	# Upgrades visibly add a covered stand, then a broader blue-and-cream canopy.
-	if fight.arena_tier > 0:
-		var roof := _project(Vector2(0, -365)) - Vector2(0, 28)
-		var width := 160.0 + fight.arena_tier * 80.0
-		for side in [-1, 1]:
-			%Stage.draw_line(roof + Vector2(side * width * 0.5, 12), roof + Vector2(side * width * 0.5, 45), Color("695138"), 5)
-		for stripe in range(12):
-			var x := roof.x - width * 0.5 + stripe * width / 12.0
-			%Stage.draw_rect(Rect2(x, roof.y, width / 12.0 + 1, 19), Color("3e718e") if stripe % 2 == 0 else Color("ebd6a2"))
-			%Stage.draw_rect(Rect2(x, roof.y + 18, width / 12.0 + 1, 4), Color("294957") if stripe % 2 == 0 else Color("b9a981"))
+		for column in range(columns):
+			var x: float = center.x + side * (116 + column * 27)
+			%Stage.draw_rect(Rect2(x - 12, 43, 24, 164), Color("654735"))
+			%Stage.draw_rect(Rect2(x - 10, 44, 20, 161), Color("b2814b"))
+			for seat in range(7):
+				var frame := (int(crowd_clock * 5) + seat + column) % 9
+				var bounce := roundf(maxf(0.0, sin(crowd_clock * 7 + seat)) * cheer * 4)
+				var foot := Vector2(x, 58 + seat * 23 - bounce)
+				var target := Rect2(foot - Vector2(16, 26), Vector2(32, 40))
+				var source := Rect2(frame * 96 + 32, 13, 32, 40)
+				%Stage.draw_texture_rect_region(SPECTATOR, target, source, Color("ead8bc") if (seat + column) % 2 == 0 else Color.WHITE)
+				%Stage.draw_texture_rect_region(SPECTATOR_HAIRS[(seat + column) % 3], target, source, [Color("dca583"), Color("ffdf99"), Color("766776")][(seat + column) % 3])
+		var flag_at := center + Vector2(side * (120 + columns * 27), -72)
+		%Stage.draw_rect(Rect2(flag_at, Vector2(3, 50)), Color("705038"))
+		%Stage.draw_rect(Rect2(flag_at + Vector2(3, 0), Vector2(17, 23)), Color("458aad") if side < 0 else Color("bf6a51"))
+		%Stage.draw_rect(Rect2(flag_at + Vector2(9, 4), Vector2(3, 12)), GOLD)
 	for id in fighters:
-		var pos: Vector2 = fighters[id].body.position
-		%Stage.draw_set_transform(pos, 0.0, Vector2(1.0, 0.3))
-		%Stage.draw_circle(Vector2.ZERO, 19.0, Color(0.24, 0.18, 0.1, 0.3))
+		var at: Vector2 = fighters[id].body.position
+		%Stage.draw_set_transform(at, 0.0, Vector2(1.0, 0.35))
+		%Stage.draw_circle(Vector2.ZERO, 11.0, Color(0.2, 0.14, 0.1, 0.25))
 		%Stage.draw_set_transform(Vector2.ZERO)
 
 
@@ -1145,7 +1381,8 @@ func _sync_fighters() -> void:
 		fighter.mana.value = fight.mana[id]
 		fighter.mana.tooltip_text = "%d / 100 mana" % fight.mana[id]
 		if fight.health[id] <= 0:
-			fighter.sprite.stop()
+			if fighter.sprite.animation != "death":
+				fighter.sprite.play("death")
 			fighter.bar.hide()
 			fighter.mana.hide()
 			fighter.name.hide()
@@ -1169,7 +1406,7 @@ func _animate_action(event: Dictionary) -> void:
 	_refresh_management()
 	_refresh_excitement(event.excitement)
 	var source: Dictionary = fighters[event.attacker]
-	var sprite: AnimatedSprite2D = source.sprite
+	var sprite = source.sprite
 	sprite.play("attack")
 	sprite.frame = 0
 	if not event.hits.is_empty():
@@ -1180,6 +1417,7 @@ func _animate_action(event: Dictionary) -> void:
 	for hit in event.hits:
 		_tint_fighter(hit.target, Color("ffbc9e"))
 	if event.winner >= 0:
+		fighters[event.winner].name.show()
 		fighters[event.winner].name.text = "%s / WINNER" % fight.heroes[event.winner].name
 		fighters[event.winner].name.add_theme_color_override("font_color", GOLD)
 

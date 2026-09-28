@@ -10,6 +10,7 @@ func _rules() -> Rules:
 	# Combat fixtures retain the original five heroes; recruitment has its own checks.
 	var fight := Rules.new()
 	fight.building_levels.hall = 1
+	fight.fighter_tier = 1
 	fight.grid.buildings.hall = {"cell": Vector2i(34, 2), "size": Vector2i(3, 2)}
 	for id in range(5):
 		fight.heroes[id].owned = true
@@ -19,6 +20,7 @@ func _rules() -> Rules:
 func _ui() -> Control:
 	var ui = load("res://game/main.tscn").instantiate()
 	ui.fight = _rules()
+	ui.selected.assign([0, 1, 2])
 	ui.fight.intro_seen = true
 	# Placement fixtures include a non-earning tavern to isolate combat rewards.
 	ui.fight.grid.buildings.tavern = {"cell": Vector2i(12, 2), "size": Vector2i(2, 2)}
@@ -41,7 +43,7 @@ func _run() -> void:
 	_check_excitement()
 	_check_recovery()
 	var fight := _rules()
-	for invalid in [[0, 1], [0, 0, 1], [-1, 1, 2], [0, 1, 5], [0, 1, 2, 3]]:
+	for invalid in [[0], [0, 0, 1], [-1, 1, 2], [0, 1, 5], [0, 1, 2, 3]]:
 		var ids: Array[int] = []
 		ids.assign(invalid)
 		assert(not fight.start(ids))
@@ -50,7 +52,7 @@ func _run() -> void:
 	fight.heroes[1].wins = 4
 	fight.heroes[2].wins = 2
 	fight.heroes[4].wins = 99
-	assert(fight.income_for([0, 1, 2]) == 180 and fight.income_for([0, 1]) == 0)
+	assert(fight.income_for([0, 1, 2]) == 180 and fight.income_for([0, 1]) == 170)
 	var lineup: Array[int] = [0, 1, 2]
 	assert(fight.start(lineup))
 	lineup[0] = 4
@@ -59,7 +61,7 @@ func _run() -> void:
 	var bank := fight.coins
 	assert(fight.heroes[4].wins == 99 and fight.income_for([0, 1, 2]) == 185)
 	assert(fight.advance(DT).is_empty() and fight.coins == bank)
-	fight.advance(Rules.REST_DURATION)
+	fight.advance(Rules.INJURY_DURATION)
 	assert(fight.start([0, 1, 2]))
 	assert(fight.crowd_tips == 0 and fight.pending_casts.is_empty())
 	for id in fight.participants:
@@ -76,7 +78,7 @@ func _run() -> void:
 				var sample := _rules()
 				for seed_value in range(20):
 					sample.rng.seed = seed_value
-					sample.advance(Rules.REST_DURATION)
+					sample.advance(Rules.INJURY_DURATION)
 					assert(sample.start([a, b, c]))
 					var duration := _finish(sample)
 					durations.append(duration)
@@ -99,6 +101,9 @@ func _run() -> void:
 	assert(average >= 12.0 and average <= 30.0, "Movement should add variety to short fights, not stretch them to a minute.")
 	assert(durations.min() >= 5.0 and durations.max() <= 60.0, "Avoid very short bouts or drawn-out sustain matches.")
 	print("PASS: 200 progressing fights average %.2fs, range %.2f–%.2fs." % [average, durations.min(), durations.max()])
+	if "--model-only" in OS.get_cmdline_user_args():
+		quit()
+		return
 	root.content_scale_size = Vector2i.ZERO
 	root.size = Vector2i(1280, 420)
 	await _check_ui()
@@ -380,7 +385,7 @@ func _check_mobility() -> void:
 	fight.health[2] = 0
 	cast = _cast(fight, 0)
 	assert(cast.winner == 0 and not cast.hits[0].has("push_to") and fight.motions.is_empty())
-	fight.advance(Rules.REST_DURATION)
+	fight.advance(Rules.INJURY_DURATION)
 	var lineup: Array[int] = [0, 1, 2]
 	fight.pursuit_until[0] = 1000.0
 	assert(fight.start(lineup) and fight.motions.is_empty() and fight.pursuit_until.is_empty() and fight.dash_cooldowns[0] == 0.5)
@@ -585,7 +590,7 @@ func _check_progression() -> void:
 	assert(fight.battle_stats[1] == {"health": 198, "attack": 21})
 	var records: Array = fight.heroes.duplicate(true)
 	assert(fight.advance(DT).is_empty() and fight.heroes == records and fight.coins == 110)
-	fight.advance(Rules.REST_DURATION)
+	fight.advance(Rules.INJURY_DURATION)
 	assert(fight.start([0, 1, 2]))
 	assert(fight.battle_stats[1] == {"health": 208, "attack": 22})
 	assert(fight.health[1] == 208 and fight.heroes[1].xp == 10 and fight.payout == 120)
@@ -623,7 +628,7 @@ func _check_arena_income() -> void:
 	fight.heroes[4].level = 10
 	fight.heroes[4].wins = 100
 	assert(fight.income_breakdown([0, 1, 2]) == {"base": 100, "levels": 90, "victories": 0, "multiplier": 1.0, "guaranteed": 190})
-	assert(fight.income_for([0, 0, 1]) == 0 and fight.income_breakdown([0, 1]).is_empty())
+	assert(fight.income_for([0, 0, 1]) == 0 and fight.income_for([0, 1]) == 145)
 	fight.coins = Rules.ARENA_UPGRADE_COSTS[0] - 1
 	assert(not fight.upgrade_arena() and fight.coins == Rules.ARENA_UPGRADE_COSTS[0] - 1 and fight.arena_capacity() == 100)
 	fight.coins = Rules.ARENA_UPGRADE_COSTS[0]
@@ -652,7 +657,7 @@ func _check_arena_income() -> void:
 		fight.pauses[id] = 0.0
 	_finish(fight)
 	assert(fight.coins == fight.settled_income + fight.crowd_tips and fight.payout == 100)
-	fight.advance(Rules.REST_DURATION)
+	fight.advance(Rules.INJURY_DURATION)
 	assert(fight.start([0, 1, 2]) and fight.arena_capacity() == 150 and fight.payout == 158)
 
 
@@ -738,11 +743,11 @@ func _check_ui() -> void:
 	assert(ui.cards.size() == 8 and ui.selected.size() == 3 and ui.cards[3].disabled)
 	ui.get_node("%HeroesButton").pressed.emit()
 	ui.cards[0].pressed.emit()
-	assert(ui.selected.size() == 2 and ui.get_node("%Start").disabled)
+	assert(ui.selected.size() == 2 and not ui.get_node("%Start").disabled)
 	ui.cards[3].pressed.emit()
 	assert(ui.selected == [1, 2, 3])
-	assert(ui.card_details[1].level.text == "LV 1  /  0/30 XP")
-	assert(ui.card_details[1].skill.text == "Sweep / 10 gold")
+	assert(ui.card_details[1].level.text == "LV 1 / 0/30 XP")
+	assert(ui.card_details[1].skill.text == "Sweep")
 	# A near-level-up booking exercises the locked payout and next fight's level bonus.
 	for id in ui.selected:
 		ui.fight.heroes[id].xp = 20
@@ -762,7 +767,8 @@ func _check_ui() -> void:
 	ui.get_node("%Start").pressed.emit()
 	assert(ui.fight.active and not ui.auto_fight)
 	ui._select_hero(1)
-	assert(ui.selected == [1, 2, 3])
+	assert(ui.selected == [2, 3] and ui.fight.participants == [1, 2, 3], "Preference edits must not alter the active fight.")
+	ui.selected.assign([1, 2, 3])
 	for id in ui.selected:
 		ui.fight.cooldowns[id] = 1000.0
 		ui.fight.pauses[id] = 1000.0
@@ -802,7 +808,7 @@ func _check_ui() -> void:
 	assert("Level up:" in ui.get_node("%Status").text and "XP" in ui.get_node("%Hint").text)
 	for id in ui.selected:
 		assert(ui.fight.heroes[id].level == 2)
-		assert("LV 2" in ui.card_details[id].level.text and "10 gold" in ui.card_details[id].skill.text)
+		assert("LV 2" in ui.card_details[id].level.text and not ui.card_details[id].skill.text.is_empty())
 		assert(ui.card_details[id].xp.value == ui.fight.heroes[id].xp)
 		assert(ui.fighters[id].bar.max_value == ui.fight.battle_stats[id].health)
 	await create_timer(0.85).timeout
@@ -813,7 +819,7 @@ func _check_ui() -> void:
 	ui.get_node("%Start").pressed.emit()
 	assert(ui.fight.active and ui.auto_fight)
 	if not ui.fight.active:
-		ui._physics_process(Rules.REST_DURATION)
+		ui._physics_process(Rules.INJURY_DURATION)
 	assert(ui.feedback.effects.is_empty() and ui.get_node("%Tips").text == "0 tips paid")
 	for id in ui.selected:
 		assert(ui.fighters[id].mana.value == 0)
@@ -836,16 +842,16 @@ func _check_ui() -> void:
 	assert(not ui.fight.active and not ui.auto_fight and ui.get_node("%Tick").is_stopped())
 	ui.get_node("%Start").pressed.emit()
 	if not ui.fight.active:
-		ui._physics_process(Rules.REST_DURATION)
+		ui._physics_process(Rules.INJURY_DURATION)
 	_finish_ui(ui)
 	ui._intermission_finished()
 	if not ui.fight.active:
-		ui._physics_process(Rules.REST_DURATION)
+		ui._physics_process(Rules.INJURY_DURATION)
 	assert(ui.fight.active and ui.fight.completed == 3)
 	ui.fight.heroes[4].level = 10
 	ui._refresh()
-	assert(ui.card_details[4].level.text == "LV 10  /  MAX" and ui.card_details[4].xp.value == 1)
-	assert("10 gold" in ui.card_details[4].skill.text)
+	assert(ui.card_details[4].level.text == "LV 10 / MAX" and ui.card_details[4].xp.value == 1)
+	assert(ui.card_details[4].skill.text == "Drain")
 	ui.queue_free()
 	await process_frame
 	print("PASS: UI XP/levels, flat cast tips, movement, resets, settlement, and stop/rebook/repeat.")
@@ -892,7 +898,7 @@ func _check_arena_ui() -> void:
 	ui.fight.coins = Rules.ARENA_UPGRADE_COSTS[0] - 10
 	ui.get_node("%Start").pressed.emit()
 	if not ui.fight.active:
-		ui._physics_process(Rules.REST_DURATION)
+		ui._physics_process(Rules.INJURY_DURATION)
 	for id in ui.selected:
 		ui.fight.cooldowns[id] = 1000.0
 		ui.fight.pauses[id] = 1000.0
@@ -944,13 +950,13 @@ func _check_excitement_ui() -> void:
 	ui._physics_process(DT)
 	assert(ui.fight.coins == 270 and ui.get_node("%Coins").text == "270 gold")
 	assert("100 base x2.50 = 250" in ui.get_node("%Commentary").tooltip_text)
-	assert("20 tips + 0 Tavern = 270 gold" in ui.get_node("%Commentary").text)
+	assert("20 tips + 0 Restaurant = 270 gold" in ui.get_node("%Commentary").text)
 	assert(ui.get_node("%FightIncome").text == "250 paid / last fight")
 	await _capture("excitement-result")
 	ui.get_node("%Tick").stop()
 	ui._intermission_finished()
 	if not ui.fight.active:
-		ui._physics_process(Rules.REST_DURATION)
+		ui._physics_process(Rules.INJURY_DURATION)
 	assert(ui.fight.active and ui.get_node("%Excitement").value == 0 and ui.displayed_tier == 0)
 	assert(ui.get_node("%ExcitementMeter").modulate == Color.WHITE)
 	assert(ui.get_node("%FightIncome").text == "105 at finish")
@@ -1089,7 +1095,7 @@ func _check_combat_feedback() -> void:
 	var distribution := [0, 0, 0]
 	var opening_seconds := 0.0
 	for seed_value in range(20):
-		opening.advance(Rules.REST_DURATION)
+		opening.advance(Rules.INJURY_DURATION)
 		opening.rng.seed = seed_value
 		assert(opening.start([0, 1, 2]))
 		opening_seconds += _finish(opening)
@@ -1115,11 +1121,14 @@ func _check_promenade_ui() -> void:
 	assert(ui.get_node("%HeroesDrawer").visible and ui.get_node("%Dismiss").visible)
 	await process_frame
 	await process_frame
-	assert(ui.get_node("%Scroll").get_global_rect().encloses(ui.cards[4].get_global_rect()), "All five heroes fit without scrolling at default size.")
+	ui.get_node("%Scroll").ensure_control_visible(ui.cards[4])
+	await process_frame
+	assert(ui.get_node("%Scroll").get_global_rect().encloses(ui.cards[4].get_global_rect()), "The scrollable roster must reveal each hero card.")
+	ui.get_node("%Scroll").scroll_vertical = 0
 	assert(ui.get_viewport().gui_get_focus_owner() == ui.get_node("%CloseHeroes"))
 	ui.cards[0].pressed.emit()
-	assert(ui.selected.size() == 2 and ui.get_node("%Start").disabled)
-	assert(ui.get_node("%FightIncome").text == "Book three heroes")
+	assert(ui.selected.size() == 2 and not ui.get_node("%Start").disabled)
+	assert(ui.get_node("%FightIncome").text == "100 base / next fight")
 	ui.cards[4].pressed.emit()
 	assert(ui.selected == [1, 2, 4] and not ui.get_node("%Start").disabled)
 	assert(ui.get_node("%HeroesButton").text == "Heroes 3/3")
@@ -1143,7 +1152,7 @@ func _check_promenade_ui() -> void:
 	assert(not ui.get_node("%HeroesDrawer").visible)
 	ui.get_node("%Start").pressed.emit()
 	ui.get_node("%HeroesButton").pressed.emit()
-	assert(ui.get_node("%HeroesDrawer").visible and ui.cards[1].disabled)
+	assert(ui.get_node("%HeroesDrawer").visible and not ui.cards[1].disabled and ui.cards[0].disabled)
 	var start: Vector2 = ui.fight.positions[1]
 	ui._physics_process(1.0 / 60.0)
 	assert(ui.fight.positions[1] != start, "Inspecting a panel must not pause idle combat.")
@@ -1197,16 +1206,16 @@ func _check_recovery() -> void:
 	fight.health[0] = 21
 	fight.health[2] = 21
 	_cast(fight, 1)
-	assert(fight.rest_remaining == [120.0, 120.0, 120.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+	assert(fight.rest_remaining == [60.0, 60.0, 60.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 	assert(fight.valid_lineup([0, 3, 4]) and not fight.start([0, 3, 4]))
-	assert(fight.lineup_rest([0, 3, 4]) == 120.0 and fight.lineup_rest([3, 4]) == 0.0)
+	assert(fight.lineup_rest([0, 3, 4]) == 60.0 and fight.lineup_rest([3, 4]) == 0.0)
 	var bank: int = fight.coins
 	var records: Array = fight.heroes.duplicate(true)
 	var elapsed: float = fight.elapsed
 	var score: float = fight.excitement
 	for invalid in [0.0, -1.0, INF, NAN]:
-		assert(fight.advance(invalid).is_empty() and fight.lineup_rest([0, 1, 2]) == 120.0)
-	assert(fight.advance(119.5).is_empty() and fight.lineup_rest([0, 1, 2]) == 0.5)
+		assert(fight.advance(invalid).is_empty() and fight.lineup_rest([0, 1, 2]) == 60.0)
+	assert(fight.advance(59.5).is_empty() and fight.lineup_rest([0, 1, 2]) == 0.5)
 	assert(not fight.start([0, 1, 2]))
 	assert(fight.advance(0.5).is_empty() and fight.lineup_rest([0, 1, 2]) == 0.0)
 	for id in fight.participants:
@@ -1230,18 +1239,18 @@ func _check_recovery_ui() -> void:
 		ui.fight.heroes[id].stamina = 1
 	ui.get_node("%Start").pressed.emit()
 	_finish_ui(ui)
-	assert(ui.fight.lineup_rest(ui.selected) == 120.0 and not ui.get_node("%Tick").is_stopped())
-	assert("Injured" in ui.card_details[0].rest.text and "stamina" in ui.card_details[3].rest.text)
+	assert(ui.fight.lineup_rest(ui.selected) == 60.0 and not ui.get_node("%Tick").is_stopped())
+	assert("Resting" in ui.card_details[0].rest.text and "stamina" in ui.card_details[3].rest.text)
 	ui.get_node("%HeroesButton").pressed.emit()
 	ui._physics_process(3.0)
 	ui._intermission_finished()
-	assert(not ui.fight.active and ui.fight.lineup_rest(ui.selected) == 117.0)
+	assert(not ui.fight.active and ui.fight.lineup_rest(ui.selected) == 57.0)
 	ui.get_node("%Start").pressed.emit()
 	assert(not ui.auto_fight and ui.get_node("%Tick").is_stopped())
-	ui._physics_process(114.0)
+	ui._physics_process(54.0)
 	assert(ui.fight.lineup_rest(ui.selected) == 3.0)
 	ui.get_node("%Start").pressed.emit()
-	assert(ui.auto_fight and not ui.fight.active and "3s" in ui.get_node("%Start").text)
+	assert(ui.auto_fight and not ui.fight.active and "3s" in ui.get_node("%Status").text)
 	ui._physics_process(2.5)
 	assert(not ui.fight.active)
 	ui._physics_process(0.5)
@@ -1283,7 +1292,7 @@ func _check_town_grid() -> void:
 	var stage: Control = ui.get_node("%Stage")
 	var scroll: HScrollBar = ui.get_node("%TownScroll")
 	assert(world.tiles is TileMapLayer and world.tiles.get_used_cells().size() == 384)
-	assert(world.size.x == 2304.0 and stage.size.x == 536.0)
+	assert(world.size.x == 1536.0 and stage.size.x == 512.0)
 	assert(is_equal_approx((stage.global_position + ui._project(Vector2.ZERO)).x, root.size.x * 0.5))
 	var combat_scale: float = ui._ground_scale()
 	var impact_position: Vector2 = ui._project(Vector2(120, -50))
@@ -1325,14 +1334,14 @@ func _check_town_grid() -> void:
 	world._gui_input(click)
 	assert(world.grid.buildings.tavern.cell == Vector2i(10, 3) and world.selected_building.is_empty())
 	var feet: Vector2 = world.building_nodes.tavern.position
-	assert(feet == Vector2(528, root.size.y - 160))
+	assert(feet == Vector2(352, root.size.y - 180))
 	await _capture("town-left")
 	scroll.value = 100000.0
-	assert(scroll.value == 2304.0 - root.size.x and world.position.x == -scroll.value)
+	assert(scroll.value == 1536.0 - root.size.x and world.position.x == -scroll.value)
 	assert(ui.get_node("%Bank").get_global_rect() == bank_rect)
 	await _capture("town-right")
 	ui.get_node("%CenterArena").pressed.emit()
-	assert(is_equal_approx(scroll.value, 1152.0 - root.size.x * 0.5))
+	assert(is_equal_approx(scroll.value, 768.0 - root.size.x * 0.5))
 	var pan := InputEventMouseButton.new()
 	pan.button_index = MOUSE_BUTTON_WHEEL_DOWN
 	pan.pressed = true
@@ -1361,7 +1370,7 @@ func _check_town_grid() -> void:
 	_finish_ui(ui)
 	ui._intermission_finished()
 	if not ui.fight.active:
-		ui._physics_process(Rules.REST_DURATION)
+		ui._physics_process(Rules.INJURY_DURATION)
 	assert(ui.fight.active and scroll.value == view_before_repeat and world.selected_building == "hall")
 	var hud_click := InputEventMouseButton.new()
 	hud_click.button_index = MOUSE_BUTTON_LEFT
@@ -1391,9 +1400,9 @@ func _check_town_grid() -> void:
 		root.size = viewport_size
 		await process_frame
 		await process_frame
-		assert(is_equal_approx(scroll.value + root.size.x * 0.5, 1152.0), "Resize preserves the viewed world center.")
+		assert(is_equal_approx(scroll.value, maxf(0.0, 768.0 - root.size.x * 0.5)), "Resize preserves the viewed world center.")
 		assert(world.grid.buildings.tavern.cell == Vector2i(10, 3) and ui._ground_scale() == combat_scale)
-		assert(stage.size == Vector2(536, 276) and ui._project(Vector2(120, -50)) == impact_position, "Resize must move existing effects and fighters together.")
+		assert(stage.size == Vector2(512, 256) and ui._project(Vector2(120, -50)) == impact_position, "Resize must move existing effects and fighters together.")
 		assert(world.cell_for_point(world.point_for_cell(Vector2i(34, 2))) == Vector2i(34, 2))
 		for name in ["Arrange", "CenterArena", "TownScroll", "Start"]:
 			assert(Rect2(Vector2.ZERO, Vector2(root.size)).encloses(ui.get_node("%" + name).get_global_rect()))
@@ -1449,7 +1458,7 @@ func _check_placement_panning() -> void:
 	scroll.value = 0.0
 	await process_frame
 	assert(world.preview_cell == previous_cell)
-	motion.position = Vector2(540, 280)
+	motion.position = world.global_position + world.point_for_cell(Vector2i(14, 5))
 	root.push_input(motion)
 	await process_frame
 	var visible_cell: Vector2i = world.preview_cell

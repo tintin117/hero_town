@@ -12,6 +12,7 @@ const CREAM := Color("fff0cf")
 const GREEN := Color("8cf5b6")
 const RED := Color("f4768c")
 const SKILL_COLORS := [GOLD, Color("ffe6a0"), Color("8ee5ff"), GREEN, RED]
+const SKILL_ROLES := [0, 1, 2, 3, 4, 1, 2, 3]
 const SKILL_DURATION := 0.85
 
 var ui: Control
@@ -89,7 +90,15 @@ func present(event: Dictionary) -> void:
 	var caster: int = event.attacker
 	if event.kind == "move":
 		effects.append({"event": event, "age": 0.0, "duration": 0.4,
-			"texture": ui.fighters[caster].sprite.sprite_frames.get_frame_texture("run", 0)})
+			"trail": true})
+		for index in range(3):
+			var ghost: Node2D = ui.fighters[caster].sprite.capture_afterimage()
+			ghost.position = ui._project(event.origin.lerp(event.destination, index * 0.12))
+			ghost.modulate = Color(0.85, 0.95, 1.0, 0.28 - index * 0.05)
+			world.add_child(ghost)
+			var tween := ghost.create_tween()
+			tween.tween_property(ghost, "modulate:a", 0.0, 0.35)
+			tween.tween_callback(ghost.queue_free)
 		_spawn(SMOKE, ui._project(event.origin), 0.25, Color("d7bc86"), {"puff_count": 4})
 		return
 	var skill: bool = event.kind == "skill"
@@ -108,8 +117,8 @@ func present(event: Dictionary) -> void:
 		return
 	_number(ui.fight.heroes[caster].skill.name, origin - Vector2(0, 76), 13, GOLD, "skill_name")
 	_show_tip(event.tip)
-	_spawn(FLASH, origin - Vector2(0, 23), 0.65, SKILL_COLORS[caster])
-	match caster:
+	_spawn(FLASH, origin - Vector2(0, 23), 0.65, SKILL_COLORS[SKILL_ROLES[caster]])
+	match SKILL_ROLES[caster]:
 		0:
 			var target: Vector2 = ui._project(event.hits[0].position)
 			_spawn(BURST, target - Vector2(0, 18), 0.5, GOLD, {"chunk_count": 12, "smoke_count": 4})
@@ -122,8 +131,8 @@ func present(event: Dictionary) -> void:
 				var edge: Vector2 = ui._project(event.origin + Vector2.from_angle(index * TAU / 4) * event.radius)
 				_spawn(SMOKE, edge, 0.18, Color("d7bc86"), {"puff_count": 3})
 		2:
-			_spawn(IMPACT, ui._project(event.hits[0].position) - Vector2(0, 23), 0.6, SKILL_COLORS[caster], {"star_points": 6, "streak_count": 14})
-			_spawn(SPARKLE, origin - Vector2(0, 23), 0.55, SKILL_COLORS[caster], {"star_count": 3})
+			_spawn(IMPACT, ui._project(event.hits[0].position) - Vector2(0, 23), 0.6, SKILL_COLORS[SKILL_ROLES[caster]], {"star_points": 6, "streak_count": 14})
+			_spawn(SPARKLE, origin - Vector2(0, 23), 0.55, SKILL_COLORS[SKILL_ROLES[caster]], {"star_count": 3})
 		3:
 			_spawn(SPARKLE, origin - Vector2(0, 22), 1.0, GREEN, {"star_count": 7})
 			_spawn(SHOCKWAVE, origin, 0.7, GREEN, {"max_radius_px": 70, "squash": 0.32})
@@ -167,13 +176,13 @@ func _spawn(scene: PackedScene, at: Vector2, scale_amount: float, color: Color, 
 
 
 func _recoil(id: int, direction: Vector2, skill: bool) -> void:
-	var sprite: AnimatedSprite2D = ui.fighters[id].sprite
+	var sprite: Node2D = ui.fighters[id].sprite
 	var old: Tween = sprite.get_meta("recoil") if sprite.has_meta("recoil") else null
 	if old and old.is_valid():
 		old.kill()
-	sprite.position = Vector2(0, -23) + direction * (7.0 if skill else 3.5)
+	sprite.position = direction * (7.0 if skill else 3.5)
 	var tween := sprite.create_tween()
-	tween.tween_property(sprite, "position", Vector2(0, -23), 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(sprite, "position", Vector2.ZERO, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	sprite.set_meta("recoil", tween)
 
 
@@ -275,7 +284,7 @@ func _draw_actions() -> void:
 		for hit in event.hits:
 			var start := origin - Vector2(0, 23)
 			var target: Vector2 = ui._project(hit.position) - Vector2(0, 23)
-			if event.attacker == 2:
+			if ui.fight.heroes[event.attacker].ranged:
 				world.draw_line(start, target, Color("b9eaff", alpha), 1.5, true)
 				world.draw_line(start, target, Color(CREAM, alpha), 1.0, true)
 			else:
@@ -294,10 +303,6 @@ func _draw_dash(effect: Dictionary) -> void:
 	var side := (destination - start).normalized().orthogonal()
 	for index in range(3):
 		var at := start.lerp(destination, maxf(0.0, progress - 0.16 * (index + 1)))
-		var size: Vector2 = effect.texture.get_size() * 0.78
-		world.draw_set_transform(at, 0.0, Vector2(-1, 1) if destination.x < start.x else Vector2.ONE)
-		world.draw_texture_rect(effect.texture, Rect2(-size * 0.5, size), false, Color(color, alpha * (0.28 - index * 0.06)))
-		world.draw_set_transform(Vector2.ZERO)
 		var offset := side * (index - 1) * 5
 		world.draw_line(at + offset, head + offset, Color(color, alpha * 0.7), 1.5, true)
 
@@ -306,10 +311,10 @@ func _draw_skill(event: Dictionary, progress: float) -> void:
 	var alpha := 1.0 - progress
 	var origin: Vector2 = ui._project(event.origin)
 	var start := origin - Vector2(0, 23)
-	var color: Color = SKILL_COLORS[event.attacker]
+	var color: Color = SKILL_COLORS[SKILL_ROLES[event.attacker]]
 	# A brief floor pulse makes the caster readable without covering HP or numbers.
 	world.draw_polyline(ui._circle_points(event.origin, 24 + progress * 28), Color(color, alpha * 0.65), 2.0, true)
-	match event.attacker:
+	match SKILL_ROLES[event.attacker]:
 		0:
 			var target: Vector2 = ui._project(event.hits[0].position) - Vector2(0, 23)
 			var direction := (target - start).angle() + progress * 1.4

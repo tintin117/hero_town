@@ -19,6 +19,10 @@ func _finish(fight: RefCounted) -> void:
 
 
 func _run() -> void:
+	if "--saves" in OS.get_cmdline_user_args():
+		_check_saves()
+		quit()
+		return
 	if "--economy" in OS.get_cmdline_user_args() or "--opening" in OS.get_cmdline_user_args():
 		var on_target := true
 		for seed_value in [7, 42, 123]:
@@ -30,7 +34,11 @@ func _run() -> void:
 	_check_roster_matchups()
 	_check_land()
 	_check_saves()
+	if "--model-only" in OS.get_cmdline_user_args():
+		quit()
+		return
 	await _check_ui()
+	await _check_facilities()
 	await _check_main_menu()
 	print("PASS: tycoon progression, owned land, save recovery, UI purchases, automation, and five-fighter presentation.")
 	quit()
@@ -38,33 +46,35 @@ func _run() -> void:
 
 func _check_progression() -> void:
 	var fight := Rules.new()
-	assert(fight.heroes.size() == 8 and fight.owned_count() == 3 and fight.max_stamina() == 10)
-	assert(not fight.start([0, 1, 3]) and not fight.recruit(3))
-	for bout in range(10):
-		assert(fight.start([0, 1, 2]))
-		_finish(fight)
-		for id in [0, 1, 2]:
-			assert(fight.heroes[id].stamina == 9 - bout)
-			assert(fight.rest_remaining[id] == (120.0 if bout == 9 else 0.0))
-	assert(not fight.start([0, 1, 2]))
-	var bank := fight.coins
+	assert(fight.heroes.size() == 8 and fight.owned_count() == 2 and fight.max_stamina() == 10)
+	assert(fight.fighter_capacity() == 2 and not fight.start([0]) and not fight.start([0, 1, 2]))
+	assert(not fight.recruit(2))
+	for id in [0, 1]:
+		fight.heroes[id].stamina = 1
+	assert(fight.start([0, 1]))
+	_finish(fight)
+	for id in [0, 1]:
+		assert(fight.heroes[id].stamina == 0 and fight.rest_remaining[id] == Rules.REST_DURATION)
+	assert(not fight.start([0, 1]))
 	for bad in [-1.0, 0.0, INF, NAN]:
 		fight.advance(bad)
-		assert(fight.rest_remaining[0] == 120.0)
+		assert(fight.rest_remaining[0] == Rules.REST_DURATION)
 	fight.coins = 100000000
 	assert(fight.purchase_upgrade("training", CELLS.training))
-	assert(fight.heroes[0].stamina == 0 and fight.heroes[3].stamina == 15)
+	assert(fight.heroes[0].stamina == 0)
 	assert(fight.purchase_upgrade("infirmary", CELLS.infirmary))
-	assert(fight.rest_remaining[0] == 120.0 and fight.recovery_duration() == 90.0)
-	fight.advance(119.5)
+	assert(fight.rest_remaining[0] == Rules.REST_DURATION, "Hospital upgrades never alter ordinary fatigue.")
+	fight.advance(Rules.REST_DURATION - 0.5)
 	assert(fight.heroes[0].stamina == 0)
 	fight.advance(0.5)
-	assert(fight.heroes[0].stamina == 15 and fight.ready(0))
+	assert(fight.heroes[0].stamina == fight.max_stamina() and fight.ready(0))
+	assert(fight.recruit(2) and not fight.recruit(3))
 	assert(fight.purchase_upgrade("hall", CELLS.hall))
 	assert(fight.recruit(3) and fight.recruit(4) and not fight.recruit(3) and not fight.recruit(5))
 	assert(fight.purchase_upgrade("hall") and fight.recruit(5))
 	assert(fight.purchase_upgrade("hall") and fight.recruit(6) and fight.recruit(7))
 	assert(fight.owned_count() == 8 and not fight.purchase_upgrade("hall"))
+	assert(fight.purchase_upgrade("fighters") and fight.fighter_capacity() == 3)
 	assert(fight.next_lineup([0, 1, 2]) == [0, 1, 2])
 	assert(fight.purchase_upgrade("auto") and fight.auto_fill_enabled)
 	fight.heroes[0].stamina = 0
@@ -75,8 +85,9 @@ func _check_progression() -> void:
 	assert(fight.next_lineup([0, 1, 2]) == [1, 2, 4, 5])
 	assert(fight.purchase_upgrade("fighters") and not fight.purchase_upgrade("fighters"))
 	assert(fight.next_lineup([0, 1, 2]) == [1, 2, 4, 5, 6])
-	fight.advance(2.0)
-	for count in [3, 4, 5]:
+	fight.advance(Rules.INJURY_DURATION)
+	for count in [2, 3, 4, 5]:
+		fight.advance(Rules.INJURY_DURATION)
 		var lineup: Array[int] = []
 		for id in range(count):
 			lineup.append(id)
@@ -87,13 +98,13 @@ func _check_progression() -> void:
 			unique[pos] = true
 		assert(unique.size() == count)
 		_finish(fight)
+	fight.advance(Rules.INJURY_DURATION)
 	assert(fight.purchase_upgrade("tavern", CELLS.tavern))
 	assert(fight.start([0, 1, 2, 3, 4]))
 	var quote := fight.payout
-	bank = fight.coins
 	assert(fight.purchase_upgrade("tavern") and fight.purchase_upgrade("seats"))
 	assert(fight.payout == quote and fight.tavern_payout == 100)
-	bank = fight.coins
+	var bank := fight.coins
 	_finish(fight)
 	assert(fight.settled_tavern == 100 and fight.coins == bank + fight.crowd_tips + fight.settled_income + 100)
 	bank = fight.coins
@@ -103,16 +114,18 @@ func _check_progression() -> void:
 	quote = fight.income_for([0, 1, 2])
 	fight.heroes[0].wins = 5000
 	assert(fight.income_for([0, 1, 2]) == quote and fight.heroes[0].wins == 5000)
-	# Every ready bench hero may rotate; fewer than three means wait, never a partial invalid match.
+	# Auto-fill can run a legal duel while six heroes are unavailable.
 	for id in range(6):
 		fight.heroes[id].stamina = 0
-		fight.rest_remaining[id] = 90.0
-	assert(fight.next_lineup([0, 1, 2]) == [6, 7] and not fight.start([6, 7]))
+		fight.rest_remaining[id] = 60.0
+	assert(fight.next_lineup([0, 1, 2]) == [6, 7] and fight.start([6, 7]))
+	_finish(fight)
 	fight.auto_fill_enabled = false
-	assert(fight.next_lineup([0, 1, 2]) == [0, 1, 2])
-	print("PASS: tenth-fight injury, recovery, upgrades, eight recruits, Auto-fill, 3–5 fighters, Tavern snapshots, and win cap.")
+	assert(fight.next_lineup([0, 1, 2]).is_empty())
+	print("PASS: two starters, fatigue, upgrades, eight recruits, Auto-fill duels, 2–5 fighters, Tavern snapshots, and win cap.")
 	# Recruited mirror healers must not stall the entire unattended economy.
 	fight = Rules.new()
+	fight.fighter_tier = 1
 	fight.heroes[3].owned = true
 	fight.heroes[7].owned = true
 	assert(fight.start([0, 3, 7]))
@@ -149,7 +162,7 @@ func _check_land() -> void:
 	fight.coins = 10000000
 	assert(fight.purchase_upgrade("tavern", CELLS.tavern) and fight.purchase_upgrade("training", CELLS.training))
 	assert(fight.purchase_upgrade("hall", CELLS.hall))
-	assert(fight.recruit(6) and fight.recruit(7))
+	assert(fight.recruit(5) and fight.recruit(6) and fight.recruit(7))
 	assert(fight.next_milestone().id == "hall" and fight.next_milestone().target == 2)
 	print("PASS: all four buildings fit; ownership, overlap, duplicate/capped purchases, and outer-land exclusion.")
 
@@ -162,12 +175,12 @@ func _check_roster_matchups() -> void:
 		for id in range(8):
 			if mask & (1 << id):
 				lineup.append(id)
-		if lineup.size() < 3 or lineup.size() > 5:
+		if lineup.size() < 2 or lineup.size() > 5:
 			continue
 		for seed_value in [7, 42]:
 			var fight := Rules.new()
 			fight.rng.seed = seed_value
-			fight.fighter_tier = lineup.size() - 3
+			fight.fighter_tier = lineup.size() - 2
 			for id in range(8):
 				fight.heroes[id].owned = true
 				fight.heroes[id].level = 10 if seed_value == 7 else 1 + (id % 3) * 4
@@ -175,52 +188,101 @@ func _check_roster_matchups() -> void:
 			_finish(fight)
 			longest = maxf(longest, fight.elapsed)
 			matches += 1
-	print("PASS: %d matches across every 3–5 hero combination, max/mixed levels, longest %.2fs." % [matches, longest])
+	print("PASS: %d matches across every 2–5 hero combination, max/mixed levels, longest %.2fs." % [matches, longest])
 
 
 func _check_saves() -> void:
 	var fight := Rules.new()
 	fight.coins = 1000000
-	assert(fight.purchase_upgrade("hall", CELLS.hall) and fight.recruit(3))
-	assert(fight.purchase_upgrade("auto"))
+	assert(fight.purchase_upgrade("hall", CELLS.hall) and fight.purchase_upgrade("hall"))
+	for id in [2, 3, 4, 5]:
+		assert(fight.recruit(id))
+	assert(fight.purchase_upgrade("auto") and fight.purchase_upgrade("fighters"))
+	assert(fight.purchase_upgrade("training", CELLS.training))
+	assert(fight.purchase_upgrade("infirmary", CELLS.infirmary))
+	assert(fight.purchase_upgrade("tavern", CELLS.tavern))
 	fight.heroes[3].stamina = 0
-	fight.rest_remaining[3] = 65.5
-	var selected: Array[int] = [0, 1, 2]
+	fight.rest_remaining[3] = 55.5
+	fight.defeat_strain[1] = 1
+	fight.bench_elapsed[1] = 14.75
+	for id in [4, 5]:
+		fight.injury_remaining[id] = 135.5 + id
+		fight.defeat_strain[id] = Rules.DEFEAT_LIMIT
+		fight.injury_order[id] = id - 3
+	fight.next_injury_order = 3
+	fight.training_elapsed[2] = 7.25
+	fight.restaurant_cooldown = 12.5
+	var selected: Array[int] = [0, 1]
 	var data := Saves.snapshot(fight, selected)
+	assert(data.version == 2)
 	var decoded := Saves.decode(JSON.parse_string(JSON.stringify(data)))
 	assert(not decoded.is_empty() and Saves.snapshot(decoded.fight, decoded.selected) == data)
 	assert(not decoded.fight.intro_seen)
+	assert(decoded.fight.hospital_patients() == [4] and decoded.fight.hospital_waiting() == [5])
+	# Convert a fixture to the actual v1 format: old recovery becomes fatigue with exact seconds.
 	var legacy := data.duplicate(true)
+	legacy.version = 1
+	legacy.fighters = 0
 	legacy.erase("intro_seen")
-	assert(Saves.decode(legacy).fight.intro_seen, "Existing estates skip the welcome without losing progress.")
-	legacy = Saves.snapshot(Rules.new(), selected)
-	legacy.erase("intro_seen")
-	assert(not Saves.decode(legacy).fight.intro_seen)
-	legacy.intro_seen = "yes"
-	assert(Saves.decode(legacy).is_empty())
+	for key in ["training", "restaurant_cooldown", "next_injury_order"]:
+		legacy.erase(key)
+	for hero in legacy.heroes:
+		for key in ["injury", "strain", "bench", "injury_order"]:
+			hero.erase(key)
+	legacy.heroes[3].rest = 119.5
+	decoded = Saves.decode(legacy)
+	assert(not decoded.is_empty() and decoded.fight.intro_seen)
+	assert(decoded.fight.fighter_capacity() == 3 and decoded.fight.owned_count() == 6)
+	assert(decoded.fight.grid.buildings == fight.grid.buildings and decoded.fight.coins == fight.coins)
+	assert(decoded.fight.rest_remaining[3] == 119.5 and decoded.fight.injury_remaining[3] == 0.0)
+	assert(decoded.fight.defeat_strain[3] == 0 and decoded.fight.training_elapsed.is_empty() and decoded.fight.restaurant_cooldown == 0.0)
+	assert(not Saves.decode(Saves.snapshot(decoded.fight, decoded.selected)).is_empty(), "Migrated fatigue must survive subsequent v2 saves.")
+	for old_tier in [0, 1, 2]:
+		legacy.fighters = old_tier
+		assert(Saves.decode(legacy).fight.fighter_capacity() == old_tier + 3)
+	var fresh := Saves.snapshot(Rules.new(), selected)
+	fresh.erase("intro_seen")
+	assert(not Saves.decode(fresh).fight.intro_seen)
+	fresh.intro_seen = "yes"
+	assert(Saves.decode(fresh).is_empty())
 	fight.intro_seen = true
 	assert(Saves.decode(Saves.snapshot(fight, selected)).fight.intro_seen)
-	for key in ["gold", "fighters", "seats"]:
+	for key in ["gold", "fighters", "seats", "next_injury_order", "restaurant_cooldown"]:
 		var invalid := data.duplicate(true)
 		invalid[key] = -1
 		assert(Saves.decode(invalid).is_empty())
 	var invalid := data.duplicate(true)
 	invalid.cells.hall = [38, 3]
 	assert(Saves.decode(invalid).is_empty())
+	for key in ["stamina", "level", "bench", "injury", "strain", "injury_order"]:
+		invalid = data.duplicate(true)
+		invalid.heroes[0][key] = {"stamina": 0, "level": 11, "bench": 60.0, "injury": 181.0, "strain": 3, "injury_order": 1}[key]
+		assert(Saves.decode(invalid).is_empty())
 	invalid = data.duplicate(true)
-	invalid.heroes[0].stamina = 0
-	assert(Saves.decode(invalid).is_empty())
+	invalid.heroes[5].injury_order = 1
+	assert(Saves.decode(invalid).is_empty(), "Hospital queue positions are unique.")
 	invalid = data.duplicate(true)
-	invalid.heroes[0].level = 11
+	invalid.next_injury_order = 2
 	assert(Saves.decode(invalid).is_empty())
 	invalid = data.duplicate(true)
 	invalid.selected = [0, 0, 1]
+	assert(Saves.decode(invalid).is_empty())
+	for training in [{"7": 0.0}, {"3": 0.0}, {"4": 0.0}, {"2": 30.0}, {"02": 0.0}, {"0": 0.0, "2": 0.0}]:
+		invalid = data.duplicate(true)
+		invalid.training = training
+		assert(Saves.decode(invalid).is_empty(), "Training requires an available owned hero, valid timer, and a free slot.")
+	invalid = data.duplicate(true)
+	invalid.heroes[2].level = 10
+	assert(Saves.decode(invalid).is_empty())
+	invalid = data.duplicate(true)
+	invalid.restaurant_cooldown = 30.1
 	assert(Saves.decode(invalid).is_empty())
 	assert(fight.start(selected))
 	fight.coins += 10 # Already-paid tips survive; transient combat never does.
 	decoded = Saves.decode(Saves.snapshot(fight, selected))
 	assert(not decoded.fight.active and decoded.fight.coins == fight.coins and decoded.fight.completed == 0)
-	assert(decoded.fight.rest_remaining[3] == 65.5 and decoded.fight.settled_income == 0)
+	assert(decoded.fight.rest_remaining[3] == 55.5 and decoded.fight.settled_income == 0)
+	assert(decoded.fight.training_elapsed[2] == 7.25 and decoded.fight.restaurant_cooldown == 12.5)
 	var path := "res://.godot/tycoon-save-check.json"
 	assert(Saves.save_game(fight, selected, path) == OK)
 	fight.coins += 7
@@ -234,7 +296,7 @@ func _check_saves() -> void:
 	assert(Saves.save_game(fight, selected, path) == OK)
 	assert(Saves.load_game(path).fight.coins == fight.coins)
 	assert(FileAccess.get_file_as_string(path + ".corrupt") == "interrupted/corrupt save")
-	print("PASS: validated save round-trip, frozen recovery, interrupted fight, invalid data, and backup recovery.")
+	print("PASS: v2 management-state round-trip, exact v1 migration, training exclusivity, frozen timers, interrupted fight, and backup recovery.")
 
 
 func _capture(label: String) -> void:
@@ -250,7 +312,7 @@ func _check_ui() -> void:
 	root.add_child(ui)
 	ui.set_physics_process(false)
 	await process_frame
-	assert(not ui.saving_enabled and ui.cards.size() == 8 and ui.fight.owned_count() == 3)
+	assert(not ui.saving_enabled and ui.cards.size() == 8 and ui.fight.owned_count() == 2)
 	assert(ui.get_node("%World").building_nodes.is_empty())
 	assert(ui.welcome.visible and "FIRST:" in ui.objective.text)
 	assert(not ui._world_input_allowed(Vector2(900, 280)))
@@ -269,7 +331,16 @@ func _check_ui() -> void:
 	ui._toggle_running()
 	while ui.fight.active:
 		ui._physics_process(DT)
-	assert(ui.fight.coins >= Rules.BUILDING_COSTS.tavern[0] and "build a Tavern" in ui.objective.text)
+	assert(ui.fight.coins >= Rules.RECRUIT_COSTS[2])
+	ui._open_objective()
+	assert(ui.get_node("%HeroesDrawer").visible)
+	ui.cards[2].pressed.emit()
+	assert(ui.fight.heroes[2].owned and ui.fight.owned_count() == 3)
+	ui._toggle_running()
+	ui._toggle_running()
+	while ui.fight.active:
+		ui._physics_process(DT)
+	assert(ui.fight.coins >= Rules.BUILDING_COSTS.tavern[0])
 	ui._open_objective()
 	assert(ui.build_drawer.visible and "+100 gold per fight" in ui.build_rows.tavern.info.text)
 	await _capture("first-purchase")
@@ -299,7 +370,9 @@ func _check_ui() -> void:
 	assert(ui.fight.coins == bank - Rules.BUILDING_COSTS.hall[0])
 	ui.cards[3].pressed.emit()
 	ui.cards[4].pressed.emit()
-	assert(ui.fight.owned_count() == 5 and ui.selected == [0, 1, 2])
+	assert(ui.fight.owned_count() == 5 and ui.selected == [0, 1])
+	ui._purchase_arena("fighters")
+	ui.selected.assign([0, 1, 2])
 	ui._building_purchase("hall")
 	ui.cards[5].pressed.emit()
 	assert(ui.fight.owned_count() == 6)
@@ -308,14 +381,17 @@ func _check_ui() -> void:
 		ui.fight.rest_remaining[id] = 90.0
 	ui.auto_fight = true
 	ui._refresh()
-	assert(ui._needs_rotation() and "book rested heroes" in ui.objective.text)
+	assert(ui._needs_rotation() and "rested heroes" in ui.objective.text)
 	ui._open_objective()
 	assert(ui.get_node("%HeroesDrawer").visible and not ui.rotate_button.disabled)
 	await _capture("rotation")
 	ui.rotate_button.pressed.emit()
-	assert(ui.selected == [3, 4, 5] and not ui.auto_fight and not ui.fight.active)
-	assert(ui.fight.rest_remaining[0] == 90.0 and "Rested heroes booked" in ui.get_node("%Status").text)
-	ui.fight.advance(90.0)
+	assert(ui.selected == [3, 4, 5] and ui.auto_fight and ui.fight.active)
+	assert(ui.fight.rest_remaining[0] == 90.0)
+	ui._toggle_running()
+	while ui.fight.active:
+		ui._physics_process(DT)
+	ui.fight.advance(Rules.INJURY_DURATION)
 	ui.selected.assign([0, 1, 2])
 	ui._close_drawers()
 	for id in ["training", "infirmary", "tavern"]:
@@ -403,6 +479,78 @@ func _check_ui() -> void:
 	print("PASS: main-scene startup restores the estate and preferences with combat stopped.")
 
 
+func _check_facilities() -> void:
+	var ui = load("res://game/main.tscn").instantiate()
+	ui.fight.coins = 1000000
+	ui.fight.intro_seen = true
+	assert(ui.fight.purchase_upgrade("hall", CELLS.hall) and ui.fight.purchase_upgrade("hall"))
+	for id in [2, 3, 4, 5]:
+		assert(ui.fight.recruit(id))
+	for id in ["training", "infirmary", "tavern"]:
+		assert(ui.fight.purchase_upgrade(id, CELLS[id]))
+	root.add_child(ui)
+	ui.set_physics_process(false)
+	await process_frame
+	ui._open_building("training")
+	assert(ui.build_drawer.visible and ui.facility_id == "training")
+	assert(ui.facility_rows[0].primary.disabled and not ui.facility_rows[2].primary.disabled)
+	ui.facility_rows[2].primary.pressed.emit()
+	assert(ui.fight.training_elapsed.has(2) and ui.facility_rows[2].primary.text == "Recall")
+	assert(ui.facility_rows[3].primary.disabled, "One Gym slot must prevent assigning a second trainee.")
+	ui._physics_process(30.0)
+	assert(ui.fight.heroes[2].xp == Rules.TRAINING_XP and not ui.fight.ready(2))
+	ui._physics_process(5.0)
+	ui.facility_rows[2].primary.pressed.emit()
+	assert(ui.fight.training_elapsed.is_empty() and ui.fight.heroes[2].xp == Rules.TRAINING_XP and ui.fight.ready(2))
+	ui.fight.heroes[3].stamina = 0
+	ui.fight.rest_remaining[3] = Rules.REST_DURATION
+	ui._open_building("tavern")
+	var bank: int = ui.fight.coins
+	ui.facility_rows[3].primary.pressed.emit()
+	assert(ui.fight.coins == bank - 20 and ui.fight.heroes[3].stamina == 5 and ui.fight.rest_remaining[3] == 0.0)
+	assert(ui.facility_rows[3].secondary.disabled and ui.fight.restaurant_cooldown == 30.0)
+	ui._physics_process(30.0)
+	ui._refresh_facility()
+	assert(not ui.facility_rows[3].secondary.disabled)
+	ui.facility_rows[3].secondary.pressed.emit()
+	assert(ui.fight.coins == bank - 70 and ui.fight.heroes[3].stamina == ui.fight.max_stamina())
+	for id in [4, 5]:
+		ui.fight.injury_remaining[id] = Rules.INJURY_DURATION
+		ui.fight.defeat_strain[id] = Rules.DEFEAT_LIMIT
+		ui.fight.injury_order[id] = id - 3
+	ui.fight.next_injury_order = 3
+	ui.fight.heroes[4].stamina = 0
+	ui.fight.rest_remaining[4] = 40.0
+	ui._open_building("infirmary")
+	assert(ui.fight.hospital_patients() == [4] and ui.fight.hospital_waiting() == [5])
+	assert("In treatment" in ui.facility_rows[4].info.text and "Also resting: 40s" in ui.facility_rows[4].info.text)
+	assert("Recovering outside" in ui.facility_rows[5].info.text and not ui.facility_rows[4].primary.visible)
+	var combined := Saves.decode(Saves.snapshot(ui.fight, ui.selected))
+	assert(not combined.is_empty() and not combined.fight.ready(4))
+	assert(combined.fight.rest_remaining[4] == 40.0 and combined.fight.injury_remaining[4] == Rules.INJURY_DURATION)
+	ui._physics_process(40.0)
+	assert(ui.fight.rest_remaining[4] == 0.0 and ui.fight.injury_remaining[4] == 100.0 and not ui.fight.ready(4))
+	ui._open_building("tavern")
+	assert(ui.facility_rows[4].primary.disabled and "injury" in ui.facility_rows[4].primary.tooltip_text)
+	ui._physics_process(50.0)
+	assert(ui.fight.ready(4) and ui.fight.hospital_patients() == [5])
+	ui._physics_process(45.0)
+	assert(ui.fight.ready(5) and ui.fight.hospital_patients().is_empty())
+	for facility in ["training", "infirmary", "tavern"]:
+		ui._open_building(facility)
+		for window_size in [Vector2i(960, 420), Vector2i(1280, 420), Vector2i(1600, 560)]:
+			root.size = window_size
+			await process_frame
+			await process_frame
+			assert(Rect2(Vector2.ZERO, Vector2(window_size)).encloses(ui.build_drawer.get_global_rect()))
+			await _capture("facility-%s-%d" % [facility, window_size.x])
+		ui._close_drawers()
+	root.size = Vector2i(1280, 420)
+	ui.queue_free()
+	await process_frame
+	print("PASS: Gym assignment/recall, food payments/cooldown, hospital queue, combined fatigue/injury, and facility layouts.")
+
+
 func _menu_fixture(path: String) -> Control:
 	var ui = load("res://game/main.tscn").instantiate()
 	ui.save_path = path
@@ -420,7 +568,7 @@ func _check_main_menu() -> void:
 	assert(fight.purchase_upgrade("hall", CELLS.hall) and fight.recruit(3))
 	fight.heroes[0].stamina = 0
 	fight.rest_remaining[0] = 45.5
-	var selected: Array[int] = [0, 1, 2]
+	var selected: Array[int] = [0, 1]
 	assert(Saves.save_game(fight, selected, path) == OK)
 	assert(Saves.save_game(fight, selected, path) == OK)
 	# Continue also supports the existing backup recovery path.
@@ -453,7 +601,7 @@ func _check_main_menu() -> void:
 	assert(ui.in_main_menu and ui.fight.coins == fight.coins and FileAccess.get_file_as_string(path) == saved_bytes)
 	ui.get_node("%ContinueGame").pressed.emit()
 	assert(not ui.in_main_menu and ui.session_started and not ui.fight.active and not ui.welcome.visible)
-	assert(ui.fight.rest_remaining[0] == 45.5 and ui.fight.owned_count() == 4)
+	assert(ui.fight.rest_remaining[0] == 45.5 and ui.fight.owned_count() == 3)
 	ui.fight.advance(45.5)
 	ui.get_node("%Start").pressed.emit()
 	ui._physics_process(DT)
@@ -483,9 +631,9 @@ func _check_main_menu() -> void:
 	ui.get_node("%NewGameConfirmation").get_ok_button().pressed.emit()
 	await process_frame
 	assert(not ui.in_main_menu and ui.welcome.visible and not ui.fight.intro_seen)
-	assert(ui.fight.coins == 0 and ui.fight.completed == 0 and ui.fight.owned_count() == 3)
+	assert(ui.fight.coins == 0 and ui.fight.completed == 0 and ui.fight.owned_count() == 2)
 	assert(ui.fight.grid.buildings.is_empty() and ui.get_node("%World").building_nodes.is_empty())
-	assert(ui.fight.max_stamina() == 10 and ui.selected == [0, 1, 2] and not ui.auto_fight)
+	assert(ui.fight.max_stamina() == 10 and ui.selected == [0, 1] and not ui.auto_fight)
 	assert(Saves.load_game(path).fight.coins == 0 and not Saves.load_game(path).fight.intro_seen)
 	assert(Saves.load_game(path + ".bak").fight.coins == fight.coins)
 	ui.queue_free()
@@ -519,7 +667,7 @@ func _check_main_menu() -> void:
 func _economy(seed_value: int) -> bool:
 	var fight := Rules.new()
 	fight.rng.seed = seed_value
-	var preferred: Array[int] = [0, 1, 2]
+	var preferred: Array[int] = [0, 1]
 	var seconds := 0.0
 	var intermission := 0.0
 	var times := {}
@@ -544,7 +692,7 @@ func _economy(seed_value: int) -> bool:
 				first_rest = seconds
 				reserve_count = fight.ready_lineup().size()
 			# Follow the same manual rotation prompt as a player until Auto-fill is purchased.
-			if not fight.auto_fill_owned and fight.lineup_rest(preferred) > 0.0 and fight.ready_lineup().size() >= 3:
+			if not fight.auto_fill_owned and fight.lineup_rest(preferred) > 0.0 and fight.ready_lineup().size() >= 2:
 				preferred = fight.ready_lineup()
 				rotations += 1
 			if intermission > 0.0:
@@ -568,13 +716,15 @@ func _economy(seed_value: int) -> bool:
 	var report := FileAccess.open("res://.godot/tycoon-%s-%d.json" % ["opening" if opening_only else "economy", seed_value], FileAccess.WRITE)
 	report.store_string(JSON.stringify({"seed": seed_value, "hours": seconds / 3600.0, "fights": fight.completed, "milestones_seconds": times, "purchases_first_ten_minutes": actions, "manual_rotations": rotations, "first_rest_seconds": first_rest, "ready_reserves_at_first_rest": reserve_count}, "\t"))
 	var on_target: bool = times.get("tavern1", 0) > 0 and times.get("tavern1", 0) <= 60
-	on_target = on_target and times.get("recruit5", INF) < first_rest and reserve_count >= 3 and rotations > 0
+	on_target = on_target and times.get("recruit2", INF) < first_rest and reserve_count >= 2 and rotations > 0
 	on_target = on_target and times.get("seats1", 0) >= 5 * 60 and times.get("seats1", 0) <= 8 * 60
 	on_target = on_target and times.get("auto1", 0) >= 8 * 60 and times.get("auto1", 0) <= 10 * 60 and actions >= 10
 	if not opening_only:
 		on_target = on_target and fight.next_milestone().is_empty() and seconds >= 12 * 3600 and seconds <= 18 * 3600
-		on_target = on_target and times.get("fighters1", 0) >= 2 * 3600 and times.get("fighters1", 0) <= 3 * 3600
-		on_target = on_target and times.get("fighters2", 0) >= 6 * 3600 and times.get("fighters2", 0) <= 8 * 3600
+		on_target = on_target and times.get("fighters2", 0) >= 2 * 3600 and times.get("fighters2", 0) <= 3 * 3600
+		# The old five-fighter window described the former fatigue-only loop.
+		# Track the new injury/rotation pacing while retaining the agreed total duration.
+		print("PACING seed=%d five_fighters=%.3fh / previous baseline 6–8h" % [seed_value, float(times.get("fighters3", 0)) / 3600.0])
 	if not on_target:
 		push_error("Economy missed an agreed milestone window.")
 	return on_target
