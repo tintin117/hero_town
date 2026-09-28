@@ -102,7 +102,7 @@ func _ready() -> void:
 	%ArenaButton.pressed.connect(_toggle_drawer.bind(%ArenaDrawer))
 	%EventButton.pressed.connect(_toggle_drawer.bind(%EventDrawer))
 	%ManageEventHeroes.pressed.connect(_toggle_drawer.bind(%HeroesDrawer))
-	var event_scroll := %EventHeroes.get_parent().get_v_scroll_bar()
+	var event_scroll: VScrollBar = %EventHeroes.get_parent().get_v_scroll_bar()
 	event_scroll.focus_mode = Control.FOCUS_ALL
 	event_scroll.custom_step = 24
 	event_scroll.focus_neighbor_top = NodePath(".")
