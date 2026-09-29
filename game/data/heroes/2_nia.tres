@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="HeroDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://game/data/defs/hero_def.gd" id="1_hero"]
+[ext_resource type="Script" path="res://game/data/defs/skill_def.gd" id="2_skill"]
+
+[sub_resource type="Resource" id="Resource_skill"]
+script = ExtResource("2_skill")
+name = "Snipe"
+kind = "strike"
+power = 2.5
+description = "Deal 2.5x attack damage to the nearest enemy within 160 units."
+
+[resource]
+script = ExtResource("1_hero")
+id = 2
+display_name = "Nia"
+unit = &"archer"
+red = false
+health = 165
+attack = 18
+ranged = true
+skill = SubResource("Resource_skill")
+price = 100
+start_owned = false
