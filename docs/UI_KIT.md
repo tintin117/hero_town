@@ -54,3 +54,21 @@ Placement rules: a Drawer lives in a full-rect Control (it slides against the pa
 
 - `godot --headless --path . --script res://game/tests/run_all.gd` (runner now waits one frame so the scene tree is ready) runs `test_ui_kit.gd`: theme entries, icon set, every component scene + setters, gallery layout at 960x420 / 1280x420 / 1600x560 (all controls inside the window, only the scroll area may run past the bottom, no overlapping HUD groups or bar children), no `Game`/`Events`/`GameState` in `game/ui/*.gd`.
 - Screenshots need a real window (not headless): `godot --path . --resolution 1280x420 --script res://.godot/capture_gallery.gd -- w=1280 h=420 [scroll=600] [drawer] [tag=name] [crop=x,y,w,h zoom=4]` writes `.godot/captures/<tag>_<w>x<h>.png`. The script lives in `docs/ui_tools/capture_gallery.gd`; copy it to `.godot/` (git-ignored) if missing.
+
+## HUD (gate G2)
+
+The real screens live next to the kit in `game/ui/` and are the only UI scripts allowed to name `Game` / `Events` (`test_ui_kit.gd` allow-lists `hud.gd`, `main_menu.gd`, `pause_menu.gd`). They reach both through two overridable vars, `game` and `events`, which default to `/root/Game` and `/root/Events` in `_ready`; tests assign their own (`core_kit.gd`) **before** `add_child`. Everything is composed from the components above; state flows `Game command -> Events signal -> widget setter`, no polling.
+
+| Scene | What it is |
+| --- | --- |
+| `hud.tscn` (`Hud`, full-rect, mouse ignore) | `Layout` VBox = `TopBar` (52 px) / `Middle` (fills; holds `%Excitement`, `%Drawers`, `%Toasts`) / `BottomBar` (96 px). Only bars, buttons and open drawers take the mouse, so the town stays draggable. |
+| `pause_menu.tscn` | Modal overlay (`%Resume`, `%SaveMenu`, `%Quit`). `open()` pauses through `Game.set_paused(true)`, `close()` resumes. Signals `main_menu_requested`, `quit_requested`. Child of the HUD, forwarded by it. |
+| `main_menu.tscn` | Title, `%NewGame`, `%Continue` (disabled + tooltip without a valid save, via `SaveStore.load_state`), `%Quit`, overwrite confirmation (`%Confirm`). Signals `new_game_requested`, `continue_requested`, `quit_requested`; `refresh()` re-checks the save. The shell does the `Game.new_game()` / `continue_game()`. |
+| `router.gd` (`DrawerRouter`) | `register(key, scene_path)`, `open(key)`, `close()`, `current`, `has_drawer(key)`, `signal drawer_changed(key)`. One drawer at a time, lazy instancing into `host`; the `context` dict is set as properties on each drawer (`game`, `events`); ESC or right click closes. Never pauses. |
+| `drawers/manager_drawer.tscn` | Drawer with manager on/off, "Book at hype >= X" slider (30-95; a mouse drag commits on release because every `set_manager` autosaves) and a live "Books in ~N s" line (inverse of `Hype.grow`). |
+
+HUD wiring: gold / fame / hype / crowd pills and the hype threshold marker follow `gold_changed`, `fame_changed`, `hype_changed`, `manager_changed`; hero cards (preferred lineup, `HeroPortraits`) rebuild on `roster_changed`, and during a fight HP / mana follow `combat_event` (hits, healing, `CombatSim.MANA_*`); the excitement gauge exists only between `fight_started` and `fight_finished`. Book calls `Game.book_fight(Game.state.preferred_lineup)` and is disabled, with a tooltip reason, while a fight runs, the game is paused or the lineup is invalid. Roster opens `drawers/roster_drawer.tscn` when that file exists (else disabled); Build and Stories are locked placeholders. Toasts: `Events.toast` plus a summary after every fight.
+
+Shell API: `hud.main_menu_requested`, `hud.quit_requested`, `hud.open_pause()`, `hud.router`, `hud.toggle_drawer(key)`, `hud.sync_all()`, `hud.show_toast(icon_name, text)`. ESC with no drawer open opens the pause menu. Drawers receive `game` / `events` from the router context, so a new drawer script only declares `var game: Node` / `var events: Node` and falls back to the autoloads.
+
+Tests: `test_hud_widgets.gd`, `test_hud_drawers.gd`, `test_hud_menus.gd`, `test_hud_layout.gd`. Screenshots (real window): `.godot/hud_demo.gd` -> `.godot/captures/hud_*.png`. A new `class_name` (`DrawerRouter`) needs one `godot --headless --path . --import` before scripts using it load from a cold class cache.

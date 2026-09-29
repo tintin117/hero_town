@@ -223,11 +223,15 @@ func _no_overlap(items: Array[Control], label: String) -> void:
 				problems.append("%s: %s overlaps %s" % [label, items[i].name, items[j].name])
 
 
+## Components and the mock/gallery stay game-free; the real screens (hud, menus) are the only UI that talk to Game / Events.
+const SCREENS := ["hud.gd", "main_menu.gd", "pause_menu.gd"]
+
+
 func _check_no_game_coupling() -> void:
 	var re := RegEx.create_from_string("\\b(Game|Events|GameState)\\b")
 	for dir in ["res://game/ui/components/", "res://game/ui/"]:
 		for f in DirAccess.get_files_at(dir):
-			if not f.ends_with(".gd"):
+			if not f.ends_with(".gd") or f in SCREENS:
 				continue
 			for line in FileAccess.get_file_as_string(dir + f).split("\n"):
 				var code := line.split("#")[0]
