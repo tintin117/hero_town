@@ -1,0 +1,274 @@
+[gd_scene load_steps=20 format=3]
+
+[ext_resource type="Script" path="res://game/ui/hud.gd" id="1"]
+[ext_resource type="Theme" path="res://game/ui/theme/fight_club_theme.tres" id="2"]
+[ext_resource type="PackedScene" path="res://game/ui/components/stat_pill.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://game/ui/components/hype_gauge.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://game/ui/components/icon_button.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://game/ui/components/excitement_gauge.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://game/ui/components/badge.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://game/ui/pause_menu.tscn" id="8"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/coin.png" id="9"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/laurel.png" id="10"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/crowd.png" id="11"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/gear.png" id="12"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/sword.png" id="13"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/megaphone.png" id="14"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/shield.png" id="15"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/hammer.png" id="16"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/scroll.png" id="17"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/lock.png" id="18"]
+
+[node name="Hud" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2")
+script = ExtResource("1")
+
+[node name="Layout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="TopBar" type="PanelContainer" parent="Layout"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_type_variation = &"HudBar"
+
+[node name="Row" type="HBoxContainer" parent="Layout/TopBar"]
+layout_mode = 2
+
+[node name="Gold" parent="Layout/TopBar/Row" instance=ExtResource("3")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Gold"
+icon = ExtResource("9")
+
+[node name="Fame" parent="Layout/TopBar/Row" instance=ExtResource("3")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+icon = ExtResource("10")
+text = "Basement Club"
+progress = 0.0
+
+[node name="SpacerL" type="Control" parent="Layout/TopBar/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Hype" parent="Layout/TopBar/Row" instance=ExtResource("4")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 32)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Hype: the crowd's eagerness. Higher hype, bigger crowd."
+
+[node name="SpacerR" type="Control" parent="Layout/TopBar/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Seats" parent="Layout/TopBar/Row" instance=ExtResource("3")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+size_flags_vertical = 4
+icon = ExtResource("11")
+
+[node name="Menu" parent="Layout/TopBar/Row" instance=ExtResource("5")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+icon_texture = ExtResource("12")
+tip = "Menu"
+
+[node name="Middle" type="Control" parent="Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Excitement" parent="Layout/Middle" instance=ExtResource("6")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_top = 8.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Drawers" type="Control" parent="Layout/Middle"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Toasts" type="Control" parent="Layout/Middle"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BottomBar" type="PanelContainer" parent="Layout"]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+theme_type_variation = &"HudBar"
+
+[node name="Row" type="HBoxContainer" parent="Layout/BottomBar"]
+layout_mode = 2
+
+[node name="Lineup" type="ScrollContainer" parent="Layout/BottomBar/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+vertical_scroll_mode = 0
+
+[node name="Cards" type="HBoxContainer" parent="Layout/BottomBar/Row/Lineup"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Sep" type="VSeparator" parent="Layout/BottomBar/Row"]
+layout_mode = 2
+
+[node name="Book" type="Button" parent="Layout/BottomBar/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(132, 64)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"RedButton"
+text = "Book"
+icon = ExtResource("13")
+
+[node name="Sep2" type="VSeparator" parent="Layout/BottomBar/Row"]
+layout_mode = 2
+
+[node name="ManagerTool" type="VBoxContainer" parent="Layout/BottomBar/Row"]
+custom_minimum_size = Vector2(68, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"TightVBox"
+
+[node name="Manager" parent="Layout/BottomBar/Row/ManagerTool" instance=ExtResource("5")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+icon_texture = ExtResource("14")
+tip = "Manager"
+
+[node name="ManagerCaption" type="Label" parent="Layout/BottomBar/Row/ManagerTool"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SmallLabel"
+text = "Manual"
+horizontal_alignment = 1
+
+[node name="RosterTool" type="VBoxContainer" parent="Layout/BottomBar/Row"]
+custom_minimum_size = Vector2(68, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"TightVBox"
+
+[node name="Roster" parent="Layout/BottomBar/Row/RosterTool" instance=ExtResource("5")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+icon_texture = ExtResource("15")
+tip = "Roster"
+
+[node name="Caption" type="Label" parent="Layout/BottomBar/Row/RosterTool"]
+layout_mode = 2
+theme_type_variation = &"SmallLabel"
+text = "Roster"
+horizontal_alignment = 1
+
+[node name="BuildTool" type="VBoxContainer" parent="Layout/BottomBar/Row"]
+custom_minimum_size = Vector2(68, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"TightVBox"
+
+[node name="Build" parent="Layout/BottomBar/Row/BuildTool" instance=ExtResource("5")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+disabled = true
+icon_texture = ExtResource("16")
+tip = "Build: coming soon"
+
+[node name="Lock" parent="Layout/BottomBar/Row/BuildTool/Build" instance=ExtResource("7")]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -14.0
+offset_top = -8.0
+offset_right = 10.0
+offset_bottom = 16.0
+grow_horizontal = 0
+tint = Color(0.45, 0.48, 0.55, 1)
+icon = ExtResource("18")
+
+[node name="Caption" type="Label" parent="Layout/BottomBar/Row/BuildTool"]
+layout_mode = 2
+theme_type_variation = &"SmallLabel"
+text = "Build"
+horizontal_alignment = 1
+
+[node name="StoriesTool" type="VBoxContainer" parent="Layout/BottomBar/Row"]
+custom_minimum_size = Vector2(68, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"TightVBox"
+
+[node name="Stories" parent="Layout/BottomBar/Row/StoriesTool" instance=ExtResource("5")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+disabled = true
+icon_texture = ExtResource("17")
+tip = "Stories: coming soon"
+
+[node name="Lock" parent="Layout/BottomBar/Row/StoriesTool/Stories" instance=ExtResource("7")]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -14.0
+offset_top = -8.0
+offset_right = 10.0
+offset_bottom = 16.0
+grow_horizontal = 0
+tint = Color(0.45, 0.48, 0.55, 1)
+icon = ExtResource("18")
+
+[node name="Caption" type="Label" parent="Layout/BottomBar/Row/StoriesTool"]
+layout_mode = 2
+theme_type_variation = &"SmallLabel"
+text = "Stories"
+horizontal_alignment = 1
+
+[node name="PauseMenu" parent="." instance=ExtResource("8")]
+unique_name_in_owner = true
