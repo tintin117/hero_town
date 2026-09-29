@@ -149,6 +149,7 @@ func expand_seats() -> bool:
 		return false
 	_spend(cost)
 	state.seats_tier += 1
+	events.roster_changed.emit()  # seat count shows in the HUD and roster; no separate signal
 	events.toast.emit("Arena expanded to %d seats" % Roster.seats(state, tuning), &"seats")
 	_autosave()
 	return true
