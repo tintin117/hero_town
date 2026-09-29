@@ -49,7 +49,8 @@ Skipping presentation gives identical outcomes (needed for offline progress late
 `simulate(lineup: Array[int], rng_seed: int, mods: CombatMods) -> Dictionary`
 - `lineup`: hero ids with stats already snapshotted by the caller (`{id, def, level, traits}`).
 - `mods`: `start_excitement`, `skill_excitement_mult`, `damage_mult` per hero, all default neutral.
-- returns `events: Array[Dictionary]` (kinds `move`, `attack`, `skill`, each with `t` seconds) and `result: {winner, duration, excitement, tips, skills, attacks, hp_left, progression}`.
+- `lineup` entries are plain Dictionaries: `{id, name, red, ranged, health, attack, skill: {kind, power}}` with level scaling and trait effects already applied by the caller — `combat_sim` knows nothing about `data/` or `GameState`.
+- returns `events: Array[Dictionary]` (kinds `move`, `attack`, `skill`, each with `t` seconds and the old field shapes: `attacker, origin, hits[{target, damage, position, push_to}], healing, radius, tip, excitement_gain, winner`) and `result: {winner, duration, excitement, tips, skills, attacks, hp_left: {id: hp}, tracks: {id: PackedVector2Array}}`. `tracks` holds each fighter's position at every 60 Hz step so the Arena can render without re-simulating. XP/level/wins are **not** in the result; `economy` derives them.
 - Ported rules (unchanged numbers): 60 Hz fixed step, arena radius 260, attack interval 1.5, mana 25/15, cast tip 10, excitement 1/s (cap 20) + 8 per skill, multiplier 1 / 1.25 / 2.5 at 25 / 60, overtime after 60 s, level growth 5 %. Parity with `golden.json` is a G1 gate.
 
 ## 4. Signal contract (`Events` autoload)
