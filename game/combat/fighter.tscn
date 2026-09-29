@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/combat/fighter.gd" id="1_fighter"]
+[ext_resource type="Script" path="res://resources/art/sunnyside_actor.gd" id="2_actor"]
+
+[node name="Fighter" type="Node2D"]
+script = ExtResource("1_fighter")
+
+[node name="Actor" type="Node2D" parent="."]
+script = ExtResource("2_actor")
