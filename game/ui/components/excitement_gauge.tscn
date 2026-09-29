@@ -1,0 +1,50 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/ui/components/excitement_gauge.gd" id="1"]
+[ext_resource type="Script" path="res://game/ui/components/gauge_bar.gd" id="2"]
+
+[node name="ExcitementGauge" type="HBoxContainer"]
+custom_minimum_size = Vector2(260, 52)
+theme_type_variation = &"GaugeRow"
+script = ExtResource("1")
+
+[node name="Icon" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Column" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"TightVBox"
+
+[node name="Head" type="HBoxContainer" parent="Column"]
+layout_mode = 2
+
+[node name="TierName" type="Label" parent="Column/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"TitleLabel"
+text = "CALM"
+
+[node name="Multiplier" type="Label" parent="Column/Head"]
+layout_mode = 2
+theme_type_variation = &"GoldLabel"
+text = "x1"
+
+[node name="Number" type="Label" parent="Column/Head"]
+custom_minimum_size = Vector2(28, 0)
+layout_mode = 2
+horizontal_alignment = 2
+text = "0"
+
+[node name="Bar" type="Control" parent="Column"]
+custom_minimum_size = Vector2(96, 26)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2")
+style = &"ExciteGauge"
