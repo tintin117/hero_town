@@ -22,7 +22,7 @@ func _lifecycle(p: Array[String]) -> void:
 	Kit.check(p, g.income_preview([0, 1] as Array[int]) == 73 and g.income_preview([0] as Array[int]) == 0, "income preview")
 
 	Kit.check(p, g.book_fight([0, 1] as Array[int], {"seed": 5}), "book_fight accepted")
-	Kit.check(p, fake.calls == 1 and fake.last_seed == 5 and fake.last_mods == null, "sim called once with seed and neutral mods")
+	Kit.check(p, fake.calls == 1 and fake.last_seed == 5 and fake.last_mods == {}, "sim called once with seed and neutral mods")
 	Kit.check(p, fake.last_lineup[0] == {"id": 0, "name": "Bram", "red": false, "ranged": false, "health": 225, "attack": 17,
 			"skill": {"kind": "strike", "power": 2.0}}, "lineup dictionary shape: %s" % [fake.last_lineup[0]])
 	Kit.check(p, not g.book_fight([0, 1] as Array[int]), "no second booking while fighting")

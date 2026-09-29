@@ -99,7 +99,7 @@ func book_fight(lineup: Array[int], opts := {}) -> bool:
 	var attendance := Hype.attendance(seats, state.hype, tuning)
 	var rng_seed := int(opts.get("seed", state.rng_seed_counter))
 	state.rng_seed_counter += 1
-	var out: Dictionary = simulate.call(_fighters(lineup), rng_seed, opts.get("mods"))
+	var out: Dictionary = simulate.call(_fighters(lineup), rng_seed, opts.get("mods", {}))
 	if not out.get("events") is Array or not out.get("result") is Dictionary:
 		return false
 	var duration := float(out.result.get("duration", 0.0))
