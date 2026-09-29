@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="Tuning" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/defs/tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+hype_max = 100.0
+hype_start = 15.0
+hype_tau = 50.0
+attendance_floor = 0.1
+afterglow_factor = 0.3
+hype_emit_interval = 0.1
+seat_tiers = PackedInt32Array(100, 150, 200)
+seat_costs = PackedInt32Array(5500, 600000)
+fighter_tiers = PackedInt32Array(2, 3, 4, 5)
+fighter_costs = PackedInt32Array(1500, 700000, 1200000)
+min_lineup = 2
+starting_gold = 0
+base_income = 100
+income_per_level = 5
+income_per_win = 5
+win_income_cap = 50
+income_reference_attendance = 100
+excitement_thresholds = PackedFloat64Array(0, 25, 60)
+excitement_multipliers = PackedFloat64Array(1, 1.25, 2.5)
+cast_tip = 10
+xp_per_fight = 10
+xp_win_bonus = 10
+level_cap = 10
+xp_base = 30
+xp_step = 20
+stat_growth = 0.05
+fame_tier_points = PackedInt32Array(0, 300, 3000, 30000)
+fame_tier_names = PackedStringArray("Basement Club", "Local Arena", "City Stadium", "Grand Coliseum")
+fame_per_fight = 1
+fame_excitement_divisor = 10.0
+manager_threshold = 70.0

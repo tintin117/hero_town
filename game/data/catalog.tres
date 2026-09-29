@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Catalog" load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://game/data/defs/catalog.gd" id="1_cat"]
+[ext_resource type="Script" path="res://game/data/defs/hero_def.gd" id="2_hero"]
+[ext_resource type="Resource" path="res://game/data/tuning.tres" id="3_tun"]
+[ext_resource type="Resource" path="res://game/data/heroes/0_bram.tres" id="h0"]
+[ext_resource type="Resource" path="res://game/data/heroes/1_ivo.tres" id="h1"]
+[ext_resource type="Resource" path="res://game/data/heroes/2_nia.tres" id="h2"]
+[ext_resource type="Resource" path="res://game/data/heroes/3_tuck.tres" id="h3"]
+[ext_resource type="Resource" path="res://game/data/heroes/4_rook.tres" id="h4"]
+[ext_resource type="Resource" path="res://game/data/heroes/5_aldric.tres" id="h5"]
+[ext_resource type="Resource" path="res://game/data/heroes/6_vera.tres" id="h6"]
+[ext_resource type="Resource" path="res://game/data/heroes/7_oswin.tres" id="h7"]
+
+[resource]
+script = ExtResource("1_cat")
+tuning = ExtResource("3_tun")
+heroes = Array[ExtResource("2_hero")]([ExtResource("h0"), ExtResource("h1"), ExtResource("h2"), ExtResource("h3"), ExtResource("h4"), ExtResource("h5"), ExtResource("h6"), ExtResource("h7")])
