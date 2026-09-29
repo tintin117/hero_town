@@ -1,0 +1,4068 @@
+{
+	"fights": [
+		{
+			"attacks": 16,
+			"crowd_tips": 40,
+			"elapsed": 11.8333,
+			"excitement": 43.8333,
+			"health": [
+				[
+					0,
+					18
+				],
+				[
+					1,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				0,
+				1
+			],
+			"payout": 100,
+			"progression": [
+				[
+					0,
+					20,
+					1,
+					1
+				],
+				[
+					1,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 7,
+			"settled_income": 125,
+			"skills": 4,
+			"steps": 710,
+			"trace": [
+				"73:attack:1:0:19",
+				"73:attack:0:1:20",
+				"164:attack:1:0:22",
+				"164:attack:0:1:14",
+				"255:attack:1:0:21",
+				"255:skill:1:0:21",
+				"255:attack:0:1:15",
+				"255:skill:0:1:34",
+				"346:attack:1:0:21",
+				"346:attack:0:1:18",
+				"437:attack:1:0:20",
+				"437:attack:0:1:20",
+				"528:attack:1:0:21",
+				"528:skill:1:0:21",
+				"528:attack:0:1:15",
+				"528:skill:0:1:34",
+				"619:attack:1:0:19",
+				"619:attack:0:1:20",
+				"710:attack:1:0:22",
+				"710:attack:0:1:8"
+			],
+			"winner": 0,
+			"wins": 0
+		},
+		{
+			"attacks": 17,
+			"crowd_tips": 40,
+			"elapsed": 13.35,
+			"excitement": 45.35,
+			"health": [
+				[
+					0,
+					0
+				],
+				[
+					1,
+					7
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				0,
+				1
+			],
+			"payout": 100,
+			"progression": [
+				[
+					0,
+					10,
+					1,
+					1
+				],
+				[
+					1,
+					20,
+					1,
+					1
+				]
+			],
+			"seed": 42,
+			"settled_income": 125,
+			"skills": 4,
+			"steps": 801,
+			"trace": [
+				"73:attack:1:0:24",
+				"73:attack:0:1:14",
+				"164:attack:1:0:24",
+				"164:attack:0:1:14",
+				"255:attack:1:0:22",
+				"255:skill:1:0:21",
+				"255:attack:0:1:14",
+				"255:skill:0:1:34",
+				"346:attack:1:0:23",
+				"346:attack:0:1:14",
+				"437:attack:1:0:18",
+				"437:attack:0:1:14",
+				"528:attack:1:0:19",
+				"528:skill:1:0:21",
+				"528:attack:0:1:17",
+				"528:skill:0:1:34",
+				"619:attack:1:0:20",
+				"619:attack:0:1:20",
+				"710:attack:1:0:18",
+				"710:attack:0:1:16",
+				"801:attack:1:0:15"
+			],
+			"winner": 1,
+			"wins": 0
+		},
+		{
+			"attacks": 15,
+			"crowd_tips": 40,
+			"elapsed": 11.8333,
+			"excitement": 43.8333,
+			"health": [
+				[
+					0,
+					37
+				],
+				[
+					1,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				0,
+				1
+			],
+			"payout": 100,
+			"progression": [
+				[
+					0,
+					20,
+					1,
+					1
+				],
+				[
+					1,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 123,
+			"settled_income": 125,
+			"skills": 4,
+			"steps": 710,
+			"trace": [
+				"73:attack:0:1:20",
+				"73:attack:1:0:23",
+				"164:attack:0:1:16",
+				"164:attack:1:0:20",
+				"255:attack:0:1:16",
+				"255:skill:0:1:34",
+				"255:attack:1:0:24",
+				"255:skill:1:0:21",
+				"346:attack:0:1:20",
+				"346:attack:1:0:18",
+				"437:attack:0:1:14",
+				"437:attack:1:0:18",
+				"528:attack:0:1:15",
+				"528:skill:0:1:34",
+				"528:attack:1:0:22",
+				"528:skill:1:0:21",
+				"619:attack:0:1:18",
+				"619:attack:1:0:21",
+				"710:attack:0:1:11"
+			],
+			"winner": 0,
+			"wins": 0
+		},
+		{
+			"attacks": 16,
+			"crowd_tips": 40,
+			"elapsed": 11.8333,
+			"excitement": 43.8333,
+			"health": [
+				[
+					0,
+					29
+				],
+				[
+					1,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				0,
+				1
+			],
+			"payout": 190,
+			"progression": [
+				[
+					0,
+					0,
+					10,
+					10
+				],
+				[
+					1,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 7,
+			"settled_income": 238,
+			"skills": 4,
+			"steps": 710,
+			"trace": [
+				"73:attack:1:0:28",
+				"73:attack:0:1:28",
+				"164:attack:1:0:31",
+				"164:attack:0:1:22",
+				"255:attack:1:0:30",
+				"255:skill:1:0:30",
+				"255:attack:0:1:23",
+				"255:skill:0:1:50",
+				"346:attack:1:0:30",
+				"346:attack:0:1:26",
+				"437:attack:1:0:29",
+				"437:attack:0:1:28",
+				"528:attack:1:0:30",
+				"528:skill:1:0:30",
+				"528:attack:0:1:23",
+				"528:skill:0:1:50",
+				"619:attack:1:0:28",
+				"619:attack:0:1:28",
+				"710:attack:1:0:31",
+				"710:attack:0:1:9"
+			],
+			"winner": 0,
+			"wins": 0
+		},
+		{
+			"attacks": 16,
+			"crowd_tips": 40,
+			"elapsed": 11.8333,
+			"excitement": 43.8333,
+			"health": [
+				[
+					0,
+					26
+				],
+				[
+					1,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				0,
+				1
+			],
+			"payout": 190,
+			"progression": [
+				[
+					0,
+					0,
+					10,
+					10
+				],
+				[
+					1,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 42,
+			"settled_income": 238,
+			"skills": 4,
+			"steps": 710,
+			"trace": [
+				"73:attack:1:0:33",
+				"73:attack:0:1:22",
+				"164:attack:1:0:33",
+				"164:attack:0:1:22",
+				"255:attack:1:0:31",
+				"255:skill:1:0:30",
+				"255:attack:0:1:22",
+				"255:skill:0:1:50",
+				"346:attack:1:0:32",
+				"346:attack:0:1:22",
+				"437:attack:1:0:27",
+				"437:attack:0:1:22",
+				"528:attack:1:0:28",
+				"528:skill:1:0:30",
+				"528:attack:0:1:25",
+				"528:skill:0:1:50",
+				"619:attack:1:0:29",
+				"619:attack:0:1:28",
+				"710:attack:1:0:27",
+				"710:attack:0:1:24"
+			],
+			"winner": 0,
+			"wins": 0
+		},
+		{
+			"attacks": 15,
+			"crowd_tips": 40,
+			"elapsed": 11.8333,
+			"excitement": 43.8333,
+			"health": [
+				[
+					0,
+					57
+				],
+				[
+					1,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				0,
+				1
+			],
+			"payout": 190,
+			"progression": [
+				[
+					0,
+					0,
+					10,
+					10
+				],
+				[
+					1,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 123,
+			"settled_income": 238,
+			"skills": 4,
+			"steps": 710,
+			"trace": [
+				"73:attack:0:1:28",
+				"73:attack:1:0:32",
+				"164:attack:0:1:24",
+				"164:attack:1:0:29",
+				"255:attack:0:1:24",
+				"255:skill:0:1:50",
+				"255:attack:1:0:33",
+				"255:skill:1:0:30",
+				"346:attack:0:1:28",
+				"346:attack:1:0:27",
+				"437:attack:0:1:22",
+				"437:attack:1:0:27",
+				"528:attack:0:1:23",
+				"528:skill:0:1:50",
+				"528:attack:1:0:31",
+				"528:skill:1:0:30",
+				"619:attack:0:1:26",
+				"619:attack:1:0:30",
+				"710:attack:0:1:12"
+			],
+			"winner": 0,
+			"wins": 0
+		},
+		{
+			"attacks": 16,
+			"crowd_tips": 50,
+			"elapsed": 13.2833,
+			"excitement": 53.2833,
+			"health": [
+				[
+					2,
+					75
+				],
+				[
+					3,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				2,
+				3
+			],
+			"payout": 100,
+			"progression": [
+				[
+					2,
+					20,
+					1,
+					1
+				],
+				[
+					3,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 7,
+			"settled_income": 125,
+			"skills": 5,
+			"steps": 797,
+			"trace": [
+				"69:attack:2:3:16",
+				"160:attack:2:3:21",
+				"209:attack:3:2:14",
+				"251:attack:2:3:15",
+				"300:attack:3:2:13",
+				"300:skill:2:3:45",
+				"342:attack:2:3:16",
+				"349:skill:3:",
+				"391:attack:3:2:13",
+				"433:attack:2:3:19",
+				"482:attack:3:2:12",
+				"524:attack:2:3:21",
+				"524:skill:2:3:45",
+				"579:attack:3:2:13",
+				"579:skill:3:",
+				"615:attack:2:3:16",
+				"670:attack:3:2:11",
+				"706:attack:2:3:21",
+				"761:attack:3:2:14",
+				"797:attack:2:3:19",
+				"797:skill:2:3:40"
+			],
+			"winner": 2,
+			"wins": 0
+		},
+		{
+			"attacks": 22,
+			"crowd_tips": 60,
+			"elapsed": 17.8333,
+			"excitement": 65.8333,
+			"health": [
+				[
+					2,
+					40
+				],
+				[
+					3,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				2,
+				3
+			],
+			"payout": 100,
+			"progression": [
+				[
+					2,
+					20,
+					1,
+					1
+				],
+				[
+					3,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 42,
+			"settled_income": 250,
+			"skills": 6,
+			"steps": 1070,
+			"trace": [
+				"69:attack:2:3:21",
+				"160:attack:2:3:15",
+				"209:attack:3:2:16",
+				"251:attack:2:3:15",
+				"300:attack:3:2:14",
+				"300:skill:2:3:45",
+				"342:attack:2:3:15",
+				"349:skill:3:",
+				"391:attack:3:2:15",
+				"433:attack:2:3:15",
+				"482:attack:3:2:10",
+				"524:attack:2:3:15",
+				"524:skill:2:3:45",
+				"579:attack:3:2:11",
+				"579:skill:3:",
+				"615:attack:2:3:18",
+				"670:attack:3:2:12",
+				"706:attack:2:3:21",
+				"761:attack:3:2:10",
+				"797:attack:2:3:17",
+				"797:skill:2:3:45",
+				"865:attack:3:2:12",
+				"865:skill:3:",
+				"888:attack:2:3:15",
+				"956:attack:3:2:11",
+				"979:attack:2:3:15",
+				"1047:attack:3:2:14",
+				"1070:attack:2:3:19"
+			],
+			"winner": 2,
+			"wins": 0
+		},
+		{
+			"attacks": 16,
+			"crowd_tips": 50,
+			"elapsed": 13.2833,
+			"excitement": 53.2833,
+			"health": [
+				[
+					2,
+					78
+				],
+				[
+					3,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				2,
+				3
+			],
+			"payout": 100,
+			"progression": [
+				[
+					2,
+					20,
+					1,
+					1
+				],
+				[
+					3,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 123,
+			"settled_income": 125,
+			"skills": 5,
+			"steps": 797,
+			"trace": [
+				"69:attack:2:3:21",
+				"160:attack:2:3:20",
+				"209:attack:3:2:12",
+				"251:attack:2:3:17",
+				"300:attack:3:2:12",
+				"300:skill:2:3:45",
+				"342:attack:2:3:21",
+				"349:skill:3:",
+				"391:attack:3:2:16",
+				"433:attack:2:3:15",
+				"482:attack:3:2:10",
+				"524:attack:2:3:15",
+				"524:skill:2:3:45",
+				"579:attack:3:2:11",
+				"579:skill:3:",
+				"615:attack:2:3:19",
+				"670:attack:3:2:14",
+				"706:attack:2:3:18",
+				"761:attack:3:2:12",
+				"797:attack:2:3:19",
+				"797:skill:2:3:39"
+			],
+			"winner": 2,
+			"wins": 0
+		},
+		{
+			"attacks": 15,
+			"crowd_tips": 40,
+			"elapsed": 11.8333,
+			"excitement": 43.8333,
+			"health": [
+				[
+					4,
+					0
+				],
+				[
+					5,
+					95
+				]
+			],
+			"levels": 5,
+			"lineup": [
+				4,
+				5
+			],
+			"payout": 240,
+			"progression": [
+				[
+					4,
+					10,
+					5,
+					5
+				],
+				[
+					5,
+					20,
+					5,
+					5
+				]
+			],
+			"seed": 7,
+			"settled_income": 300,
+			"skills": 4,
+			"steps": 710,
+			"trace": [
+				"73:attack:5:4:23",
+				"73:attack:4:5:17",
+				"164:attack:5:4:26",
+				"164:attack:4:5:11",
+				"255:attack:5:4:25",
+				"255:skill:5:4:25",
+				"255:attack:4:5:12",
+				"255:skill:4:5:21",
+				"346:attack:5:4:25",
+				"346:attack:4:5:15",
+				"437:attack:5:4:24",
+				"437:attack:4:5:17",
+				"528:attack:5:4:25",
+				"528:skill:5:4:25",
+				"528:attack:4:5:12",
+				"528:skill:4:5:21",
+				"619:attack:5:4:23",
+				"619:attack:4:5:17",
+				"710:attack:5:4:11"
+			],
+			"winner": 5,
+			"wins": 10
+		},
+		{
+			"attacks": 15,
+			"crowd_tips": 40,
+			"elapsed": 11.8333,
+			"excitement": 43.8333,
+			"health": [
+				[
+					4,
+					0
+				],
+				[
+					5,
+					110
+				]
+			],
+			"levels": 5,
+			"lineup": [
+				4,
+				5
+			],
+			"payout": 240,
+			"progression": [
+				[
+					4,
+					10,
+					5,
+					5
+				],
+				[
+					5,
+					20,
+					5,
+					5
+				]
+			],
+			"seed": 42,
+			"settled_income": 300,
+			"skills": 4,
+			"steps": 710,
+			"trace": [
+				"73:attack:5:4:28",
+				"73:attack:4:5:11",
+				"164:attack:5:4:28",
+				"164:attack:4:5:11",
+				"255:attack:5:4:26",
+				"255:skill:5:4:25",
+				"255:attack:4:5:11",
+				"255:skill:4:5:21",
+				"346:attack:5:4:27",
+				"346:attack:4:5:11",
+				"437:attack:5:4:22",
+				"437:attack:4:5:11",
+				"528:attack:5:4:23",
+				"528:skill:5:4:25",
+				"528:attack:4:5:14",
+				"528:skill:4:5:21",
+				"619:attack:5:4:24",
+				"619:attack:4:5:17",
+				"710:attack:5:4:4"
+			],
+			"winner": 5,
+			"wins": 10
+		},
+		{
+			"attacks": 16,
+			"crowd_tips": 40,
+			"elapsed": 11.8333,
+			"excitement": 43.8333,
+			"health": [
+				[
+					4,
+					0
+				],
+				[
+					5,
+					85
+				]
+			],
+			"levels": 5,
+			"lineup": [
+				4,
+				5
+			],
+			"payout": 240,
+			"progression": [
+				[
+					4,
+					10,
+					5,
+					5
+				],
+				[
+					5,
+					20,
+					5,
+					5
+				]
+			],
+			"seed": 123,
+			"settled_income": 300,
+			"skills": 4,
+			"steps": 710,
+			"trace": [
+				"73:attack:4:5:17",
+				"73:attack:5:4:27",
+				"164:attack:4:5:13",
+				"164:attack:5:4:24",
+				"255:attack:4:5:13",
+				"255:skill:4:5:21",
+				"255:attack:5:4:28",
+				"255:skill:5:4:25",
+				"346:attack:4:5:17",
+				"346:attack:5:4:22",
+				"437:attack:4:5:11",
+				"437:attack:5:4:22",
+				"528:attack:4:5:12",
+				"528:skill:4:5:21",
+				"528:attack:5:4:26",
+				"528:skill:5:4:25",
+				"619:attack:4:5:15",
+				"619:attack:5:4:25",
+				"710:attack:4:5:13",
+				"710:attack:5:4:8"
+			],
+			"winner": 5,
+			"wins": 10
+		},
+		{
+			"attacks": 16,
+			"crowd_tips": 50,
+			"elapsed": 13.2833,
+			"excitement": 53.2833,
+			"health": [
+				[
+					6,
+					107
+				],
+				[
+					7,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				6,
+				7
+			],
+			"payout": 190,
+			"progression": [
+				[
+					6,
+					0,
+					10,
+					10
+				],
+				[
+					7,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 7,
+			"settled_income": 238,
+			"skills": 5,
+			"steps": 797,
+			"trace": [
+				"69:attack:6:7:24",
+				"160:attack:6:7:29",
+				"209:attack:7:6:20",
+				"251:attack:6:7:23",
+				"300:attack:7:6:19",
+				"300:skill:6:7:65",
+				"342:attack:6:7:24",
+				"349:skill:7:",
+				"391:attack:7:6:19",
+				"433:attack:6:7:27",
+				"482:attack:7:6:18",
+				"524:attack:6:7:29",
+				"524:skill:6:7:65",
+				"579:attack:7:6:19",
+				"579:skill:7:",
+				"615:attack:6:7:24",
+				"670:attack:7:6:17",
+				"706:attack:6:7:29",
+				"761:attack:7:6:20",
+				"797:attack:6:7:27",
+				"797:skill:6:7:61"
+			],
+			"winner": 6,
+			"wins": 0
+		},
+		{
+			"attacks": 22,
+			"crowd_tips": 60,
+			"elapsed": 17.8333,
+			"excitement": 65.8333,
+			"health": [
+				[
+					6,
+					54
+				],
+				[
+					7,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				6,
+				7
+			],
+			"payout": 190,
+			"progression": [
+				[
+					6,
+					0,
+					10,
+					10
+				],
+				[
+					7,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 42,
+			"settled_income": 475,
+			"skills": 6,
+			"steps": 1070,
+			"trace": [
+				"69:attack:6:7:29",
+				"160:attack:6:7:23",
+				"209:attack:7:6:22",
+				"251:attack:6:7:23",
+				"300:attack:7:6:20",
+				"300:skill:6:7:65",
+				"342:attack:6:7:23",
+				"349:skill:7:",
+				"391:attack:7:6:21",
+				"433:attack:6:7:23",
+				"482:attack:7:6:16",
+				"524:attack:6:7:23",
+				"524:skill:6:7:65",
+				"579:attack:7:6:17",
+				"579:skill:7:",
+				"615:attack:6:7:26",
+				"670:attack:7:6:18",
+				"706:attack:6:7:29",
+				"761:attack:7:6:16",
+				"797:attack:6:7:25",
+				"797:skill:6:7:65",
+				"865:attack:7:6:18",
+				"865:skill:7:",
+				"888:attack:6:7:23",
+				"956:attack:7:6:17",
+				"979:attack:6:7:23",
+				"1047:attack:7:6:20",
+				"1070:attack:6:7:23"
+			],
+			"winner": 6,
+			"wins": 0
+		},
+		{
+			"attacks": 16,
+			"crowd_tips": 50,
+			"elapsed": 13.2833,
+			"excitement": 53.2833,
+			"health": [
+				[
+					6,
+					110
+				],
+				[
+					7,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				6,
+				7
+			],
+			"payout": 190,
+			"progression": [
+				[
+					6,
+					0,
+					10,
+					10
+				],
+				[
+					7,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 123,
+			"settled_income": 238,
+			"skills": 5,
+			"steps": 797,
+			"trace": [
+				"69:attack:6:7:29",
+				"160:attack:6:7:28",
+				"209:attack:7:6:18",
+				"251:attack:6:7:25",
+				"300:attack:7:6:18",
+				"300:skill:6:7:65",
+				"342:attack:6:7:29",
+				"349:skill:7:",
+				"391:attack:7:6:22",
+				"433:attack:6:7:23",
+				"482:attack:7:6:16",
+				"524:attack:6:7:23",
+				"524:skill:6:7:65",
+				"579:attack:7:6:17",
+				"579:skill:7:",
+				"615:attack:6:7:27",
+				"670:attack:7:6:20",
+				"706:attack:6:7:26",
+				"761:attack:7:6:18",
+				"797:attack:6:7:27",
+				"797:skill:6:7:60"
+			],
+			"winner": 6,
+			"wins": 0
+		},
+		{
+			"attacks": 18,
+			"crowd_tips": 40,
+			"elapsed": 10.7833,
+			"excitement": 42.7833,
+			"health": [
+				[
+					0,
+					0
+				],
+				[
+					2,
+					165
+				],
+				[
+					4,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				0,
+				2,
+				4
+			],
+			"payout": 100,
+			"progression": [
+				[
+					0,
+					10,
+					1,
+					1
+				],
+				[
+					2,
+					20,
+					1,
+					1
+				],
+				[
+					4,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 7,
+			"settled_income": 125,
+			"skills": 4,
+			"steps": 647,
+			"trace": [
+				"56:attack:4:0:12",
+				"56:attack:0:4:18",
+				"101:attack:2:0:17",
+				"147:attack:4:0:15",
+				"147:attack:0:4:17",
+				"192:attack:2:0:16",
+				"192:skill:0:4:34",
+				"238:attack:4:0:10",
+				"238:skill:4:0:18",
+				"238:attack:0:4:20",
+				"283:attack:2:0:19",
+				"329:attack:4:0:13",
+				"329:attack:0:4:20",
+				"374:attack:2:0:19",
+				"374:skill:2:0:45",
+				"374:skill:0:4:34",
+				"420:attack:4:0:13",
+				"420:attack:0:4:16",
+				"465:attack:2:0:21",
+				"511:attack:4:0:7",
+				"556:attack:2:4:16",
+				"647:attack:2:4:1"
+			],
+			"winner": 2,
+			"wins": 0
+		},
+		{
+			"attacks": 18,
+			"crowd_tips": 50,
+			"elapsed": 12.3833,
+			"excitement": 52.3833,
+			"health": [
+				[
+					0,
+					120
+				],
+				[
+					2,
+					0
+				],
+				[
+					4,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				0,
+				2,
+				4
+			],
+			"payout": 100,
+			"progression": [
+				[
+					0,
+					20,
+					1,
+					1
+				],
+				[
+					2,
+					10,
+					1,
+					1
+				],
+				[
+					4,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 42,
+			"settled_income": 125,
+			"skills": 5,
+			"steps": 743,
+			"trace": [
+				"50:attack:2:4:20",
+				"141:attack:2:4:15",
+				"180:attack:4:2:9",
+				"197:attack:0:4:14",
+				"232:attack:2:4:16",
+				"271:attack:4:2:12",
+				"271:skill:4:2:18",
+				"271:skill:2:4:45",
+				"288:attack:0:4:16",
+				"323:attack:2:4:21",
+				"362:attack:4:0:9",
+				"379:attack:0:4:16",
+				"414:attack:2:4:13",
+				"470:attack:0:2:14",
+				"470:skill:0:2:34",
+				"505:attack:2:0:16",
+				"561:attack:0:2:14",
+				"561:skill:2:0:45",
+				"596:attack:2:0:19",
+				"652:attack:0:2:18",
+				"687:attack:2:0:16",
+				"743:attack:0:2:15",
+				"743:skill:0:2:31"
+			],
+			"winner": 0,
+			"wins": 0
+		},
+		{
+			"attacks": 23,
+			"crowd_tips": 70,
+			"elapsed": 15.3333,
+			"excitement": 71.3333,
+			"health": [
+				[
+					0,
+					0
+				],
+				[
+					2,
+					8
+				],
+				[
+					4,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				0,
+				2,
+				4
+			],
+			"payout": 100,
+			"progression": [
+				[
+					0,
+					10,
+					1,
+					1
+				],
+				[
+					2,
+					20,
+					1,
+					1
+				],
+				[
+					4,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 123,
+			"settled_income": 250,
+			"skills": 7,
+			"steps": 920,
+			"trace": [
+				"56:attack:4:0:15",
+				"56:attack:0:4:14",
+				"101:attack:2:4:15",
+				"147:attack:4:0:9",
+				"147:attack:0:4:15",
+				"192:attack:2:4:19",
+				"192:skill:4:0:18",
+				"238:attack:4:0:13",
+				"238:attack:0:4:17",
+				"238:skill:0:4:34",
+				"283:attack:2:4:17",
+				"329:attack:4:0:13",
+				"329:attack:0:4:18",
+				"374:attack:2:4:16",
+				"374:skill:2:4:11",
+				"465:attack:2:0:19",
+				"522:attack:0:2:20",
+				"556:attack:2:0:20",
+				"613:attack:0:2:18",
+				"613:skill:0:2:34",
+				"647:attack:2:0:17",
+				"647:skill:2:0:45",
+				"704:attack:0:2:15",
+				"738:attack:2:0:16",
+				"795:attack:0:2:20",
+				"829:attack:2:0:16",
+				"886:attack:0:2:16",
+				"886:skill:0:2:34",
+				"920:attack:2:0:17",
+				"920:skill:2:0:7"
+			],
+			"winner": 2,
+			"wins": 0
+		},
+		{
+			"attacks": 32,
+			"crowd_tips": 90,
+			"elapsed": 19.9167,
+			"excitement": 91.9167,
+			"health": [
+				[
+					1,
+					0
+				],
+				[
+					3,
+					33
+				],
+				[
+					5,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				1,
+				3,
+				5
+			],
+			"payout": 535,
+			"progression": [
+				[
+					1,
+					0,
+					10,
+					10
+				],
+				[
+					3,
+					0,
+					10,
+					10
+				],
+				[
+					5,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 7,
+			"settled_income": 1338,
+			"skills": 9,
+			"steps": 1195,
+			"trace": [
+				"56:attack:5:1:30",
+				"56:attack:1:5:31",
+				"103:attack:3:1:18",
+				"147:attack:5:1:33",
+				"147:attack:1:5:30",
+				"194:attack:3:1:17",
+				"194:skill:1:3:30,5:30",
+				"238:attack:5:1:28",
+				"238:skill:5:1:30",
+				"238:attack:1:5:33",
+				"285:attack:3:1:20",
+				"329:attack:5:1:31",
+				"329:attack:1:3:33",
+				"376:attack:3:1:20",
+				"376:skill:3:",
+				"376:skill:1:3:30,5:30",
+				"420:attack:1:3:31",
+				"436:attack:5:1:29",
+				"467:attack:3:1:22",
+				"511:attack:1:3:33",
+				"527:attack:5:1:9",
+				"558:attack:3:5:16",
+				"558:skill:5:3:30",
+				"618:attack:5:3:31",
+				"649:attack:3:5:17",
+				"649:skill:3:",
+				"709:attack:5:3:31",
+				"740:attack:3:5:18",
+				"800:attack:5:3:30",
+				"800:skill:5:3:30",
+				"831:attack:3:5:20",
+				"891:attack:5:3:28",
+				"922:attack:3:5:18",
+				"922:skill:3:",
+				"982:attack:5:3:29",
+				"1013:attack:3:5:17",
+				"1073:attack:5:3:28",
+				"1073:skill:5:3:30",
+				"1104:attack:3:5:17",
+				"1164:attack:5:3:31",
+				"1195:attack:3:5:10"
+			],
+			"winner": 3,
+			"wins": 20
+		},
+		{
+			"attacks": 26,
+			"crowd_tips": 70,
+			"elapsed": 15.6667,
+			"excitement": 71.6667,
+			"health": [
+				[
+					1,
+					72
+				],
+				[
+					3,
+					0
+				],
+				[
+					5,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				1,
+				3,
+				5
+			],
+			"payout": 535,
+			"progression": [
+				[
+					1,
+					0,
+					10,
+					10
+				],
+				[
+					3,
+					0,
+					10,
+					10
+				],
+				[
+					5,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 42,
+			"settled_income": 1338,
+			"skills": 7,
+			"steps": 940,
+			"trace": [
+				"56:attack:5:3:32",
+				"56:attack:3:5:16",
+				"103:attack:1:3:27",
+				"147:attack:5:3:27",
+				"147:attack:3:5:17",
+				"194:attack:1:3:30",
+				"194:skill:3:",
+				"238:attack:5:3:29",
+				"238:skill:5:1:30,3:30",
+				"238:attack:3:5:22",
+				"287:attack:1:3:27",
+				"329:attack:5:3:29",
+				"329:attack:3:5:18",
+				"378:attack:1:3:27",
+				"378:skill:1:3:30,5:30",
+				"378:skill:3:",
+				"420:attack:5:3:28",
+				"420:attack:3:5:16",
+				"469:attack:1:3:31",
+				"511:attack:5:3:31",
+				"511:skill:5:1:30,3:30",
+				"511:attack:3:5:17",
+				"576:attack:1:3:19",
+				"602:attack:5:1:33",
+				"667:attack:1:5:32",
+				"693:attack:5:1:27",
+				"693:skill:1:5:30",
+				"758:attack:1:5:28",
+				"784:attack:5:1:32",
+				"784:skill:5:1:30",
+				"849:attack:1:5:31",
+				"875:attack:5:1:33",
+				"940:attack:1:5:30"
+			],
+			"winner": 1,
+			"wins": 20
+		},
+		{
+			"attacks": 30,
+			"crowd_tips": 80,
+			"elapsed": 18.4167,
+			"excitement": 82.4167,
+			"health": [
+				[
+					1,
+					0
+				],
+				[
+					3,
+					98
+				],
+				[
+					5,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				1,
+				3,
+				5
+			],
+			"payout": 535,
+			"progression": [
+				[
+					1,
+					0,
+					10,
+					10
+				],
+				[
+					3,
+					0,
+					10,
+					10
+				],
+				[
+					5,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 123,
+			"settled_income": 1338,
+			"skills": 8,
+			"steps": 1105,
+			"trace": [
+				"56:attack:5:1:33",
+				"56:attack:1:5:27",
+				"103:attack:3:5:16",
+				"147:attack:5:1:27",
+				"147:attack:1:5:28",
+				"194:attack:3:5:20",
+				"194:skill:5:1:30,3:30",
+				"238:attack:5:1:31",
+				"238:attack:1:5:30",
+				"238:skill:1:5:30",
+				"285:attack:3:5:18",
+				"329:attack:5:3:31",
+				"329:attack:1:5:31",
+				"376:attack:3:5:17",
+				"376:skill:3:",
+				"376:skill:5:1:30,3:30",
+				"420:attack:5:3:31",
+				"437:attack:1:5:33",
+				"467:attack:3:5:21",
+				"511:attack:5:3:31",
+				"528:attack:1:5:16",
+				"558:attack:3:1:17",
+				"619:attack:1:3:28",
+				"619:skill:1:3:30",
+				"650:attack:3:1:22",
+				"650:skill:3:",
+				"710:attack:1:3:28",
+				"741:attack:3:1:18",
+				"801:attack:1:3:29",
+				"832:attack:3:1:20",
+				"892:attack:1:3:32",
+				"892:skill:1:3:30",
+				"923:attack:3:1:21",
+				"923:skill:3:",
+				"983:attack:1:3:31",
+				"1014:attack:3:1:20",
+				"1074:attack:1:3:29",
+				"1105:attack:3:1:18"
+			],
+			"winner": 3,
+			"wins": 20
+		},
+		{
+			"attacks": 44,
+			"crowd_tips": 140,
+			"elapsed": 21.9667,
+			"excitement": 100.0,
+			"health": [
+				[
+					0,
+					0
+				],
+				[
+					1,
+					11
+				],
+				[
+					2,
+					0
+				],
+				[
+					3,
+					0
+				]
+			],
+			"levels": 5,
+			"lineup": [
+				0,
+				1,
+				2,
+				3
+			],
+			"payout": 180,
+			"progression": [
+				[
+					0,
+					10,
+					5,
+					5
+				],
+				[
+					1,
+					20,
+					5,
+					5
+				],
+				[
+					2,
+					10,
+					5,
+					5
+				],
+				[
+					3,
+					10,
+					5,
+					5
+				]
+			],
+			"seed": 7,
+			"settled_income": 450,
+			"skills": 14,
+			"steps": 1318,
+			"trace": [
+				"33:attack:2:0:22",
+				"44:attack:3:1:14",
+				"44:attack:1:3:23",
+				"124:attack:2:0:25",
+				"135:attack:3:1:17",
+				"135:attack:1:3:26",
+				"148:attack:0:2:23",
+				"215:attack:2:0:23",
+				"226:attack:3:1:17",
+				"226:skill:3:",
+				"226:attack:1:3:24",
+				"226:skill:1:3:25",
+				"239:attack:0:2:23",
+				"239:skill:2:0:55",
+				"306:attack:2:0:25",
+				"306:skill:0:2:40",
+				"317:attack:3:1:14",
+				"317:attack:1:3:22",
+				"330:attack:0:2:21",
+				"397:attack:2:0:20",
+				"408:attack:3:1:17",
+				"408:attack:1:3:24",
+				"421:attack:0:2:20",
+				"488:attack:2:0:23",
+				"488:skill:2:0:55",
+				"499:attack:3:1:14",
+				"499:skill:3:",
+				"499:attack:1:3:24",
+				"499:skill:1:3:25",
+				"516:attack:0:2:19",
+				"516:skill:0:2:40",
+				"579:attack:2:0:20",
+				"590:attack:3:1:14",
+				"590:attack:1:3:23",
+				"607:attack:0:2:12",
+				"681:attack:3:1:15",
+				"681:attack:1:3:26",
+				"772:attack:3:1:18",
+				"772:skill:3:",
+				"772:attack:1:3:23",
+				"772:skill:1:3:25",
+				"787:attack:0:3:17",
+				"863:attack:3:0:2",
+				"863:attack:1:3:28",
+				"954:attack:3:1:15",
+				"954:attack:1:3:23",
+				"954:skill:3:",
+				"1045:attack:3:1:18",
+				"1045:attack:1:3:24",
+				"1045:skill:1:3:25",
+				"1136:attack:3:1:19",
+				"1136:attack:1:3:28",
+				"1227:attack:3:1:17",
+				"1227:skill:3:",
+				"1227:attack:1:3:23",
+				"1318:attack:3:1:18",
+				"1318:attack:1:3:22",
+				"1318:skill:1:3:21"
+			],
+			"winner": 1,
+			"wins": 0
+		},
+		{
+			"attacks": 32,
+			"crowd_tips": 100,
+			"elapsed": 15.4667,
+			"excitement": 95.4667,
+			"health": [
+				[
+					0,
+					0
+				],
+				[
+					1,
+					0
+				],
+				[
+					2,
+					198
+				],
+				[
+					3,
+					0
+				]
+			],
+			"levels": 5,
+			"lineup": [
+				0,
+				1,
+				2,
+				3
+			],
+			"payout": 180,
+			"progression": [
+				[
+					0,
+					10,
+					5,
+					5
+				],
+				[
+					1,
+					10,
+					5,
+					5
+				],
+				[
+					2,
+					20,
+					5,
+					5
+				],
+				[
+					3,
+					10,
+					5,
+					5
+				]
+			],
+			"seed": 42,
+			"settled_income": 450,
+			"skills": 10,
+			"steps": 928,
+			"trace": [
+				"45:attack:1:3:23",
+				"45:attack:3:1:16",
+				"104:attack:0:1:19",
+				"109:attack:2:0:25",
+				"136:attack:1:3:22",
+				"136:attack:3:1:15",
+				"195:attack:0:1:19",
+				"195:skill:1:0:25,3:25",
+				"200:attack:2:0:19",
+				"230:attack:1:3:23",
+				"230:attack:3:1:13",
+				"230:skill:3:",
+				"286:attack:0:1:21",
+				"286:skill:0:1:40",
+				"291:attack:2:0:23",
+				"321:attack:1:3:23",
+				"321:attack:3:1:14",
+				"377:attack:0:3:23",
+				"382:attack:2:3:24",
+				"382:skill:2:3:55",
+				"412:attack:1:3:22",
+				"412:skill:1:0:25,3:25",
+				"412:attack:3:1:14",
+				"412:skill:3:",
+				"468:attack:0:1:22",
+				"473:attack:2:0:23",
+				"503:attack:1:3:28",
+				"503:attack:3:1:18",
+				"559:attack:0:1:21",
+				"559:skill:0:1:6",
+				"564:attack:2:0:23",
+				"594:attack:3:0:19",
+				"650:attack:0:3:19",
+				"655:attack:2:0:19",
+				"685:attack:3:0:13",
+				"685:skill:3:",
+				"741:attack:0:3:22",
+				"741:skill:0:3:40",
+				"746:attack:2:0:20",
+				"746:skill:2:0:36",
+				"837:attack:2:3:23",
+				"928:attack:2:3:5"
+			],
+			"winner": 2,
+			"wins": 0
+		},
+		{
+			"attacks": 36,
+			"crowd_tips": 110,
+			"elapsed": 17.3167,
+			"excitement": 100.0,
+			"health": [
+				[
+					0,
+					0
+				],
+				[
+					1,
+					0
+				],
+				[
+					2,
+					73
+				],
+				[
+					3,
+					0
+				]
+			],
+			"levels": 5,
+			"lineup": [
+				0,
+				1,
+				2,
+				3
+			],
+			"payout": 180,
+			"progression": [
+				[
+					0,
+					10,
+					5,
+					5
+				],
+				[
+					1,
+					10,
+					5,
+					5
+				],
+				[
+					2,
+					20,
+					5,
+					5
+				],
+				[
+					3,
+					10,
+					5,
+					5
+				]
+			],
+			"seed": 123,
+			"settled_income": 450,
+			"skills": 11,
+			"steps": 1039,
+			"trace": [
+				"33:attack:2:1:20",
+				"45:attack:0:3:21",
+				"45:attack:3:0:17",
+				"124:attack:2:1:22",
+				"136:attack:0:3:19",
+				"136:attack:3:0:17",
+				"148:attack:1:2:26",
+				"215:attack:2:1:20",
+				"227:attack:0:3:21",
+				"227:skill:0:3:40",
+				"227:attack:3:0:19",
+				"227:skill:3:",
+				"239:attack:1:2:27",
+				"239:skill:2:1:55",
+				"306:attack:2:1:23",
+				"306:skill:1:2:25",
+				"318:attack:0:3:19",
+				"318:attack:3:0:14",
+				"330:attack:1:2:23",
+				"397:attack:2:1:25",
+				"409:attack:0:3:18",
+				"409:attack:3:0:15",
+				"421:attack:1:2:24",
+				"488:attack:2:1:23",
+				"488:skill:2:1:50",
+				"500:attack:0:3:22",
+				"500:skill:0:3:40",
+				"500:attack:3:0:18",
+				"500:skill:3:",
+				"591:attack:0:3:21",
+				"591:attack:3:0:17",
+				"675:attack:2:3:21",
+				"682:attack:0:3:23",
+				"682:attack:3:0:13",
+				"766:attack:2:3:22",
+				"766:skill:3:",
+				"773:attack:0:3:21",
+				"773:skill:0:3:40",
+				"773:attack:3:0:19",
+				"857:attack:2:0:21",
+				"864:attack:0:3:21",
+				"864:attack:3:0:19",
+				"948:attack:2:0:25",
+				"948:skill:2:0:55",
+				"955:attack:0:3:21",
+				"955:skill:0:3:12",
+				"1039:attack:2:0:1"
+			],
+			"winner": 2,
+			"wins": 0
+		},
+		{
+			"attacks": 39,
+			"crowd_tips": 120,
+			"elapsed": 20.2,
+			"excitement": 100.0,
+			"health": [
+				[
+					4,
+					0
+				],
+				[
+					5,
+					0
+				],
+				[
+					6,
+					103
+				],
+				[
+					7,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				4,
+				5,
+				6,
+				7
+			],
+			"payout": 280,
+			"progression": [
+				[
+					4,
+					0,
+					10,
+					10
+				],
+				[
+					5,
+					0,
+					10,
+					10
+				],
+				[
+					6,
+					0,
+					10,
+					10
+				],
+				[
+					7,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 7,
+			"settled_income": 700,
+			"skills": 12,
+			"steps": 1212,
+			"trace": [
+				"33:attack:6:4:26",
+				"44:attack:7:5:17",
+				"44:attack:5:7:28",
+				"124:attack:6:4:29",
+				"135:attack:7:5:20",
+				"135:attack:5:7:31",
+				"148:attack:4:6:20",
+				"215:attack:6:4:27",
+				"226:attack:7:5:20",
+				"226:skill:7:",
+				"226:attack:5:7:29",
+				"226:skill:5:7:30",
+				"239:attack:4:6:20",
+				"239:skill:6:4:65",
+				"306:attack:6:4:29",
+				"306:skill:4:6:26",
+				"317:attack:7:5:17",
+				"317:attack:5:7:27",
+				"330:attack:4:6:18",
+				"397:attack:6:4:24",
+				"408:attack:7:5:20",
+				"408:attack:5:7:29",
+				"421:attack:4:6:17",
+				"488:attack:6:4:27",
+				"488:skill:6:4:28",
+				"499:attack:7:5:17",
+				"499:skill:7:",
+				"499:attack:5:7:29",
+				"499:skill:5:7:30",
+				"590:attack:7:5:18",
+				"590:attack:5:7:28",
+				"666:attack:6:7:24",
+				"681:attack:7:5:17",
+				"681:attack:5:7:31",
+				"681:skill:7:",
+				"757:attack:6:7:25",
+				"772:attack:7:5:20",
+				"772:attack:5:7:32",
+				"772:skill:5:7:30",
+				"848:attack:6:5:24",
+				"863:attack:7:5:16",
+				"863:attack:5:7:33",
+				"939:attack:6:5:29",
+				"939:skill:6:5:52",
+				"1030:attack:6:7:25",
+				"1030:skill:7:",
+				"1116:attack:7:6:17",
+				"1121:attack:6:7:28",
+				"1207:attack:7:6:18",
+				"1212:attack:6:7:29",
+				"1212:skill:6:7:29"
+			],
+			"winner": 6,
+			"wins": 0
+		},
+		{
+			"attacks": 31,
+			"crowd_tips": 90,
+			"elapsed": 12.4333,
+			"excitement": 84.4333,
+			"health": [
+				[
+					4,
+					0
+				],
+				[
+					5,
+					0
+				],
+				[
+					6,
+					239
+				],
+				[
+					7,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				4,
+				5,
+				6,
+				7
+			],
+			"payout": 280,
+			"progression": [
+				[
+					4,
+					0,
+					10,
+					10
+				],
+				[
+					5,
+					0,
+					10,
+					10
+				],
+				[
+					6,
+					0,
+					10,
+					10
+				],
+				[
+					7,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 42,
+			"settled_income": 700,
+			"skills": 9,
+			"steps": 746,
+			"trace": [
+				"45:attack:5:7:28",
+				"45:attack:7:5:19",
+				"104:attack:4:5:16",
+				"109:attack:6:4:29",
+				"136:attack:5:7:27",
+				"136:attack:7:5:18",
+				"195:attack:4:5:16",
+				"195:skill:5:4:30,7:30",
+				"200:attack:6:4:23",
+				"230:attack:5:7:28",
+				"230:attack:7:5:16",
+				"230:skill:7:",
+				"286:attack:4:5:18",
+				"286:skill:4:5:26",
+				"291:attack:6:4:27",
+				"321:attack:5:7:28",
+				"321:attack:7:5:17",
+				"377:attack:4:7:20",
+				"382:attack:6:7:28",
+				"382:skill:6:7:65",
+				"412:attack:5:7:27",
+				"412:skill:5:4:30,7:30",
+				"412:attack:7:5:17",
+				"412:skill:7:",
+				"468:attack:4:5:19",
+				"473:attack:6:4:27",
+				"503:attack:5:7:33",
+				"503:attack:7:5:21",
+				"559:attack:4:5:18",
+				"559:skill:4:5:26",
+				"564:attack:6:4:27",
+				"594:attack:5:7:33",
+				"594:skill:5:4:30,7:30",
+				"594:attack:7:5:18",
+				"650:attack:4:5:14",
+				"655:attack:6:4:23",
+				"685:attack:5:7:20",
+				"741:attack:4:5:8",
+				"746:attack:6:4:27",
+				"746:skill:6:4:8"
+			],
+			"winner": 6,
+			"wins": 0
+		},
+		{
+			"attacks": 44,
+			"crowd_tips": 130,
+			"elapsed": 24.8333,
+			"excitement": 100.0,
+			"health": [
+				[
+					4,
+					0
+				],
+				[
+					5,
+					0
+				],
+				[
+					6,
+					0
+				],
+				[
+					7,
+					107
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				4,
+				5,
+				6,
+				7
+			],
+			"payout": 280,
+			"progression": [
+				[
+					4,
+					0,
+					10,
+					10
+				],
+				[
+					5,
+					0,
+					10,
+					10
+				],
+				[
+					6,
+					0,
+					10,
+					10
+				],
+				[
+					7,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 123,
+			"settled_income": 700,
+			"skills": 13,
+			"steps": 1490,
+			"trace": [
+				"33:attack:6:5:24",
+				"45:attack:4:7:18",
+				"45:attack:7:4:20",
+				"124:attack:6:5:26",
+				"136:attack:4:7:16",
+				"136:attack:7:4:20",
+				"148:attack:5:6:31",
+				"215:attack:6:5:24",
+				"227:attack:4:7:18",
+				"227:skill:4:7:26",
+				"227:attack:7:4:22",
+				"227:skill:7:",
+				"239:attack:5:6:32",
+				"239:skill:6:5:65",
+				"306:attack:6:5:27",
+				"306:skill:5:6:30",
+				"318:attack:4:7:16",
+				"318:attack:7:4:17",
+				"330:attack:5:6:28",
+				"397:attack:6:5:29",
+				"409:attack:4:7:15",
+				"409:attack:7:4:18",
+				"421:attack:5:6:29",
+				"488:attack:6:5:27",
+				"488:skill:6:5:65",
+				"500:attack:4:7:19",
+				"500:skill:4:7:26",
+				"500:attack:7:4:21",
+				"500:skill:7:",
+				"591:attack:4:7:18",
+				"591:attack:7:4:20",
+				"675:attack:6:7:25",
+				"682:attack:4:7:20",
+				"682:attack:7:4:16",
+				"766:attack:6:7:26",
+				"766:skill:7:",
+				"773:attack:4:7:18",
+				"773:skill:4:7:26",
+				"773:attack:7:4:22",
+				"857:attack:6:4:25",
+				"864:attack:4:7:18",
+				"864:attack:7:4:22",
+				"948:attack:6:4:29",
+				"948:skill:6:4:55",
+				"1040:attack:6:7:27",
+				"1126:attack:7:6:18",
+				"1126:skill:7:",
+				"1131:attack:6:7:29",
+				"1217:attack:7:6:16",
+				"1222:attack:6:7:25",
+				"1222:skill:6:7:65",
+				"1308:attack:7:6:18",
+				"1313:attack:6:7:26",
+				"1399:attack:7:6:20",
+				"1399:skill:7:",
+				"1404:attack:6:7:26",
+				"1490:attack:7:6:17"
+			],
+			"winner": 7,
+			"wins": 0
+		},
+		{
+			"attacks": 42,
+			"crowd_tips": 120,
+			"elapsed": 16.45,
+			"excitement": 100.0,
+			"health": [
+				[
+					0,
+					0
+				],
+				[
+					1,
+					0
+				],
+				[
+					2,
+					98
+				],
+				[
+					3,
+					0
+				],
+				[
+					4,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				0,
+				1,
+				2,
+				3,
+				4
+			],
+			"payout": 100,
+			"progression": [
+				[
+					0,
+					10,
+					1,
+					1
+				],
+				[
+					1,
+					10,
+					1,
+					1
+				],
+				[
+					2,
+					20,
+					1,
+					1
+				],
+				[
+					3,
+					10,
+					1,
+					1
+				],
+				[
+					4,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 7,
+			"settled_income": 250,
+			"skills": 12,
+			"steps": 987,
+			"trace": [
+				"31:attack:2:4:19",
+				"47:attack:3:0:14",
+				"47:attack:0:3:20",
+				"117:attack:1:3:22",
+				"122:attack:2:4:19",
+				"138:attack:3:0:12",
+				"138:attack:4:2:15",
+				"138:attack:0:3:20",
+				"208:attack:1:3:19",
+				"208:skill:3:",
+				"213:attack:2:4:15",
+				"229:attack:3:0:14",
+				"229:attack:4:2:10",
+				"229:skill:2:4:45",
+				"229:attack:0:3:18",
+				"229:skill:0:3:34",
+				"299:attack:1:3:20",
+				"304:attack:2:4:18",
+				"304:skill:4:2:18",
+				"320:attack:3:1:14",
+				"320:attack:0:1:15",
+				"320:skill:1:0:21,3:21",
+				"330:attack:4:2:11",
+				"390:attack:1:0:20",
+				"395:attack:2:4:16",
+				"411:attack:3:1:11",
+				"411:skill:3:",
+				"411:attack:0:1:15",
+				"421:attack:4:2:13",
+				"481:attack:1:0:20",
+				"486:attack:2:4:19",
+				"486:skill:2:4:25",
+				"502:attack:3:1:15",
+				"502:attack:0:1:15",
+				"502:skill:0:1:34",
+				"502:skill:1:0:21,3:21",
+				"572:attack:1:0:18",
+				"593:attack:3:1:16",
+				"593:attack:0:1:20",
+				"663:attack:1:0:20",
+				"684:attack:3:0:11",
+				"684:attack:0:3:19",
+				"690:attack:2:0:17",
+				"690:skill:0:3:34",
+				"754:attack:1:3:24",
+				"754:skill:1:0:21,3:21",
+				"754:skill:3:",
+				"777:attack:3:1:16",
+				"799:attack:0:1:18",
+				"805:attack:2:0:16",
+				"845:attack:1:3:23",
+				"868:attack:3:1:9",
+				"896:attack:2:3:15",
+				"987:attack:2:3:5"
+			],
+			"winner": 2,
+			"wins": 0
+		},
+		{
+			"attacks": 45,
+			"crowd_tips": 140,
+			"elapsed": 24.7667,
+			"excitement": 100.0,
+			"health": [
+				[
+					0,
+					0
+				],
+				[
+					1,
+					0
+				],
+				[
+					2,
+					116
+				],
+				[
+					3,
+					0
+				],
+				[
+					4,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				0,
+				1,
+				2,
+				3,
+				4
+			],
+			"payout": 100,
+			"progression": [
+				[
+					0,
+					10,
+					1,
+					1
+				],
+				[
+					1,
+					10,
+					1,
+					1
+				],
+				[
+					2,
+					20,
+					1,
+					1
+				],
+				[
+					3,
+					10,
+					1,
+					1
+				],
+				[
+					4,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 42,
+			"settled_income": 250,
+			"skills": 14,
+			"steps": 1486,
+			"trace": [
+				"46:attack:4:3:9",
+				"46:attack:3:4:12",
+				"302:attack:0:1:16",
+				"302:attack:4:1:9",
+				"302:attack:3:0:11",
+				"302:attack:1:0:18",
+				"303:attack:2:1:19",
+				"393:attack:0:1:18",
+				"393:attack:4:1:10",
+				"393:skill:1:0:21,3:21,4:21",
+				"393:attack:3:0:11",
+				"393:attack:1:0:24",
+				"393:skill:0:1:34",
+				"394:attack:2:1:20",
+				"484:attack:0:3:14",
+				"484:skill:3:",
+				"484:attack:4:1:10",
+				"484:skill:4:1:18",
+				"484:attack:3:0:15",
+				"484:attack:1:4:22",
+				"485:attack:2:4:21",
+				"575:attack:0:3:19",
+				"575:attack:4:1:13",
+				"575:attack:3:0:14",
+				"575:attack:1:4:24",
+				"575:skill:1:4:21",
+				"576:attack:2:4:17",
+				"576:skill:2:4:38",
+				"666:attack:0:3:14",
+				"666:skill:0:3:34",
+				"666:attack:3:0:10",
+				"666:skill:3:",
+				"666:attack:1:3:23",
+				"667:attack:2:0:16",
+				"757:attack:0:1:18",
+				"757:attack:3:1:13",
+				"758:attack:2:0:15",
+				"848:attack:0:3:18",
+				"848:attack:3:0:14",
+				"848:skill:0:3:34",
+				"849:attack:2:0:17",
+				"939:attack:0:3:17",
+				"939:attack:3:0:11",
+				"939:skill:3:",
+				"940:attack:2:0:19",
+				"940:skill:2:0:9",
+				"1031:attack:2:3:15",
+				"1122:attack:2:3:21",
+				"1211:attack:3:2:10",
+				"1213:attack:2:3:15",
+				"1302:attack:3:2:15",
+				"1302:skill:2:3:45",
+				"1304:attack:2:3:18",
+				"1304:skill:3:",
+				"1393:attack:3:2:14",
+				"1395:attack:2:3:20",
+				"1484:attack:3:2:10",
+				"1486:attack:2:3:21",
+				"1486:skill:2:3:20"
+			],
+			"winner": 2,
+			"wins": 0
+		},
+		{
+			"attacks": 46,
+			"crowd_tips": 130,
+			"elapsed": 18.5167,
+			"excitement": 100.0,
+			"health": [
+				[
+					0,
+					0
+				],
+				[
+					1,
+					45
+				],
+				[
+					2,
+					0
+				],
+				[
+					3,
+					0
+				],
+				[
+					4,
+					0
+				]
+			],
+			"levels": 1,
+			"lineup": [
+				0,
+				1,
+				2,
+				3,
+				4
+			],
+			"payout": 100,
+			"progression": [
+				[
+					0,
+					10,
+					1,
+					1
+				],
+				[
+					1,
+					20,
+					1,
+					1
+				],
+				[
+					2,
+					10,
+					1,
+					1
+				],
+				[
+					3,
+					10,
+					1,
+					1
+				],
+				[
+					4,
+					10,
+					1,
+					1
+				]
+			],
+			"seed": 123,
+			"settled_income": 250,
+			"skills": 13,
+			"steps": 1111,
+			"trace": [
+				"22:attack:2:3:17",
+				"52:attack:4:0:13",
+				"52:attack:0:4:18",
+				"91:attack:3:2:11",
+				"110:attack:1:2:22",
+				"113:attack:2:3:21",
+				"143:attack:4:0:14",
+				"143:attack:0:4:18",
+				"182:attack:3:2:12",
+				"201:attack:1:2:19",
+				"201:skill:2:3:45",
+				"204:attack:2:1:16",
+				"234:attack:4:0:15",
+				"234:skill:4:0:18",
+				"234:attack:0:4:15",
+				"234:skill:0:4:34",
+				"273:attack:3:2:12",
+				"273:skill:3:",
+				"292:attack:1:2:20",
+				"295:attack:2:1:19",
+				"295:skill:1:2:21,3:21",
+				"325:attack:4:0:14",
+				"325:attack:0:4:19",
+				"364:attack:3:2:14",
+				"383:attack:1:2:22",
+				"383:skill:2:3:45",
+				"386:attack:2:1:17",
+				"416:attack:4:0:15",
+				"416:attack:0:4:14",
+				"455:attack:3:2:12",
+				"474:attack:1:3:22",
+				"507:attack:4:0:15",
+				"507:skill:4:0:18",
+				"507:attack:0:4:16",
+				"507:skill:0:4:34",
+				"546:attack:3:1:14",
+				"565:attack:1:3:24",
+				"565:skill:1:3:21",
+				"565:skill:3:",
+				"598:attack:4:0:15",
+				"598:attack:0:4:18",
+				"637:attack:3:1:12",
+				"656:attack:1:3:24",
+				"689:attack:4:0:9",
+				"689:attack:0:4:8",
+				"728:attack:3:1:12",
+				"747:attack:1:3:21",
+				"819:attack:3:1:14",
+				"819:skill:3:",
+				"838:attack:1:3:21",
+				"838:skill:1:0:21,3:21",
+				"910:attack:3:1:13",
+				"912:attack:0:3:14",
+				"912:skill:0:3:19",
+				"929:attack:1:0:21",
+				"1003:attack:0:1:18",
+				"1020:attack:1:0:21",
+				"1094:attack:0:1:18",
+				"1111:attack:1:0:16"
+			],
+			"winner": 1,
+			"wins": 0
+		},
+		{
+			"attacks": 125,
+			"crowd_tips": 400,
+			"elapsed": 75.15,
+			"excitement": 100.0,
+			"health": [
+				[
+					3,
+					110
+				],
+				[
+					4,
+					0
+				],
+				[
+					5,
+					0
+				],
+				[
+					6,
+					0
+				],
+				[
+					7,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				3,
+				4,
+				5,
+				6,
+				7
+			],
+			"payout": 450,
+			"progression": [
+				[
+					3,
+					0,
+					10,
+					10
+				],
+				[
+					4,
+					0,
+					10,
+					10
+				],
+				[
+					5,
+					0,
+					10,
+					10
+				],
+				[
+					6,
+					0,
+					10,
+					10
+				],
+				[
+					7,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 7,
+			"settled_income": 1125,
+			"skills": 40,
+			"steps": 4509,
+			"trace": [
+				"31:attack:6:4:27",
+				"50:attack:7:3:20",
+				"50:attack:3:7:22",
+				"122:attack:6:4:27",
+				"138:attack:4:6:18",
+				"141:attack:7:3:18",
+				"141:attack:3:7:22",
+				"210:attack:5:4:33",
+				"213:attack:6:4:24",
+				"229:attack:4:6:14",
+				"229:skill:4:6:26",
+				"229:skill:6:4:65",
+				"232:attack:7:3:20",
+				"232:skill:7:",
+				"232:attack:3:7:17",
+				"232:skill:3:",
+				"304:attack:6:4:27",
+				"306:attack:5:4:29",
+				"320:attack:4:6:17",
+				"323:attack:7:3:20",
+				"323:attack:3:7:17",
+				"395:attack:6:4:23",
+				"409:attack:5:6:29",
+				"414:attack:7:3:17",
+				"414:attack:3:7:17",
+				"486:attack:6:5:24",
+				"486:skill:6:5:65",
+				"505:attack:7:3:20",
+				"505:skill:7:",
+				"505:attack:3:7:18",
+				"505:skill:3:",
+				"541:attack:5:6:31",
+				"541:skill:5:6:30",
+				"577:attack:6:5:28",
+				"596:attack:7:3:17",
+				"596:attack:3:7:16",
+				"632:attack:5:6:33",
+				"668:attack:6:5:29",
+				"687:attack:7:3:18",
+				"687:attack:3:7:17",
+				"723:attack:5:6:32",
+				"759:attack:6:5:25",
+				"759:skill:6:5:65",
+				"778:attack:7:3:22",
+				"778:skill:7:",
+				"778:attack:3:7:22",
+				"778:skill:3:",
+				"850:attack:6:5:27",
+				"850:skill:5:6:9",
+				"869:attack:7:3:17",
+				"869:attack:3:7:21",
+				"957:attack:5:7:27",
+				"960:attack:7:3:16",
+				"960:attack:3:7:22",
+				"960:skill:7:",
+				"1048:attack:5:7:27",
+				"1051:attack:7:3:20",
+				"1051:attack:3:7:16",
+				"1051:skill:3:",
+				"1139:attack:5:7:29",
+				"1142:attack:7:3:16",
+				"1142:attack:3:7:16",
+				"1142:skill:7:",
+				"1230:attack:5:7:33",
+				"1230:skill:5:3:30,7:30",
+				"1233:attack:7:3:20",
+				"1233:attack:3:7:21",
+				"1321:attack:5:7:31",
+				"1324:attack:7:5:21",
+				"1324:attack:3:7:18",
+				"1324:skill:3:",
+				"1324:skill:7:",
+				"1412:attack:5:7:32",
+				"1415:attack:7:5:3",
+				"1415:attack:3:7:18",
+				"1506:attack:7:3:22",
+				"1506:attack:3:7:20",
+				"1597:attack:7:3:18",
+				"1597:skill:7:",
+				"1597:attack:3:7:19",
+				"1597:skill:3:",
+				"1688:attack:7:3:21",
+				"1688:attack:3:7:20",
+				"1779:attack:7:3:18",
+				"1779:attack:3:7:19",
+				"1870:attack:7:3:16",
+				"1870:skill:7:",
+				"1870:attack:3:7:18",
+				"1870:skill:3:",
+				"1961:attack:7:3:16",
+				"1961:attack:3:7:19",
+				"2052:attack:7:3:21",
+				"2052:attack:3:7:17",
+				"2143:attack:7:3:21",
+				"2143:skill:7:",
+				"2143:attack:3:7:20",
+				"2143:skill:3:",
+				"2234:attack:7:3:21",
+				"2234:attack:3:7:18",
+				"2325:attack:7:3:22",
+				"2325:attack:3:7:20",
+				"2416:attack:7:3:19",
+				"2416:skill:7:",
+				"2416:attack:3:7:17",
+				"2416:skill:3:",
+				"2507:attack:7:3:22",
+				"2507:attack:3:7:22",
+				"2598:attack:7:3:21",
+				"2598:attack:3:7:17",
+				"2689:attack:7:3:20",
+				"2689:skill:7:",
+				"2689:attack:3:7:17",
+				"2689:skill:3:",
+				"2780:attack:7:3:16",
+				"2780:attack:3:7:21",
+				"2871:attack:7:3:20",
+				"2871:attack:3:7:22",
+				"2962:attack:7:3:18",
+				"2962:skill:7:",
+				"2962:attack:3:7:17",
+				"2962:skill:3:",
+				"3053:attack:7:3:21",
+				"3053:attack:3:7:18",
+				"3144:attack:7:3:17",
+				"3144:attack:3:7:19",
+				"3235:attack:7:3:17",
+				"3235:skill:7:",
+				"3235:attack:3:7:18",
+				"3235:skill:3:",
+				"3326:attack:7:3:20",
+				"3326:attack:3:7:18",
+				"3417:attack:7:3:19",
+				"3417:attack:3:7:20",
+				"3508:attack:7:3:20",
+				"3508:skill:7:",
+				"3508:attack:3:7:22",
+				"3508:skill:3:",
+				"3599:attack:7:3:22",
+				"3599:attack:3:7:17",
+				"3690:attack:7:3:24",
+				"3690:attack:3:7:23",
+				"3781:attack:7:3:25",
+				"3781:skill:7:",
+				"3781:attack:3:7:27",
+				"3781:skill:3:",
+				"3872:attack:7:3:31",
+				"3872:attack:3:7:31",
+				"3963:attack:7:3:32",
+				"3963:attack:3:7:29",
+				"4054:attack:7:3:33",
+				"4054:skill:7:",
+				"4054:attack:3:7:39",
+				"4054:skill:3:",
+				"4145:attack:7:3:40",
+				"4145:attack:3:7:31",
+				"4236:attack:7:3:39",
+				"4236:attack:3:7:35",
+				"4327:attack:7:3:44",
+				"4327:skill:7:",
+				"4327:attack:3:7:44",
+				"4327:skill:3:",
+				"4418:attack:7:3:43",
+				"4418:attack:3:7:52",
+				"4509:attack:7:3:45",
+				"4509:attack:3:7:30"
+			],
+			"winner": 3,
+			"wins": 5
+		},
+		{
+			"attacks": 51,
+			"crowd_tips": 160,
+			"elapsed": 19.5,
+			"excitement": 100.0,
+			"health": [
+				[
+					3,
+					144
+				],
+				[
+					4,
+					0
+				],
+				[
+					5,
+					0
+				],
+				[
+					6,
+					0
+				],
+				[
+					7,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				3,
+				4,
+				5,
+				6,
+				7
+			],
+			"payout": 450,
+			"progression": [
+				[
+					3,
+					0,
+					10,
+					10
+				],
+				[
+					4,
+					0,
+					10,
+					10
+				],
+				[
+					5,
+					0,
+					10,
+					10
+				],
+				[
+					6,
+					0,
+					10,
+					10
+				],
+				[
+					7,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 42,
+			"settled_income": 1125,
+			"skills": 16,
+			"steps": 1170,
+			"trace": [
+				"22:attack:6:7:23",
+				"91:attack:7:6:18",
+				"110:attack:4:6:16",
+				"113:attack:6:7:23",
+				"169:attack:3:7:17",
+				"182:attack:7:6:16",
+				"186:attack:5:4:31",
+				"201:attack:4:6:18",
+				"201:skill:6:7:65",
+				"204:attack:6:4:24",
+				"260:attack:3:7:17",
+				"260:skill:7:",
+				"278:attack:7:6:22",
+				"279:attack:5:4:32",
+				"292:attack:4:6:14",
+				"292:skill:4:6:26",
+				"295:attack:6:7:24",
+				"351:attack:3:7:21",
+				"369:attack:7:4:20",
+				"370:attack:5:4:33",
+				"383:attack:4:7:19",
+				"386:attack:6:7:27",
+				"386:skill:6:7:65",
+				"386:skill:7:",
+				"442:attack:3:4:20",
+				"442:skill:3:",
+				"460:attack:7:3:22",
+				"461:attack:5:4:29",
+				"461:skill:5:3:30,4:30,7:30",
+				"477:attack:6:4:23",
+				"492:skill:4:7:26",
+				"492:attack:4:7:14",
+				"533:attack:3:4:21",
+				"551:attack:7:3:17",
+				"552:attack:5:4:18",
+				"568:attack:6:5:28",
+				"624:attack:3:7:16",
+				"642:attack:7:3:20",
+				"642:skill:7:",
+				"643:attack:5:3:31",
+				"643:skill:3:",
+				"659:attack:6:5:25",
+				"715:attack:3:7:19",
+				"733:attack:7:3:17",
+				"734:attack:5:3:31",
+				"734:skill:5:3:30,6:30,7:30",
+				"750:attack:6:5:23",
+				"750:skill:6:5:65",
+				"806:attack:3:7:22",
+				"824:attack:7:3:16",
+				"841:attack:6:5:23",
+				"879:attack:5:6:32",
+				"897:attack:3:7:19",
+				"897:skill:3:",
+				"915:attack:7:3:20",
+				"915:skill:7:",
+				"932:attack:6:5:28",
+				"970:attack:5:6:27",
+				"988:attack:3:7:22",
+				"1006:attack:7:3:19",
+				"1023:attack:6:5:28",
+				"1023:skill:6:5:65",
+				"1023:skill:5:6:20",
+				"1061:attack:5:7:33",
+				"1079:attack:3:7:17",
+				"1152:attack:5:3:30",
+				"1170:attack:3:5:2"
+			],
+			"winner": 3,
+			"wins": 5
+		},
+		{
+			"attacks": 137,
+			"crowd_tips": 450,
+			"elapsed": 80.7333,
+			"excitement": 100.0,
+			"health": [
+				[
+					3,
+					22
+				],
+				[
+					4,
+					0
+				],
+				[
+					5,
+					0
+				],
+				[
+					6,
+					0
+				],
+				[
+					7,
+					0
+				]
+			],
+			"levels": 10,
+			"lineup": [
+				3,
+				4,
+				5,
+				6,
+				7
+			],
+			"payout": 450,
+			"progression": [
+				[
+					3,
+					0,
+					10,
+					10
+				],
+				[
+					4,
+					0,
+					10,
+					10
+				],
+				[
+					5,
+					0,
+					10,
+					10
+				],
+				[
+					6,
+					0,
+					10,
+					10
+				],
+				[
+					7,
+					0,
+					10,
+					10
+				]
+			],
+			"seed": 123,
+			"settled_income": 1125,
+			"skills": 45,
+			"steps": 4844,
+			"trace": [
+				"22:attack:6:5:25",
+				"91:attack:5:6:31",
+				"110:attack:3:6:20",
+				"113:attack:6:5:24",
+				"169:attack:4:5:18",
+				"182:attack:5:6:33",
+				"186:attack:7:3:21",
+				"201:attack:3:6:20",
+				"201:skill:6:5:65",
+				"204:attack:6:3:25",
+				"260:attack:4:5:15",
+				"260:skill:5:3:30,4:30,6:30,7:30",
+				"278:attack:5:6:28",
+				"294:attack:3:6:22",
+				"294:skill:3:",
+				"295:attack:6:5:24",
+				"317:attack:7:3:18",
+				"351:attack:4:5:16",
+				"369:attack:5:4:31",
+				"385:attack:3:6:21",
+				"386:attack:6:5:28",
+				"386:skill:6:5:65",
+				"408:attack:7:3:20",
+				"442:attack:4:5:7",
+				"476:attack:3:6:18",
+				"477:attack:6:3:29",
+				"480:skill:4:6:16",
+				"499:attack:7:3:16",
+				"499:skill:7:",
+				"499:skill:3:",
+				"533:attack:4:3:17",
+				"567:attack:3:7:20",
+				"590:attack:7:3:22",
+				"624:attack:4:3:16",
+				"658:attack:3:7:20",
+				"681:attack:7:3:22",
+				"681:skill:3:",
+				"715:attack:4:3:20",
+				"749:attack:3:7:20",
+				"772:attack:7:3:18",
+				"772:skill:7:",
+				"806:attack:4:3:20",
+				"806:skill:4:3:26",
+				"840:attack:3:7:16",
+				"863:attack:7:3:18",
+				"863:skill:3:",
+				"897:attack:4:7:16",
+				"931:attack:3:7:19",
+				"954:attack:7:3:20",
+				"988:attack:4:7:17",
+				"988:skill:7:",
+				"1022:attack:3:7:19",
+				"1045:attack:7:3:16",
+				"1079:attack:4:7:17",
+				"1113:attack:3:7:20",
+				"1113:skill:3:",
+				"1136:attack:7:3:19",
+				"1170:attack:4:7:18",
+				"1170:skill:4:7:26",
+				"1170:skill:7:",
+				"1204:attack:3:4:18",
+				"1227:attack:7:4:21",
+				"1261:attack:4:7:14",
+				"1295:attack:3:4:17",
+				"1318:attack:7:4:21",
+				"1352:attack:4:7:18",
+				"1352:skill:4:7:26",
+				"1386:attack:3:4:19",
+				"1409:attack:7:3:22",
+				"1409:skill:7:",
+				"1409:skill:3:",
+				"1443:attack:4:7:16",
+				"1477:attack:3:4:21",
+				"1500:attack:7:3:20",
+				"1534:attack:4:3:16",
+				"1568:attack:3:4:18",
+				"1591:attack:7:3:20",
+				"1625:attack:4:3:16",
+				"1625:skill:4:3:26",
+				"1625:skill:3:",
+				"1659:attack:3:7:22",
+				"1682:attack:7:4:16",
+				"1682:skill:7:",
+				"1716:attack:4:7:14",
+				"1750:attack:3:7:18",
+				"1773:attack:7:4:18",
+				"1807:attack:4:7:18",
+				"1841:attack:3:7:16",
+				"1864:attack:7:4:20",
+				"1864:skill:7:",
+				"1898:attack:4:7:14",
+				"1898:skill:4:7:26",
+				"1932:attack:3:4:18",
+				"1932:skill:3:",
+				"1955:attack:7:4:22",
+				"1989:attack:4:3:17",
+				"2023:attack:3:4:22",
+				"2046:attack:7:4:17",
+				"2080:attack:4:3:15",
+				"2080:skill:4:3:26",
+				"2114:attack:3:4:19",
+				"2137:attack:7:4:20",
+				"2171:attack:4:7:16",
+				"2171:skill:7:",
+				"2205:attack:3:4:21",
+				"2205:skill:3:",
+				"2228:attack:7:4:5",
+				"2296:attack:3:7:16",
+				"2319:attack:7:3:16",
+				"2387:attack:3:7:19",
+				"2410:attack:7:3:19",
+				"2410:skill:7:",
+				"2478:attack:3:7:17",
+				"2478:skill:3:",
+				"2501:attack:7:3:22",
+				"2569:attack:3:7:17",
+				"2592:attack:7:3:17",
+				"2660:attack:3:7:19",
+				"2683:attack:7:3:19",
+				"2683:skill:7:",
+				"2751:attack:3:7:19",
+				"2751:skill:3:",
+				"2774:attack:7:3:21",
+				"2842:attack:3:7:16",
+				"2865:attack:7:3:19",
+				"2933:attack:3:7:17",
+				"2956:attack:7:3:17",
+				"2956:skill:7:",
+				"3024:attack:3:7:16",
+				"3024:skill:3:",
+				"3047:attack:7:3:17",
+				"3115:attack:3:7:17",
+				"3138:attack:7:3:18",
+				"3206:attack:3:7:21",
+				"3229:attack:7:3:16",
+				"3229:skill:7:",
+				"3297:attack:3:7:22",
+				"3297:skill:3:",
+				"3320:attack:7:3:16",
+				"3388:attack:3:7:17",
+				"3411:attack:7:3:18",
+				"3479:attack:3:7:18",
+				"3502:attack:7:3:18",
+				"3502:skill:7:",
+				"3570:attack:3:7:22",
+				"3570:skill:3:",
+				"3593:attack:7:3:22",
+				"3661:attack:3:7:21",
+				"3684:attack:7:3:22",
+				"3752:attack:3:7:25",
+				"3775:attack:7:3:23",
+				"3775:skill:7:",
+				"3843:attack:3:7:27",
+				"3843:skill:3:",
+				"3866:attack:7:3:23",
+				"3934:attack:3:7:33",
+				"3957:attack:7:3:30",
+				"4025:attack:3:7:34",
+				"4048:attack:7:3:37",
+				"4048:skill:7:",
+				"4116:attack:3:7:35",
+				"4116:skill:3:",
+				"4139:attack:7:3:30",
+				"4207:attack:3:7:36",
+				"4230:attack:7:3:43",
+				"4298:attack:3:7:37",
+				"4321:attack:7:3:44",
+				"4321:skill:7:",
+				"4389:attack:3:7:37",
+				"4389:skill:3:",
+				"4412:attack:7:3:40",
+				"4480:attack:3:7:42",
+				"4503:attack:7:3:53",
+				"4571:attack:3:7:52",
+				"4594:attack:7:3:56",
+				"4594:skill:7:",
+				"4662:attack:3:7:47",
+				"4662:skill:3:",
+				"4685:attack:7:3:45",
+				"4753:attack:3:7:58",
+				"4776:attack:7:3:59",
+				"4844:attack:3:7:43"
+			],
+			"winner": 3,
+			"wins": 5
+		}
+	],
+	"heroes": [
+		{
+			"attack": 17,
+			"health": 225,
+			"name": "Bram",
+			"ranged": false,
+			"red": false,
+			"skill": {
+				"description": "Deal 2x attack damage to the nearest enemy within 45 units.",
+				"kind": "strike",
+				"name": "Heavy Strike",
+				"power": 2.0
+			},
+			"unit": "warrior"
+		},
+		{
+			"attack": 21,
+			"health": 198,
+			"name": "Ivo",
+			"ranged": false,
+			"red": false,
+			"skill": {
+				"description": "Deal attack damage to every enemy within a 90-unit circle.",
+				"kind": "sweep",
+				"name": "Sweep",
+				"power": 1.0
+			},
+			"unit": "lancer"
+		},
+		{
+			"attack": 18,
+			"health": 165,
+			"name": "Nia",
+			"ranged": true,
+			"red": false,
+			"skill": {
+				"description": "Deal 2.5x attack damage to the nearest enemy within 160 units.",
+				"kind": "strike",
+				"name": "Snipe",
+				"power": 2.5
+			},
+			"unit": "archer"
+		},
+		{
+			"attack": 13,
+			"health": 210,
+			"name": "Tuck",
+			"ranged": false,
+			"red": false,
+			"skill": {
+				"description": "Restore 20% of maximum HP to yourself.",
+				"kind": "heal",
+				"name": "Second Wind",
+				"power": 0.2
+			},
+			"unit": "monk"
+		},
+		{
+			"attack": 12,
+			"health": 158,
+			"name": "Rook",
+			"ranged": false,
+			"red": true,
+			"skill": {
+				"description": "Deal 1.5x attack damage within 45 units. Heal by actual damage dealt.",
+				"kind": "drain",
+				"name": "Drain",
+				"power": 1.5
+			},
+			"unit": "warrior"
+		},
+		{
+			"attack": 21,
+			"health": 198,
+			"name": "Aldric",
+			"ranged": false,
+			"red": true,
+			"skill": {
+				"description": "Deal attack damage to every enemy within a 90-unit circle.",
+				"kind": "sweep",
+				"name": "Sweep",
+				"power": 1.0
+			},
+			"unit": "lancer"
+		},
+		{
+			"attack": 18,
+			"health": 165,
+			"name": "Vera",
+			"ranged": true,
+			"red": true,
+			"skill": {
+				"description": "Deal 2.5x attack damage to the nearest enemy within 160 units.",
+				"kind": "strike",
+				"name": "Snipe",
+				"power": 2.5
+			},
+			"unit": "archer"
+		},
+		{
+			"attack": 13,
+			"health": 210,
+			"name": "Oswin",
+			"ranged": false,
+			"red": true,
+			"skill": {
+				"description": "Restore 20% of maximum HP to yourself.",
+				"kind": "heal",
+				"name": "Second Wind",
+				"power": 0.2
+			},
+			"unit": "monk"
+		}
+	],
+	"incomes": [
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 100,
+				"levels": 0,
+				"multiplier": 1.0,
+				"victories": 0
+			},
+			"levels": 1,
+			"tier": 0,
+			"wins": 0,
+			"with_excitement": [
+				100,
+				125,
+				125,
+				250,
+				250
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 145,
+				"levels": 0,
+				"multiplier": 1.0,
+				"victories": 45
+			},
+			"levels": 1,
+			"tier": 0,
+			"wins": 3,
+			"with_excitement": [
+				145,
+				181,
+				181,
+				363,
+				363
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 850,
+				"levels": 0,
+				"multiplier": 1.0,
+				"victories": 750
+			},
+			"levels": 1,
+			"tier": 0,
+			"wins": 60,
+			"with_excitement": [
+				850,
+				1063,
+				1063,
+				2125,
+				2125
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 160,
+				"levels": 60,
+				"multiplier": 1.0,
+				"victories": 0
+			},
+			"levels": 5,
+			"tier": 0,
+			"wins": 0,
+			"with_excitement": [
+				160,
+				200,
+				200,
+				400,
+				400
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 205,
+				"levels": 60,
+				"multiplier": 1.0,
+				"victories": 45
+			},
+			"levels": 5,
+			"tier": 0,
+			"wins": 3,
+			"with_excitement": [
+				205,
+				256,
+				256,
+				513,
+				513
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 910,
+				"levels": 60,
+				"multiplier": 1.0,
+				"victories": 750
+			},
+			"levels": 5,
+			"tier": 0,
+			"wins": 60,
+			"with_excitement": [
+				910,
+				1138,
+				1138,
+				2275,
+				2275
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 235,
+				"levels": 135,
+				"multiplier": 1.0,
+				"victories": 0
+			},
+			"levels": 10,
+			"tier": 0,
+			"wins": 0,
+			"with_excitement": [
+				235,
+				294,
+				294,
+				588,
+				588
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 280,
+				"levels": 135,
+				"multiplier": 1.0,
+				"victories": 45
+			},
+			"levels": 10,
+			"tier": 0,
+			"wins": 3,
+			"with_excitement": [
+				280,
+				350,
+				350,
+				700,
+				700
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 985,
+				"levels": 135,
+				"multiplier": 1.0,
+				"victories": 750
+			},
+			"levels": 10,
+			"tier": 0,
+			"wins": 60,
+			"with_excitement": [
+				985,
+				1231,
+				1231,
+				2463,
+				2463
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 150,
+				"levels": 0,
+				"multiplier": 1.5,
+				"victories": 0
+			},
+			"levels": 1,
+			"tier": 1,
+			"wins": 0,
+			"with_excitement": [
+				150,
+				188,
+				188,
+				375,
+				375
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 218,
+				"levels": 0,
+				"multiplier": 1.5,
+				"victories": 45
+			},
+			"levels": 1,
+			"tier": 1,
+			"wins": 3,
+			"with_excitement": [
+				218,
+				273,
+				273,
+				545,
+				545
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 1275,
+				"levels": 0,
+				"multiplier": 1.5,
+				"victories": 750
+			},
+			"levels": 1,
+			"tier": 1,
+			"wins": 60,
+			"with_excitement": [
+				1275,
+				1594,
+				1594,
+				3188,
+				3188
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 240,
+				"levels": 60,
+				"multiplier": 1.5,
+				"victories": 0
+			},
+			"levels": 5,
+			"tier": 1,
+			"wins": 0,
+			"with_excitement": [
+				240,
+				300,
+				300,
+				600,
+				600
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 308,
+				"levels": 60,
+				"multiplier": 1.5,
+				"victories": 45
+			},
+			"levels": 5,
+			"tier": 1,
+			"wins": 3,
+			"with_excitement": [
+				308,
+				385,
+				385,
+				770,
+				770
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 1365,
+				"levels": 60,
+				"multiplier": 1.5,
+				"victories": 750
+			},
+			"levels": 5,
+			"tier": 1,
+			"wins": 60,
+			"with_excitement": [
+				1365,
+				1706,
+				1706,
+				3413,
+				3413
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 353,
+				"levels": 135,
+				"multiplier": 1.5,
+				"victories": 0
+			},
+			"levels": 10,
+			"tier": 1,
+			"wins": 0,
+			"with_excitement": [
+				353,
+				441,
+				441,
+				883,
+				883
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 420,
+				"levels": 135,
+				"multiplier": 1.5,
+				"victories": 45
+			},
+			"levels": 10,
+			"tier": 1,
+			"wins": 3,
+			"with_excitement": [
+				420,
+				525,
+				525,
+				1050,
+				1050
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 1478,
+				"levels": 135,
+				"multiplier": 1.5,
+				"victories": 750
+			},
+			"levels": 10,
+			"tier": 1,
+			"wins": 60,
+			"with_excitement": [
+				1478,
+				1848,
+				1848,
+				3695,
+				3695
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 200,
+				"levels": 0,
+				"multiplier": 2.0,
+				"victories": 0
+			},
+			"levels": 1,
+			"tier": 2,
+			"wins": 0,
+			"with_excitement": [
+				200,
+				250,
+				250,
+				500,
+				500
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 290,
+				"levels": 0,
+				"multiplier": 2.0,
+				"victories": 45
+			},
+			"levels": 1,
+			"tier": 2,
+			"wins": 3,
+			"with_excitement": [
+				290,
+				363,
+				363,
+				725,
+				725
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 1700,
+				"levels": 0,
+				"multiplier": 2.0,
+				"victories": 750
+			},
+			"levels": 1,
+			"tier": 2,
+			"wins": 60,
+			"with_excitement": [
+				1700,
+				2125,
+				2125,
+				4250,
+				4250
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 320,
+				"levels": 60,
+				"multiplier": 2.0,
+				"victories": 0
+			},
+			"levels": 5,
+			"tier": 2,
+			"wins": 0,
+			"with_excitement": [
+				320,
+				400,
+				400,
+				800,
+				800
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 410,
+				"levels": 60,
+				"multiplier": 2.0,
+				"victories": 45
+			},
+			"levels": 5,
+			"tier": 2,
+			"wins": 3,
+			"with_excitement": [
+				410,
+				513,
+				513,
+				1025,
+				1025
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 1820,
+				"levels": 60,
+				"multiplier": 2.0,
+				"victories": 750
+			},
+			"levels": 5,
+			"tier": 2,
+			"wins": 60,
+			"with_excitement": [
+				1820,
+				2275,
+				2275,
+				4550,
+				4550
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 470,
+				"levels": 135,
+				"multiplier": 2.0,
+				"victories": 0
+			},
+			"levels": 10,
+			"tier": 2,
+			"wins": 0,
+			"with_excitement": [
+				470,
+				588,
+				588,
+				1175,
+				1175
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 560,
+				"levels": 135,
+				"multiplier": 2.0,
+				"victories": 45
+			},
+			"levels": 10,
+			"tier": 2,
+			"wins": 3,
+			"with_excitement": [
+				560,
+				700,
+				700,
+				1400,
+				1400
+			]
+		},
+		{
+			"breakdown": {
+				"base": 100,
+				"guaranteed": 1970,
+				"levels": 135,
+				"multiplier": 2.0,
+				"victories": 750
+			},
+			"levels": 10,
+			"tier": 2,
+			"wins": 60,
+			"with_excitement": [
+				1970,
+				2463,
+				2463,
+				4925,
+				4925
+			]
+		}
+	],
+	"stats": [
+		{
+			"levels": [
+				[
+					1,
+					225,
+					17
+				],
+				[
+					2,
+					236,
+					18
+				],
+				[
+					5,
+					270,
+					20
+				],
+				[
+					10,
+					326,
+					25
+				]
+			],
+			"name": "Bram"
+		},
+		{
+			"levels": [
+				[
+					1,
+					198,
+					21
+				],
+				[
+					2,
+					208,
+					22
+				],
+				[
+					5,
+					238,
+					25
+				],
+				[
+					10,
+					287,
+					30
+				]
+			],
+			"name": "Ivo"
+		},
+		{
+			"levels": [
+				[
+					1,
+					165,
+					18
+				],
+				[
+					2,
+					173,
+					19
+				],
+				[
+					5,
+					198,
+					22
+				],
+				[
+					10,
+					239,
+					26
+				]
+			],
+			"name": "Nia"
+		},
+		{
+			"levels": [
+				[
+					1,
+					210,
+					13
+				],
+				[
+					2,
+					221,
+					14
+				],
+				[
+					5,
+					252,
+					16
+				],
+				[
+					10,
+					305,
+					19
+				]
+			],
+			"name": "Tuck"
+		},
+		{
+			"levels": [
+				[
+					1,
+					158,
+					12
+				],
+				[
+					2,
+					166,
+					13
+				],
+				[
+					5,
+					190,
+					14
+				],
+				[
+					10,
+					229,
+					17
+				]
+			],
+			"name": "Rook"
+		},
+		{
+			"levels": [
+				[
+					1,
+					198,
+					21
+				],
+				[
+					2,
+					208,
+					22
+				],
+				[
+					5,
+					238,
+					25
+				],
+				[
+					10,
+					287,
+					30
+				]
+			],
+			"name": "Aldric"
+		},
+		{
+			"levels": [
+				[
+					1,
+					165,
+					18
+				],
+				[
+					2,
+					173,
+					19
+				],
+				[
+					5,
+					198,
+					22
+				],
+				[
+					10,
+					239,
+					26
+				]
+			],
+			"name": "Vera"
+		},
+		{
+			"levels": [
+				[
+					1,
+					210,
+					13
+				],
+				[
+					2,
+					221,
+					14
+				],
+				[
+					5,
+					252,
+					16
+				],
+				[
+					10,
+					305,
+					19
+				]
+			],
+			"name": "Oswin"
+		}
+	]
+}
