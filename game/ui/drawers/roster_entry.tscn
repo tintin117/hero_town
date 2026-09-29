@@ -1,0 +1,68 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/ui/drawers/roster_entry.gd" id="1"]
+[ext_resource type="PackedScene" path="res://game/ui/components/hero_card.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://game/ui/components/badge.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://game/ui/components/cost_button.tscn" id="4"]
+
+[node name="RosterEntry" type="VBoxContainer"]
+custom_minimum_size = Vector2(216, 0)
+theme_type_variation = &"TightVBox"
+script = ExtResource("1")
+
+[node name="Stack" type="MarginContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Card" parent="Stack" instance=ExtResource("2")]
+custom_minimum_size = Vector2(216, 0)
+layout_mode = 2
+
+[node name="Overlay" type="Control" parent="Stack"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Slot" parent="Stack/Overlay" instance=ExtResource("3")]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 24.0
+offset_bottom = 24.0
+tint = Color(0.23, 0.44, 0.77, 1)
+
+[node name="Action" type="VBoxContainer" parent="."]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+alignment = 1
+
+[node name="Progress" type="VBoxContainer" parent="Action"]
+layout_mode = 2
+theme_type_variation = &"TightVBox"
+
+[node name="Xp" type="ProgressBar" parent="Action/Progress"]
+layout_mode = 2
+theme_type_variation = &"MiniBar"
+show_percentage = false
+
+[node name="Stats" type="Label" parent="Action/Progress"]
+layout_mode = 2
+theme_type_variation = &"SmallLabel"
+text = "XP 0/30   0 wins"
+clip_text = true
+
+[node name="Buy" parent="Action" instance=ExtResource("4")]
+layout_mode = 2
+
+[node name="Bars" parent="Stack/Card/Card/Row/Info" index="1"]
+visible = false
+
+[node name="Traits" parent="Stack/Card/Card/Row/Info" index="2"]
+visible = false
+
+[node name="Skill" type="Label" parent="Stack/Card/Card/Row/Info" index="3"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"DarkSmallLabel"
+text = "Skill"
+clip_text = true
