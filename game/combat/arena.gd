@@ -48,8 +48,7 @@ func _ready() -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, SIZE), Color("5f7d47"))
-	draw_rect(Rect2(Vector2.ZERO, SIZE), Color("344b43"), false, 2.0)
+	# The ring sits directly on the town's grass; no backdrop plate.
 	# Pixel-art ring: 2 px scanlines so the ellipse matches the 2x Sunnyside art.
 	_ellipse(RADII + Vector2(8, 8), Vector2(0, 8), Color("344b43"))
 	_ellipse(RADII + Vector2(8, 8), Vector2.ZERO, Color("8a988a"))
