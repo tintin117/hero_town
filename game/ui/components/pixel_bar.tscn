@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/ui/components/pixel_bar.gd" id="1"]
+
+[node name="PixelBar" type="Control"]
+custom_minimum_size = Vector2(45, 21)
+script = ExtResource("1")

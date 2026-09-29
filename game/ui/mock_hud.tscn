@@ -1,0 +1,196 @@
+[gd_scene load_steps=20 format=3]
+
+[ext_resource type="Script" path="res://game/ui/mock_hud.gd" id="1"]
+[ext_resource type="PackedScene" path="res://game/ui/components/stat_pill.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://game/ui/components/hype_gauge.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://game/ui/components/hero_card.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://game/ui/components/icon_button.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://game/ui/components/badge.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://game/ui/components/excitement_gauge.tscn" id="7"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/coin.png" id="8"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/laurel.png" id="9"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/crowd.png" id="10"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/gear.png" id="11"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/sword.png" id="12"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/shield.png" id="13"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/hammer.png" id="14"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/scroll.png" id="15"]
+[ext_resource type="Texture2D" path="res://resources/ui/avatars/avatar_01.png" id="16"]
+[ext_resource type="Texture2D" path="res://resources/ui/avatars/avatar_05.png" id="17"]
+[ext_resource type="Texture2D" path="res://resources/ui/avatars/avatar_10.png" id="18"]
+
+[node name="MockHud" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="TopBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 48.0
+grow_horizontal = 2
+theme_type_variation = &"HudBar"
+
+[node name="Row" type="HBoxContainer" parent="TopBar"]
+layout_mode = 2
+
+[node name="Gold" parent="TopBar/Row" instance=ExtResource("2")]
+layout_mode = 2
+size_flags_vertical = 4
+icon = ExtResource("8")
+value = 1240.0
+
+[node name="Fame" parent="TopBar/Row" instance=ExtResource("2")]
+layout_mode = 2
+size_flags_vertical = 4
+icon = ExtResource("9")
+text = "Tier 2"
+progress = 0.4
+
+[node name="Spacer" type="Control" parent="TopBar/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Hype" parent="TopBar/Row" instance=ExtResource("3")]
+custom_minimum_size = Vector2(280, 32)
+layout_mode = 2
+size_flags_vertical = 4
+value = 42.0
+threshold = 70.0
+
+[node name="Spacer2" type="Control" parent="TopBar/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Seats" parent="TopBar/Row" instance=ExtResource("2")]
+layout_mode = 2
+size_flags_vertical = 4
+icon = ExtResource("10")
+value = 100.0
+
+[node name="Menu" parent="TopBar/Row" instance=ExtResource("5")]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+icon_texture = ExtResource("11")
+tip = "Menu"
+
+[node name="Excitement" parent="." instance=ExtResource("7")]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 56.0
+offset_right = 150.0
+offset_bottom = 108.0
+grow_horizontal = 2
+value = 58.0
+multiplier_text = "x1.25"
+
+[node name="BottomBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -96.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_type_variation = &"HudBar"
+
+[node name="Row" type="HBoxContainer" parent="BottomBar"]
+layout_mode = 2
+
+[node name="Hero1" parent="BottomBar/Row" instance=ExtResource("4")]
+layout_mode = 2
+portrait = ExtResource("16")
+hero_name = "Bram"
+level = 5
+hp = 0.85
+mana = 0.5
+selected = true
+
+[node name="Hero2" parent="BottomBar/Row" instance=ExtResource("4")]
+layout_mode = 2
+portrait = ExtResource("17")
+hero_name = "Ivo"
+level = 6
+hp = 1.0
+mana = 0.8
+
+[node name="Hero3" parent="BottomBar/Row" instance=ExtResource("4")]
+layout_mode = 2
+portrait = ExtResource("18")
+hero_name = "Nia"
+level = 10
+hp = 0.4
+mana = 1.0
+
+[node name="Sep" type="VSeparator" parent="BottomBar/Row"]
+layout_mode = 2
+
+[node name="Book" type="Button" parent="BottomBar/Row"]
+custom_minimum_size = Vector2(104, 56)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"RedButton"
+text = "Book"
+icon = ExtResource("12")
+
+[node name="Spacer" type="Control" parent="BottomBar/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Roster" parent="BottomBar/Row" instance=ExtResource("5")]
+layout_mode = 2
+size_flags_vertical = 4
+icon_texture = ExtResource("13")
+tip = "Roster"
+
+[node name="Build" parent="BottomBar/Row" instance=ExtResource("5")]
+layout_mode = 2
+size_flags_vertical = 4
+icon_texture = ExtResource("14")
+tip = "Build"
+
+[node name="Badge" parent="BottomBar/Row/Build" instance=ExtResource("6")]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -14.0
+offset_top = -8.0
+offset_right = 10.0
+offset_bottom = 16.0
+grow_horizontal = 0
+tint = Color(0.27, 0.7, 0.35, 1)
+text = "!"
+pulsing = true
+
+[node name="Stories" parent="BottomBar/Row" instance=ExtResource("5")]
+layout_mode = 2
+size_flags_vertical = 4
+icon_texture = ExtResource("15")
+tip = "Stories"
+
+[node name="Badge" parent="BottomBar/Row/Stories" instance=ExtResource("6")]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -14.0
+offset_top = -8.0
+offset_right = 10.0
+offset_bottom = 16.0
+grow_horizontal = 0
+count = 2
+pulsing = true

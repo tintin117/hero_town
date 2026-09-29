@@ -4,6 +4,7 @@ extends SceneTree
 
 
 func _init() -> void:
+	await process_frame  # UI tests need a running, ready tree
 	var failures := 0
 	var dir := DirAccess.open("res://game/tests")
 	var files := Array(dir.get_files()).filter(func(f: String) -> bool: return f.begins_with("test_") and f.ends_with(".gd"))
