@@ -83,7 +83,6 @@ func _at_size(size: Vector2i) -> void:
 	_check(hud.get_node("%Excitement").visible, "%s: excitement gauge visible in a fight" % label)
 	_inside([hud.get_node("%Excitement")] as Array[Control], middle.get_global_rect(), "%s excitement" % label)
 	_check(hud.get_node("%Bell").get_global_rect().size.x >= 100.0, "%s: the bell status keeps its width with 5 fighters" % label)
-	_check(hud.get_node("%Cards").get_child_count() == 5, "%s: five hero cards" % label)
 	var drawer: Drawer = load("res://game/ui/drawers/manager_drawer.tscn").instantiate()
 	_check(drawer.panel_size.y + 2.0 * drawer.margin <= middle.size.y and drawer.panel_size.x + 2.0 * drawer.margin <= size.x,
 			"%s: the manager drawer fits between the bars" % label)

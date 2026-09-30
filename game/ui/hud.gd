@@ -11,7 +11,6 @@ signal main_menu_requested
 signal quit_requested
 
 const ICONS := "res://resources/ui/icons/"
-const CHIP := preload("res://game/ui/components/hero_chip.tscn")
 const TOAST := preload("res://game/ui/components/toast.tscn")
 const HOLD_TIME := 0.7  ## seconds to hold the Bell button to plant
 const DRAWERS := {
@@ -26,9 +25,6 @@ var events: Node
 var router: DrawerRouter
 
 var _hold := -1.0  ## seconds the plant button has been held, -1 when not held
-var _hp := {}  ## hero id -> hit points during a fight (empty when idle)
-var _mana := {}
-var _cards := {}  ## hero id -> HeroChip
 var _toasts := []  ## slot -> live toast; toasts stack upwards
 
 @onready var _gold: StatPill = %Gold
@@ -75,8 +71,7 @@ func _ready() -> void:
 	events.hype_changed.connect(_on_hype)
 	events.fame_changed.connect(_on_fame)
 	events.manager_changed.connect(_refresh_manager)
-	events.roster_changed.connect(_rebuild_cards)
-	events.hero_changed.connect(_on_hero_changed)
+	events.roster_changed.connect(_refresh_bell)
 	events.fight_started.connect(_on_fight_started)
 	events.combat_event.connect(_on_combat_event)
 	events.fight_finished.connect(_on_fight_finished)
@@ -93,7 +88,7 @@ func sync_all() -> void:
 	_hype.value = game.state.hype
 	_on_fame(game.state.fame_points, Fame.tier(game.state.fame_points, game.tuning))
 	_refresh_manager()
-	_rebuild_cards()
+	_refresh_bell()
 	_refresh_seats()
 	_sync_tray()
 
@@ -221,26 +216,9 @@ func _process(delta: float) -> void:
 		game.plant()
 
 
-## Chips show who is planted (or, before planting, who is picked).
-func _rebuild_cards() -> void:
-	for chip in %Cards.get_children():
-		%Cards.remove_child(chip)
-		chip.queue_free()
-	_cards.clear()
-	var ids: Array[int] = game.planted if not game.planted.is_empty() else game.state.preferred_lineup
-	for id in ids:
-		var chip := CHIP.instantiate() as HeroChip
-		chip.portrait = HeroPortraits.portrait(id)
-		chip.hero_name = "%s  Lv %d" % [game.hero_defs[id].display_name, game.state.heroes[id].level]
-		%Cards.add_child(chip)
-		_cards[id] = chip
-		_paint_card(id)
-	_refresh_bell()
-
-
 ## The seed tray slides up whenever nothing is planted and tucks away once a lineup is planted.
 func _sync_tray() -> void:
-	_rebuild_cards()
+	_refresh_bell()
 	if not is_visible_in_tree():
 		return  # a drawer opened behind the main menu would be laid out against a hidden parent
 	if game.planted.is_empty() and game.series.is_empty():
@@ -250,30 +228,7 @@ func _sync_tray() -> void:
 		router.close()
 
 
-func _on_hero_changed(id: int) -> void:
-	if _cards.has(id):
-		_paint_card(id)
-
-
-func _max_hp(id: int) -> int:
-	return Roster.stats_for(game.hero_defs[id], game.state.heroes[id].level, game.tuning).health
-
-
-## Idle fighters show full HP and empty mana; during a fight the tracked values.
-func _paint_card(id: int) -> void:
-	if _cards.has(id):
-		_cards[id].set_hp(_hp.get(id, _max_hp(id)), _max_hp(id))
-
-
-# --- fight -----------------------------------------------------------------------------------
-
-func _on_fight_started(info: Dictionary) -> void:
-	_hp.clear()
-	_mana.clear()
-	for id: int in info.lineup:
-		_hp[id] = _max_hp(id)
-		_mana[id] = 0
-		_paint_card(id)
+func _on_fight_started(_info: Dictionary) -> void:
 	_excitement.set_value(0.0)
 	_excitement.set_multiplier(_multiplier_text(game.tuning.excitement_multipliers[0]))
 	_excitement.visible = true
@@ -281,22 +236,8 @@ func _on_fight_started(info: Dictionary) -> void:
 	_refresh_bell()
 
 
-## Replays the sim's event onto the bars. The mana numbers come from CombatSim's own constants.
+## HP lives on the fighters in the arena; the HUD only follows excitement.
 func _on_combat_event(event: Dictionary) -> void:
-	var attacker: int = event.get("attacker", -1)
-	if str(event.get("kind")) == "skill":
-		_mana[attacker] = 0
-	elif str(event.get("kind")) == "attack" and _mana.has(attacker):
-		_mana[attacker] = mini(CombatSim.MANA_MAX, _mana[attacker] + CombatSim.MANA_ON_HIT)
-	for hit: Dictionary in event.get("hits", []):
-		var victim: int = hit.target
-		_hp[victim] = maxi(0, _hp.get(victim, 0) - int(hit.damage))
-		if str(event.get("kind")) == "attack" and _hp[victim] > 0:
-			_mana[victim] = mini(CombatSim.MANA_MAX, _mana.get(victim, 0) + CombatSim.MANA_ON_HURT)
-	if _hp.has(attacker):
-		_hp[attacker] = mini(_max_hp(attacker), _hp[attacker] + int(event.get("healing", 0)))
-	for id: int in _hp:
-		_paint_card(id)
 	var excitement := float(event.get("excitement", _excitement.value))
 	_excitement.set_value(excitement)
 	_excitement.set_multiplier(_multiplier_text(Economy.excitement_multiplier(excitement, game.tuning)))
@@ -304,11 +245,6 @@ func _on_combat_event(event: Dictionary) -> void:
 
 func _on_fight_finished(result: Dictionary) -> void:
 	_excitement.visible = false
-	var ids: Array = _hp.keys()
-	_hp.clear()
-	_mana.clear()
-	for id: int in ids:
-		_paint_card(id)
 	_refresh_seats()
 	_refresh_bell()
 	var winner := int(result.get("winner", -1))

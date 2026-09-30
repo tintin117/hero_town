@@ -38,7 +38,6 @@ func _builds(hud: Control, g: Node) -> void:
 	_check(hud.mouse_filter == Control.MOUSE_FILTER_IGNORE, "HUD root must not eat mouse input")
 	for path in ["Layout", "Layout/Middle", "%Drawers", "%Toasts", "%Excitement"]:
 		_check((hud.get_node(path) as Control).mouse_filter == Control.MOUSE_FILTER_IGNORE, "%s must ignore the mouse" % path)
-	_check(hud.get_node("%Cards").get_child_count() == g.state.preferred_lineup.size(), "one hero card per preferred fighter")
 	_check(not hud.get_node("%Excitement").visible, "excitement gauge is hidden while idle")
 	for locked in ["%Build", "%Stories"]:
 		_check(hud.get_node(locked).disabled and hud.get_node(locked).tooltip_text.contains("coming soon"), "%s is locked" % locked)
@@ -94,23 +93,16 @@ func _book_button(hud: Control, g: Node, fake: Object) -> void:
 func _fight(hud: Control, g: Node) -> void:
 	var excitement: ExcitementGauge = hud.get_node("%Excitement")
 	_check(excitement.visible and Kit.near(excitement.value, 0.0), "excitement gauge appears at fight start, reset")
-	var bram: HeroChip = hud.get_node("%Cards").get_child(0)
-	var ivo: HeroChip = hud.get_node("%Cards").get_child(1)
-	var ivo_hp: int = Roster.stats_for(g.hero_defs[1], 1, g.tuning).health
-	g.events.combat_event.emit({"kind": &"attack", "attacker": 0, "hits": [{"target": 1, "damage": ivo_hp / 2, "position": Vector2.ZERO}],
+	g.events.combat_event.emit({"kind": &"attack", "attacker": 0, "hits": [{"target": 1, "damage": 40, "position": Vector2.ZERO}],
 			"healing": 0, "excitement": 30.0})
-	_check(Kit.near(ivo.hp, float(ivo_hp - ivo_hp / 2) / ivo_hp, 0.01), "victim HP follows hits: %f" % ivo.hp)
 	_check(Kit.near(excitement.value, 30.0) and excitement.multiplier_text == "x1.25", "excitement follows combat events")
-	g.events.combat_event.emit({"kind": &"skill", "attacker": 0, "hits": [{"target": 1, "damage": ivo_hp, "position": Vector2.ZERO}],
+	g.events.combat_event.emit({"kind": &"skill", "attacker": 0, "hits": [{"target": 1, "damage": 999, "position": Vector2.ZERO}],
 			"healing": 0, "excitement": 70.0})
-	_check(Kit.near(ivo.hp, 0.0), "a skill can drop HP to 0")
 	var log := Kit.record(g.events)
 	for i in 20:
 		g.advance(0.5)
 	_check(Kit.count(log, "finished") == 1, "fight settled")
 	_check(not excitement.visible, "excitement gauge hides after the fight")
-	var idle_ivo: HeroChip = hud.get_node("%Cards").get_child(1)  # chips are rebuilt when the plant is used up
-	_check(Kit.near(idle_ivo.hp, 1.0), "idle chips return to full HP")
 	var toasts: Control = hud.get_node("%Toasts")
 	_check(toasts.get_child_count() == 2, "a bout summary toast and a series toast appear")
 	if toasts.get_child_count() > 0:

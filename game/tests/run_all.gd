@@ -10,7 +10,10 @@ func _init() -> void:
 	var files := Array(dir.get_files()).filter(func(f: String) -> bool: return f.begins_with("test_") and f.ends_with(".gd"))
 	files.sort()
 	for file: String in files:
-		var problems: Array = load("res://game/tests/" + file).new().run()
+		var script: GDScript = load("res://game/tests/" + file)
+		var problems: Array = ["script failed to load (parse error?)"]
+		if script != null and script.can_instantiate():
+			problems = script.new().run()
 		print("%s %s" % ["PASS" if problems.is_empty() else "FAIL", file])
 		for message in problems:
 			print("  - ", message)
