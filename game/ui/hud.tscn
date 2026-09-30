@@ -149,22 +149,8 @@ tip = "Roster"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-disabled = true
 icon_texture = ExtResource("16")
-tip = "Build: coming soon"
-
-[node name="Lock" parent="Layout/Middle/Tools/Build" instance=ExtResource("7")]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -14.0
-offset_top = -8.0
-offset_right = 10.0
-offset_bottom = 16.0
-grow_horizontal = 0
-tint = Color(0.45, 0.48, 0.55, 1)
-icon = ExtResource("18")
+tip = "Build"
 
 [node name="Stories" parent="Layout/Middle/Tools" instance=ExtResource("5")]
 unique_name_in_owner = true

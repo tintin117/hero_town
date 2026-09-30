@@ -39,8 +39,8 @@ func _builds(hud: Control, g: Node) -> void:
 	for path in ["Layout", "Layout/Middle", "%Drawers", "%Toasts", "%Excitement"]:
 		_check((hud.get_node(path) as Control).mouse_filter == Control.MOUSE_FILTER_IGNORE, "%s must ignore the mouse" % path)
 	_check(not hud.get_node("%Excitement").visible, "excitement gauge is hidden while idle")
-	for locked in ["%Build", "%Stories"]:
-		_check(hud.get_node(locked).disabled and hud.get_node(locked).tooltip_text.contains("coming soon"), "%s is locked" % locked)
+	_check(hud.get_node("%Stories").disabled and hud.get_node("%Stories").tooltip_text.contains("coming soon"), "Stories is locked")
+	_check(not hud.get_node("%Build").disabled, "Build is unlocked (test_build_drawer covers its drawer)")
 	var roster_exists := ResourceLoader.exists("res://game/ui/drawers/roster_drawer.tscn")
 	_check(hud.get_node("%Roster").disabled == not roster_exists, "Roster button follows the roster drawer's existence")
 	_check(hud.get_node("%Text").text.contains("Hold the arena"), "the status says to hold the arena: %s" % hud.get_node("%Text").text)
