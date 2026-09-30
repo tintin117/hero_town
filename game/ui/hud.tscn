@@ -153,14 +153,20 @@ size_flags_vertical = 4
 [node name="Sep" type="VSeparator" parent="Layout/BottomBar/Row"]
 layout_mode = 2
 
-[node name="Book" type="Button" parent="Layout/BottomBar/Row"]
+[node name="Bell" type="PanelContainer" parent="Layout/BottomBar/Row"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(132, 64)
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"RedButton"
-text = "Book"
-icon = ExtResource("13")
+theme_type_variation = &"Pill"
+
+[node name="Text" type="Label" parent="Layout/BottomBar/Row/Bell"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 1
+text = "Bell"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Sep2" type="VSeparator" parent="Layout/BottomBar/Row"]
 layout_mode = 2

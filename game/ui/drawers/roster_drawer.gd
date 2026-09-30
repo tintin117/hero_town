@@ -77,10 +77,12 @@ func _toggle_lineup(id: int) -> void:
 	if id in lineup:
 		lineup.erase(id)
 	else:
+		if lineup.size() >= Roster.fighter_capacity(game.state, game.tuning):
+			lineup.pop_front()  # full: the oldest pick makes room, so swapping never dips below the minimum
 		lineup.append(id)
 	if not game.set_preferred_lineup(lineup):
 		hint.text = "Keep at least %d fighters" % game.tuning.min_lineup if id in game.state.preferred_lineup \
-				else "Lineup full - remove a fighter first"
+				else "That fighter is not in the club yet"
 
 
 func _lineup_hint(s: GameState, t: Tuning) -> String:

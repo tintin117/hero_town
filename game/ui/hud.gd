@@ -1,11 +1,11 @@
 extends Control
-## The in-game HUD: top bar (gold, fame, hype, crowd, menu), bottom bar (lineup, Book, manager, roster, locked tabs),
+## The in-game HUD: top bar (gold, fame, hype, crowd, menu), bottom bar (lineup, bell status, manager, roster, locked tabs),
 ## the fight excitement gauge, a drawer host and a toast layer. It never writes state: it calls Game commands
 ## and redraws from Events signals. Only its own widgets take the mouse, so the town below stays draggable.
 ##
 ## `game` / `events` default to the autoloads (which do not exist under --script); tests assign them before add_child.
 ## Shell API: signals main_menu_requested / quit_requested (forwarded from the pause menu), `router` (open drawers),
-## open_pause(). Named nodes for tests: %Gold %Fame %Hype %Seats %Book %Manager %Roster %Excitement %Cards.
+## open_pause(). Named nodes for tests: %Gold %Fame %Hype %Seats %Bell %Manager %Roster %Excitement %Cards.
 
 signal main_menu_requested
 signal quit_requested
@@ -33,7 +33,8 @@ var _toasts := []  ## slot -> live toast; toasts stack upwards
 @onready var _hype: HypeGauge = %Hype
 @onready var _seats: StatPill = %Seats
 @onready var _excitement: ExcitementGauge = %Excitement
-@onready var _book: Button = %Book
+@onready var _bell: Control = %Bell
+@onready var _bell_text: Label = %Text
 @onready var _pause: Control = %PauseMenu
 
 
@@ -56,7 +57,6 @@ func _ready() -> void:
 	_excitement.tier_marks = marks
 
 	%Menu.pressed.connect(open_pause)
-	_book.pressed.connect(func() -> void: game.book_fight(game.state.preferred_lineup))
 	%Manager.pressed.connect(toggle_drawer.bind(&"manager"))
 	%Roster.pressed.connect(toggle_drawer.bind(&"roster"))
 	%Roster.disabled = not router.has_drawer(&"roster")
@@ -71,7 +71,9 @@ func _ready() -> void:
 	events.fight_started.connect(_on_fight_started)
 	events.combat_event.connect(_on_combat_event)
 	events.fight_finished.connect(_on_fight_finished)
-	events.paused_changed.connect(func(_paused: bool) -> void: _refresh_book())
+	events.series_started.connect(func(_info: Dictionary) -> void: _refresh_seats(); _refresh_bell())
+	events.series_finished.connect(_on_series_finished)
+	events.paused_changed.connect(func(_paused: bool) -> void: _refresh_bell())
 	events.toast.connect(func(text: String, icon: StringName) -> void: show_toast(TOAST_ICONS.get(icon, "info"), text))
 	sync_all()
 
@@ -124,7 +126,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_hype(hype: float) -> void:
 	_hype.set_value(hype)
 	_refresh_seats()
-	_refresh_book()
+	_refresh_bell()
 
 
 func _on_fame(points: int, tier: int) -> void:
@@ -135,38 +137,42 @@ func _on_fame(points: int, tier: int) -> void:
 	_fame.tooltip_text = "Fame %d%s" % [points, "" if top else " / %d" % t.fame_tier_points[tier + 1]]
 
 
-## Idle: the crowd a booking right now would draw. Fighting: the crowd that was booked.
+## The crowd of the running series, or what the bell would draw now.
 func _refresh_seats() -> void:
-	var fighting: bool = not game.fight.is_empty()
-	var seats: int = game.fight.seats if fighting else Roster.seats(game.state, game.tuning)
-	var crowd: int = game.fight.attendance if fighting else game.attendance_if_booked_now()
+	var live: bool = not game.series.is_empty()
+	var seats: int = game.series.seats if live else Roster.seats(game.state, game.tuning)
+	var crowd: int = game.crowd_now()
 	_seats.text = "%d/%d" % [crowd, seats]
-	_seats.tooltip_text = ("Crowd in the arena: %d of %d seats" if fighting else "Crowd if you book now: %d of %d seats") % [crowd, seats]
+	_seats.tooltip_text = ("Crowd in the arena: %d of %d seats" if live else "Crowd when the bell rings now: %d of %d seats") % [crowd, seats]
 
 
 func _refresh_manager() -> void:
 	var manager: Dictionary = game.state.manager
 	_hype.set_threshold(manager.threshold if manager.enabled else -1.0)
 	%ManagerCaption.text = "Auto %d" % int(manager.threshold) if manager.enabled else "Manual"
-	%Manager.tip = "Manager books at hype >= %d" % int(manager.threshold) if manager.enabled else "Manager is off"
+	%Manager.tip = "Bell rings at hype >= %d" % int(manager.threshold) if manager.enabled else "Auto bell is off"
 
 
 # --- bottom bar ------------------------------------------------------------------------------
 
-func _refresh_book() -> void:
-	var lineup: Array[int] = game.state.preferred_lineup
-	var reason := ""
-	if not game.fight.is_empty():
-		reason = "A fight is already on."
-	elif game.paused:
-		reason = "The game is paused."
-	elif not Roster.valid_lineup(game.state, game.tuning, lineup):
-		reason = "Pick at least %d fighters in the roster." % game.tuning.min_lineup
-	var base: int = game.income_preview(lineup)
-	_book.disabled = reason != ""
-	_book.text = "Fight on!" if not game.fight.is_empty() else ("Book\n+%d" % base if base > 0 else "Book")
-	var best := _multiplier_text(game.tuning.excitement_multipliers[-1])
-	_book.tooltip_text = reason if reason != "" else "Ticket base +%d gold, up to %s with excitement." % [base, best]
+## The bell rings by itself once hype reaches the threshold: idle it shows the target, during a
+## series the bout number and score.
+func _refresh_bell() -> void:
+	var manager: Dictionary = game.state.manager
+	var series: Dictionary = game.series
+	if series.is_empty():
+		_bell_text.text = "Bell at
+hype %d" % int(manager.threshold) if manager.enabled else "Bell off"
+		_bell.tooltip_text = "The bell rings by itself when hype reaches %d. First to %d wins the series." 				% [int(manager.threshold), game.tuning.series_wins]
+		return
+	var score := []
+	var names := []
+	for id: int in series.lineup:
+		score.append(str(series.wins.get(id, 0)))
+		names.append("%s %d" % [game.hero_defs[id].display_name, series.wins.get(id, 0)])
+	_bell_text.text = "Bout %d
+%s" % [series.bout + 1, "-".join(score)]
+	_bell.tooltip_text = "First to %d wins.  %s" % [game.tuning.series_wins, "  ".join(names)]
 
 
 func _rebuild_cards() -> void:
@@ -183,7 +189,7 @@ func _rebuild_cards() -> void:
 		%Cards.add_child(card)
 		_cards[id] = card
 		_paint_card(id)
-	_refresh_book()
+	_refresh_bell()
 
 
 func _on_hero_changed(id: int) -> void:
@@ -216,7 +222,7 @@ func _on_fight_started(info: Dictionary) -> void:
 	_excitement.set_multiplier(_multiplier_text(game.tuning.excitement_multipliers[0]))
 	_excitement.visible = true
 	_refresh_seats()
-	_refresh_book()
+	_refresh_bell()
 
 
 ## Replays the sim's event onto the bars. The mana numbers come from CombatSim's own constants.
@@ -248,11 +254,24 @@ func _on_fight_finished(result: Dictionary) -> void:
 	for id: int in ids:
 		_paint_card(id)
 	_refresh_seats()
-	_refresh_book()
+	_refresh_bell()
 	var winner := int(result.get("winner", -1))
 	if winner >= 0 and winner < game.hero_defs.size():
 		show_toast("trophy", "%s wins!  +%d gold (%s)  +%d fame" % [game.hero_defs[winner].display_name,
 				result.payout, _multiplier_text(result.multiplier), result.fame_gained], 4.0)
+
+
+func _on_series_finished(result: Dictionary) -> void:
+	_refresh_seats()
+	_refresh_bell()
+	var winner := int(result.winner)
+	if winner >= 0:
+		var lost := 0
+		for id: int in result.wins:
+			if id != winner:
+				lost += int(result.wins[id])
+		show_toast("trophy", "%s takes the series %d-%d!  +%d fame" % [game.hero_defs[winner].display_name,
+				result.wins[winner], lost, result.fame_bonus], 4.5)
 
 
 static func _multiplier_text(multiplier: float) -> String:

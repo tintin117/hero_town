@@ -74,10 +74,10 @@ func _recruit() -> void:
 
 
 func _lineup() -> void:
-	# capacity 2 and lineup [0, 1]: adding is refused, removing would go below the minimum
+	# capacity 2 and lineup [0, 1]: a pick into the full lineup swaps out the oldest one (no need to remove first)
 	_drawer.entries[2].card.pressed.emit()
-	_check(_lineup_is([0, 1]), "full lineup refuses a third fighter")
-	_check("full" in _drawer.hint.text, "hint explains lineup full: %s" % _drawer.hint.text)
+	_check(_lineup_is([1, 2]), "picking into a full lineup swaps out the oldest pick")
+	_game.set_preferred_lineup([0, 1] as Array[int])
 	_drawer.entries[0].card.pressed.emit()
 	_check(_lineup_is([0, 1]), "lineup keeps the minimum of 2")
 	_check("at least 2" in _drawer.hint.text, "hint explains the minimum: %s" % _drawer.hint.text)

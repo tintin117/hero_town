@@ -43,6 +43,11 @@ static func tuning() -> Tuning:
 static func game(fake: FakeSim = null) -> Node:
 	var g: Node = GameScript.new()
 	g.events = EventsScript.new()
+	g.tuning = g.tuning.duplicate()  # legacy tests play one fight per booking; test_core_series uses the real bo5
+	g.tuning.series_wins = 1
+	g.tuning.series_max_bouts = 1
+	g.tuning.series_pause = 0.0
+	g.tuning.series_fame_bonus = 0
 	g.autosave = false
 	g.save_path = SAVE_DIR + "/game_save.json"
 	if fake != null:

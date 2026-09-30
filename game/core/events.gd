@@ -8,7 +8,9 @@ signal fame_changed(points: int, tier: int)  ## tier is 0-based
 signal fight_booked(lineup: Array[int], main_event: StringName)
 signal fight_started(info: Dictionary)  ## lineup, attendance, seats, seed, duration
 signal combat_event(event: Dictionary)
-signal fight_finished(result: Dictionary)
+signal fight_finished(result: Dictionary)  ## one bout settled
+signal series_started(info: Dictionary)  ## lineup, attendance, seats, wins_needed
+signal series_finished(result: Dictionary)  ## winner (-1 = unresolved), wins {id: n}, bouts, fame_bonus
 signal roster_changed
 signal hero_changed(id: int)
 signal building_changed(id: StringName)

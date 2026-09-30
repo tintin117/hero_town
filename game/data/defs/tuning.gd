@@ -42,5 +42,11 @@ extends Resource
 @export var fame_per_fight := 0
 @export var fame_excitement_divisor := 1.0  ## + int(excitement / divisor) per fight
 
+@export_group("Series")
+@export var series_wins := 1  ## bo5 = first to 3; tests use 1 for single-fight lifecycles
+@export var series_pause := 0.0  ## seconds of crowd chatter between bouts
+@export var series_max_bouts := 1  ## draw guard: a series ends unresolved after this many bouts
+@export var series_fame_bonus := 0
+
 @export_group("Manager")
 @export var manager_threshold := 0.0

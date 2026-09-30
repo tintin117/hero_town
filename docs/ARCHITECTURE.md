@@ -40,7 +40,8 @@ UI / input ──command──▶ Game ──▶ systems mutate GameState ──
 
 ## 3. Fight lifecycle
 
-1. **Bell** (`Game.book_fight`): `hype`→`attendance`; `combat_sim.simulate(lineup, seed, mods)` runs the whole fight instantly and deterministically, returning `{events, result}`.
+0. **Series (bo5, first to 3).** The bell rings by itself when hype reaches the manager threshold (default 70; there is no manual Book). It locks `attendance` for the whole series and plays bouts 1..n with a `series_pause` (3 s) of crowd chatter between them; each bout runs steps 1–3 below and pays as it finishes. The series ends at `series_wins` wins (fame bonus) or after `series_max_bouts` (draw guard, no winner). Hype falls to the last bout's afterglow when the series ends and grows only while idle. `Game.series` holds the running series; `Game.crowd_now()` is the locked crowd or what the bell would draw now.
+1. **Bout start** (`Game.book_fight` rings the bell, `_start_bout` per bout): `hype`→`attendance`; `combat_sim.simulate(lineup, seed, mods)` runs the whole fight instantly and deterministically, returning `{events, result}`.
 2. **Playback**: `Game` releases `events` by fight clock. Each event fires `Events.combat_event(e)`; a skill event pays its 10-gold tip when released. The Arena only replays events for display.
 3. **Settle** when the last event is released: `economy.settle(result)` pays gold, XP, wins, fame, concessions, sets afterglow → `Events.fight_finished(result)`.
 
@@ -63,7 +64,9 @@ Skipping presentation gives identical outcomes (needed for offline progress late
 | `fight_booked` | `lineup: Array[int], main_event: StringName` | bell, before playback |
 | `fight_started` | `info: Dictionary` (`lineup, attendance, seats, seed, duration`) | playback begins |
 | `combat_event` | `event: Dictionary` | playback releases a sim event |
-| `fight_finished` | `result: Dictionary` | settlement done |
+| `fight_finished` | `result: Dictionary` | one bout settled |
+| `series_started` | `info: Dictionary` (`lineup, attendance, seats, wins_needed`) | the bell rings |
+| `series_finished` | `result: Dictionary` (`winner` (-1 = unresolved), `wins`, `bouts`, `fame_bonus`) | a fighter reaches the win count |
 | `roster_changed` | – | recruit, lineup or level change |
 | `hero_changed` | `id: int` | one hero's XP / level / wins |
 | `building_changed` | `id: StringName` | built, upgraded or moved |

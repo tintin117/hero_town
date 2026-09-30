@@ -1,5 +1,5 @@
 extends Drawer
-## Manager settings: on/off and "Book at hype >= X", plus a live "Books in ~N s" estimate.
+## Manager settings: on/off and "Bell at hype >= X", plus a live "Bell in ~N s" estimate.
 ## `game` / `events` default to the autoloads; tests set them before add_child.
 
 var game: Node
@@ -48,20 +48,20 @@ func _commit() -> void:
 
 
 func _update_texts() -> void:
-	_threshold.text = "Book at hype >= %d" % int(_slider.value)
+	_threshold.text = "Bell at hype >= %d" % int(_slider.value)
 	_estimate.text = _estimate_text()
 
 
 func _estimate_text() -> String:
 	if not _toggle.button_pressed:
-		return "Manager is off: you book by hand."
+		return "Auto bell is off: no fights start."
 	if not game.fight.is_empty():
 		return "Fight in progress."
 	if not Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup):
 		return "Needs a valid lineup."
 	var hype: float = game.state.hype
 	if hype >= _slider.value:
-		return "Books now."
+		return "Bell rings now."
 	# Inverse of Hype.grow: time for hype to climb from `hype` to the threshold.
 	var t: Tuning = game.tuning
-	return "Books in ~%d s" % ceili(t.hype_tau * log((t.hype_max - hype) / (t.hype_max - _slider.value)))
+	return "Bell in ~%d s" % ceili(t.hype_tau * log((t.hype_max - hype) / (t.hype_max - _slider.value)))

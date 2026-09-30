@@ -44,7 +44,7 @@ func _builds(hud: Control, g: Node) -> void:
 		_check(hud.get_node(locked).disabled and hud.get_node(locked).tooltip_text.contains("coming soon"), "%s is locked" % locked)
 	var roster_exists := ResourceLoader.exists("res://game/ui/drawers/roster_drawer.tscn")
 	_check(hud.get_node("%Roster").disabled == not roster_exists, "Roster button follows the roster drawer's existence")
-	_check(not hud.get_node("%Book").disabled, "Book is enabled with a valid idle lineup")
+	_check(hud.get_node("%Text").text.contains("hype 70"), "bell shows the hype target: %s" % hud.get_node("%Text").text)
 	_check(hud.get_node("%Seats").text == "%d/100" % g.attendance_if_booked_now(), "seats pill shows the crowd now: %s" % hud.get_node("%Seats").text)
 
 
@@ -54,7 +54,7 @@ func _widgets_follow_signals(hud: Control, g: Node) -> void:
 	_check(int(hud.get_node("%Gold").value) == 500, "gold pill follows gold_changed")
 	g.events.hype_changed.emit(55.0)
 	_check(Kit.near(hud.get_node("%Hype").value, 55.0), "hype gauge follows hype_changed")
-	_check(hud.get_node("%Hype").threshold < 0.0, "no threshold marker while the manager is off")
+	_check(Kit.near(hud.get_node("%Hype").threshold, 70.0), "threshold marker shows the bell target from the start")
 	g.set_manager(true, 60.0)
 	_check(Kit.near(hud.get_node("%Hype").threshold, 60.0), "threshold marker follows manager_changed")
 	_check(hud.get_node("%ManagerCaption").text == "Auto 60", "manager caption shows the threshold")
@@ -70,25 +70,18 @@ func _widgets_follow_signals(hud: Control, g: Node) -> void:
 
 
 func _book_button(hud: Control, g: Node, fake: Object) -> void:
-	var book: Button = hud.get_node("%Book")
-	_check(book.text.contains("+%d" % g.income_preview(g.state.preferred_lineup)), "Book shows the income preview: %s" % book.text)
-	g.set_paused(true)
-	_check(book.disabled and book.tooltip_text.contains("paused"), "Book is disabled with a reason while paused")
-	g.set_paused(false)
-	_check(not book.disabled, "Book re-enables after resume")
-	var lineup: Array[int] = g.state.preferred_lineup.duplicate()
-	g.state.preferred_lineup = [0] as Array[int]
-	g.events.roster_changed.emit()
-	_check(book.disabled and book.tooltip_text.contains("fighters"), "Book is disabled with a reason for a short lineup")
-	g.state.preferred_lineup = lineup
-	g.events.roster_changed.emit()
-	book.pressed.emit()
-	_check(fake.calls == 1 and not g.fight.is_empty(), "Book calls Game.book_fight with the preferred lineup")
-	_check(fake.last_lineup.size() == lineup.size(), "the whole preferred lineup was booked")
-	_check(book.disabled and book.tooltip_text.contains("fight"), "Book is disabled with a reason during a fight")
-	_check(hud.get_node("%Seats").text == "100/100", "seats pill shows the booked crowd")
-	book.pressed.emit()
-	_check(fake.calls == 1, "a second press during the fight does nothing")
+	var text: Label = hud.get_node("%Text")
+	g.state.manager.enabled = false
+	g.events.manager_changed.emit()
+	_check(text.text == "Bell off", "bell status when the auto bell is off: %s" % text.text)
+	g.state.manager.enabled = true
+	g.events.manager_changed.emit()
+	_check(g.book_fight(g.state.preferred_lineup), "the bell (manager) starts the series")
+	_check(fake.calls == 1 and not g.fight.is_empty(), "the series plays its first bout")
+	_check(fake.last_lineup.size() == g.state.preferred_lineup.size(), "the whole preferred lineup fights")
+	_check(text.text.begins_with("Bout 1"), "bell status shows the bout during a series: %s" % text.text)
+	_check(hud.get_node("%Seats").text == "100/100", "seats pill shows the locked crowd")
+	_check(not g.book_fight(g.state.preferred_lineup), "no second bell during a series")
 
 
 func _fight(hud: Control, g: Node) -> void:
@@ -112,10 +105,10 @@ func _fight(hud: Control, g: Node) -> void:
 	_check(not excitement.visible, "excitement gauge hides after the fight")
 	_check(Kit.near(ivo.hp, 1.0) and Kit.near(bram.mana, 0.0), "idle cards return to full HP and empty mana")
 	var toasts: Control = hud.get_node("%Toasts")
-	_check(toasts.get_child_count() == 1, "a fight summary toast appears")
+	_check(toasts.get_child_count() == 2, "a bout summary toast and a series toast appear")
 	if toasts.get_child_count() > 0:
 		var text: String = toasts.get_child(0).text
 		_check(text.contains("Bram") and text.contains("gold") and text.contains("fame") and text.contains("x1.25"), "summary toast content: %s" % text)
 	g.events.toast.emit("Hello", &"fame")
-	_check(toasts.get_child_count() == 2, "Events.toast makes a toast")
-	_check(not (hud.get_node("%Book") as Button).disabled, "Book is enabled again after the fight")
+	_check(toasts.get_child_count() == 3, "Events.toast makes a toast")
+	_check(hud.get_node("%Text").text.contains("hype"), "bell shows the hype target again after the series")

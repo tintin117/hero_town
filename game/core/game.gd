@@ -16,9 +16,12 @@ var sim := Callable()
 var save_path := SaveStore.DEFAULT_PATH
 var autosave := true
 var paused := false
-## Running fight, empty while idle: lineup, attendance, seats, seed, locked_base, duration,
-## events, result, clock, next. Not saved.
+## Running bout, empty while idle or between bouts: lineup, attendance, seats, seed, locked_base,
+## duration, events, result, clock, next. Not saved.
 var fight := {}
+## Running series (first to `tuning.series_wins`), empty while idle: lineup, attendance (locked at the
+## bell), seats, wins {hero id: n}, bout (bouts settled), pause (seconds until the next bout), seed. Not saved.
+var series := {}
 var _hype_emit_acc := 0.0
 
 
@@ -45,6 +48,11 @@ func advance(dt: float) -> void:
 	if not fight.is_empty():
 		_play(dt)
 		return
+	if not series.is_empty():
+		series.pause -= dt
+		if series.pause <= 0.0 and not _start_bout():
+			series = {}
+		return
 	var before := state.hype
 	state.hype = Hype.grow(before, dt, tuning)
 	_hype_emit_acc += dt
@@ -59,7 +67,9 @@ func advance(dt: float) -> void:
 
 func new_game() -> bool:
 	state = GameState.create(tuning, hero_defs)
+	state.manager.enabled = true  # the bell rings by itself; there is no manual Book
 	fight = {}
+	series = {}
 	_announce()
 	_autosave()
 	return true
@@ -70,7 +80,9 @@ func continue_game() -> bool:
 	if loaded.is_empty():
 		return false
 	state = loaded.state
+	state.manager.enabled = true
 	fight = {}
+	series = {}
 	_announce()
 	if loaded.recovered:
 		events.toast.emit("Save restored from backup", &"save")
@@ -88,28 +100,25 @@ func set_paused(value: bool) -> bool:
 	return true
 
 
-## `opts`: main_event (StringName), mods (combat mods, null = neutral), seed (int, tests).
+## Rings the bell: starts a series with the crowd hype has built (locked for every bout).
+## `opts`: main_event (StringName), mods (combat mods), seed (int, tests; bout n uses seed + n).
 func book_fight(lineup: Array[int], opts := {}) -> bool:
-	if not fight.is_empty() or not Roster.valid_lineup(state, tuning, lineup):
+	if not fight.is_empty() or not series.is_empty() or not Roster.valid_lineup(state, tuning, lineup):
 		return false
-	var simulate := _simulator()
-	if not simulate.is_valid():
+	if not _simulator().is_valid():
 		return false
 	var seats := Roster.seats(state, tuning)
 	var attendance := Hype.attendance(seats, state.hype, tuning)
 	var rng_seed := int(opts.get("seed", state.rng_seed_counter))
 	state.rng_seed_counter += 1
-	var out: Dictionary = simulate.call(_fighters(lineup), rng_seed, opts.get("mods", {}))
-	if not out.get("events") is Array or not out.get("result") is Dictionary:
-		return false
-	var duration := float(out.result.get("duration", 0.0))
-	var locked_base := Economy.base_income(state, tuning, lineup, attendance)
+	series = {"lineup": lineup.duplicate(), "attendance": attendance, "seats": seats, "wins": {},
+		"bout": 0, "pause": 0.0, "seed": rng_seed, "opts": opts}
 	events.fight_booked.emit(lineup.duplicate(), StringName(opts.get("main_event", &"")))
-	fight = {"lineup": lineup.duplicate(), "attendance": attendance, "seats": seats, "seed": rng_seed,
-		"locked_base": locked_base, "duration": duration, "events": out.events, "result": out.result,
-		"clock": 0.0, "next": 0}
-	events.fight_started.emit({"lineup": fight.lineup.duplicate(), "attendance": attendance,
-		"seats": seats, "seed": rng_seed, "duration": duration, "locked_base": locked_base})
+	events.series_started.emit({"lineup": lineup.duplicate(), "attendance": attendance, "seats": seats,
+		"wins_needed": tuning.series_wins})
+	if not _start_bout():
+		series = {}
+		return false
 	return true
 
 
@@ -173,6 +182,11 @@ func can_afford(cost: int) -> bool:
 	return state.gold >= cost
 
 
+## The crowd in the arena: the locked one during a series, otherwise what the bell would draw now.
+func crowd_now() -> int:
+	return int(series.attendance) if not series.is_empty() else attendance_if_booked_now()
+
+
 func attendance_if_booked_now() -> int:
 	return Hype.attendance(Roster.seats(state, tuning), state.hype, tuning)
 
@@ -190,6 +204,22 @@ func _simulator() -> Callable:
 	if not sim.is_valid() and ResourceLoader.exists(COMBAT_SIM_PATH):
 		sim = Callable(load(COMBAT_SIM_PATH), &"simulate")
 	return sim
+
+
+## Simulates the next bout of the running series and starts its playback.
+func _start_bout() -> bool:
+	var lineup: Array[int] = series.lineup
+	var out: Dictionary = _simulator().call(_fighters(lineup), int(series.seed) + int(series.bout), series.opts.get("mods", {}))
+	if not out.get("events") is Array or not out.get("result") is Dictionary:
+		return false
+	var duration := float(out.result.get("duration", 0.0))
+	var locked_base := Economy.base_income(state, tuning, lineup, series.attendance)
+	fight = {"lineup": lineup.duplicate(), "attendance": series.attendance, "seats": series.seats,
+		"seed": int(series.seed) + int(series.bout), "locked_base": locked_base, "duration": duration,
+		"events": out.events, "result": out.result, "clock": 0.0, "next": 0}
+	events.fight_started.emit({"lineup": lineup.duplicate(), "attendance": series.attendance,
+		"seats": series.seats, "seed": fight.seed, "duration": duration, "locked_base": locked_base})
+	return true
 
 
 func _fighters(lineup: Array[int]) -> Array[Dictionary]:
@@ -238,8 +268,33 @@ func _settle() -> void:
 		leveled = leveled or hero.level > hero.level_before
 	if leveled:
 		events.roster_changed.emit()
+	var ended := _count_bout(int(done.result.get("winner", -1)))  # before the signal so listeners see the score
 	events.fight_finished.emit(out)
+	if not ended.is_empty():
+		events.series_finished.emit(ended)
 	_autosave()
+
+
+## Counts the bout for the series. Returns the series result once it ends (`series_wins` reached or the
+## draw guard hit), otherwise schedules the next bout and returns {}.
+func _count_bout(winner: int) -> Dictionary:
+	if series.is_empty():
+		return {}
+	series.bout += 1
+	if winner >= 0:
+		series.wins[winner] = int(series.wins.get(winner, 0)) + 1
+	var won: bool = winner >= 0 and series.wins[winner] >= tuning.series_wins
+	if not won and series.bout < tuning.series_max_bouts:
+		series.pause = tuning.series_pause
+		return {}
+	var bonus := tuning.series_fame_bonus if won else 0
+	state.fame_points += bonus
+	var result := {"winner": winner if won else -1, "wins": series.wins.duplicate(), "bouts": series.bout,
+		"fame_bonus": bonus, "lineup": series.lineup.duplicate()}
+	series = {}
+	if bonus > 0:
+		events.fame_changed.emit(state.fame_points, Fame.tier(state.fame_points, tuning))
+	return result
 
 
 func _spend(cost: int) -> void:

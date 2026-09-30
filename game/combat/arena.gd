@@ -125,7 +125,7 @@ func _add_fighter(id: int, health: int, bar: bool, ground: Vector2) -> void:
 func _refresh_crowd() -> void:
 	var seats := Roster.seats(game.state, game.tuning)
 	_crowd.set_seats(seats)
-	_crowd.set_attendance(game.attendance_if_booked_now(), seats)
+	_crowd.set_attendance(game.crowd_now(), seats)
 
 
 func _place_fighters() -> void:

@@ -1,6 +1,6 @@
 extends RefCounted
 ## HUD layout at 960x420, 1280x420 and 1600x560: bars keep their height, nothing overlaps or leaves the window,
-## the Book button stays reachable with a full 5-fighter lineup, and drawers fit between the bars.
+## the bell status stays visible with a full 5-fighter lineup, and drawers fit between the bars.
 
 const Kit := preload("res://game/tests/core_kit.gd")
 const SIZES: Array[Vector2i] = [Vector2i(960, 420), Vector2i(1280, 420), Vector2i(1600, 560)]
@@ -82,7 +82,7 @@ func _at_size(size: Vector2i) -> void:
 	_inside(_kids(hud.get_node("Layout/BottomBar/Row")), window, "%s bottom bar" % label)
 	_check(hud.get_node("%Excitement").visible, "%s: excitement gauge visible in a fight" % label)
 	_inside([hud.get_node("%Excitement")] as Array[Control], middle.get_global_rect(), "%s excitement" % label)
-	_check(hud.get_node("%Book").get_global_rect().size.x >= 100.0, "%s: Book keeps its width with 5 fighters" % label)
+	_check(hud.get_node("%Bell").get_global_rect().size.x >= 100.0, "%s: the bell status keeps its width with 5 fighters" % label)
 	_check(hud.get_node("%Cards").get_child_count() == 5, "%s: five hero cards" % label)
 	var drawer: Drawer = load("res://game/ui/drawers/manager_drawer.tscn").instantiate()
 	_check(drawer.panel_size.y + 2.0 * drawer.margin <= middle.size.y and drawer.panel_size.x + 2.0 * drawer.margin <= size.x,

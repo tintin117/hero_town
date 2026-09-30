@@ -77,7 +77,8 @@ func _manager_drawer(router: DrawerRouter, host: Control, g: Node) -> void:
 	var toggle: CheckButton = drawer.get_node("%Toggle")
 	var slider: HSlider = drawer.get_node("%Slider")
 	var estimate: Label = drawer.get_node("%Estimate")
-	_check(not toggle.button_pressed and Kit.near(slider.value, 70.0), "drawer starts from Game.state.manager (off, 70)")
+	_check(toggle.button_pressed and Kit.near(slider.value, 70.0), "drawer starts from Game.state.manager (on, 70)")
+	toggle.button_pressed = false
 	toggle.button_pressed = true
 	_check(g.state.manager.enabled, "toggle calls set_manager(true, ...)")
 	slider.value = 55.0
@@ -85,10 +86,10 @@ func _manager_drawer(router: DrawerRouter, host: Control, g: Node) -> void:
 	g.state.hype = 15.0
 	g.events.hype_changed.emit(15.0)
 	# 50 s * ln((100 - 15) / (100 - 55)) = 31.8 -> 32
-	_check(estimate.text == "Books in ~32 s", "estimate from the hype curve: %s" % estimate.text)
+	_check(estimate.text == "Bell in ~32 s", "estimate from the hype curve: %s" % estimate.text)
 	g.state.hype = 60.0
 	g.events.hype_changed.emit(60.0)
-	_check(estimate.text == "Books now.", "estimate at/above the threshold: %s" % estimate.text)
+	_check(estimate.text == "Bell rings now.", "estimate at/above the threshold: %s" % estimate.text)
 	g.set_manager(false, 80.0)
 	_check(not toggle.button_pressed and Kit.near(slider.value, 80.0), "drawer follows manager_changed")
 	_check(estimate.text.contains("off"), "estimate says the manager is off: %s" % estimate.text)
