@@ -3,8 +3,8 @@ extends RefCounted
 ## without paying or placing. Not a test itself (the runner takes test_*.gd only). Dispose with CoreKit.dispose().
 
 const Kit := preload("res://game/tests/core_kit.gd")
-const CELLS := {&"promotion_office": Vector2i(10, 0), &"recruitment_hall": Vector2i(12, 0),
-		&"gym": Vector2i(10, 3), &"restaurant": Vector2i(14, 3)}
+const CELLS := {&"promotion_office": [10, 0], &"recruitment_hall": [12, 0],
+		&"gym": [10, 3], &"restaurant": [14, 3]}
 
 
 static func make() -> Node:

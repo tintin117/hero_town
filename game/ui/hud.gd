@@ -45,6 +45,7 @@ var _prop: StringName = &""  ## the prop the running series uses
 @onready var _seats: StatPill = %Seats
 @onready var _excitement: ExcitementGauge = %Excitement
 @onready var _status: Label = %Text
+@onready var _action: Button = %Action
 @onready var _prop_icon: TextureRect = %PropIcon
 @onready var _ripe_badge: Badge = %Ripe
 @onready var _pause: Control = %PauseMenu
@@ -69,6 +70,7 @@ func _ready() -> void:
 	_excitement.tier_marks = marks
 
 	%Menu.pressed.connect(open_pause)
+	_action.pressed.connect(_on_action)
 	events.planted_changed.connect(_refresh_status)
 	%Manager.pressed.connect(toggle_drawer.bind(&"manager"))
 	%Roster.pressed.connect(toggle_drawer.bind(&"roster"))
@@ -231,14 +233,15 @@ func _refresh_status() -> void:
 	elif not manager.enabled:
 		text = "Bell off"
 		tip = "The auto bell is off (see the manager)."
-	elif not Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup):
-		text = "Tap the arena: pick %d+ fighters" % game.tuning.min_lineup
-		tip = "Tap the arena to pick the fighters to plant."
+	elif game.plant_block_reason() != "":
+		text = game.plant_block_reason()
+		tip = "Tap the arena to change the pick."
 	else:
 		text = "Hold the arena to plant"
 		tip = "Hold the arena to plant the picked fighters. Tap it to change them. The bell rings at hype %d." % int(manager.threshold)
 	_status.text = text
 	_status.tooltip_text = tip
+	_refresh_action()
 	_show_prop(prop)
 	if main != "":
 		_status.tooltip_text += "  Main Event: every bout pays more."
@@ -285,6 +288,37 @@ func _on_series_started(info: Dictionary) -> void:
 	_main_event = info.get("main_event", {})
 	_prop = info.get("prop", &"")
 	_sync_tray()
+
+
+## The action button: Plant, then (once planted) Ring bell now, which starts the series with the crowd hype has built so far.
+func _refresh_action() -> void:
+	if not game.series.is_empty():
+		_action.text = "Series on"
+		_action.disabled = true
+		_action.tooltip_text = "A series is running."
+	elif not game.planted.is_empty():
+		_action.text = "Ring bell now"
+		_action.disabled = false
+		_action.tooltip_text = "Start now with %d of %d seats filled. Waiting for more hype draws a bigger crowd." 				% [game.attendance_if_booked_now(), Roster.seats(game.state, game.tuning)]
+	elif game.plant_block_reason() != "":
+		_action.text = "Pick fighters"
+		_action.disabled = false
+		_action.tooltip_text = game.plant_block_reason()
+	else:
+		_action.text = "Plant"
+		_action.disabled = false
+		_action.tooltip_text = "Plant the picked fighters. Hype grows once they are planted."
+
+
+func _on_action() -> void:
+	if not game.series.is_empty():
+		return
+	if not game.planted.is_empty():
+		game.book_fight(game.planted)
+	elif game.plant_block_reason() != "":
+		toggle_drawer(&"seeds")
+	else:
+		game.plant()
 
 
 func _can_plant() -> bool:

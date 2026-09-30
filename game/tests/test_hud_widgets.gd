@@ -26,6 +26,7 @@ func run() -> Array[String]:
 	_widgets_follow_signals(hud, g)
 	_book_button(hud, g, fake)
 	_fight(hud, g)
+	_action_button(hud, g)
 	vp.free()
 	Kit.dispose(g)
 	return problems
@@ -97,6 +98,15 @@ func _book_button(hud: Control, g: Node, fake: Object) -> void:
 	_check(status.text.begins_with("Bout 1"), "status shows the bout during a series: %s" % status.text)
 	_check(hud.get_node("%Seats").text == "100/100", "seats pill shows the locked crowd")
 	_check(not g.book_fight(g.state.preferred_lineup), "no second bell during a series")
+
+
+func _action_button(hud: Control, g: Node) -> void:
+	var action: Button = hud.get_node("%Action")
+	_check(action.text == "Plant" and not action.disabled, "the action button offers Plant: %s" % action.text)
+	action.pressed.emit()
+	_check(not g.planted.is_empty() and action.text == "Ring bell now", "pressing Plant plants and turns into Ring bell now: %s" % action.text)
+	action.pressed.emit()
+	_check(not g.series.is_empty() and action.text == "Series on" and action.disabled, "Ring bell now starts the series at once")
 
 
 func _fight(hud: Control, g: Node) -> void:

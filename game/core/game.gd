@@ -144,8 +144,24 @@ func book_fight(lineup: Array[int], opts := {}) -> bool:
 
 
 ## Plants the selected lineup: from now on hype grows, and the bell rings the series with these fighters.
+## Why planting is refused right now, "" when it is allowed (the HUD shows this instead of failing silently).
+func plant_block_reason() -> String:
+	if not series.is_empty() or not fight.is_empty():
+		return "A series is already on."
+	if not planted.is_empty():
+		return "Already planted."
+	if not Roster.valid_lineup(state, tuning, state.preferred_lineup):
+		return "Pick %d-%d fighters first." % [tuning.min_lineup, Roster.fighter_capacity(state, tuning)]
+	for id in state.preferred_lineup:
+		if _any_training([id] as Array[int]):
+			return "%s is training in the Gym - recall them first." % hero_defs[id].display_name
+	return ""
+
+
 func plant() -> bool:
-	if not planted.is_empty() or not series.is_empty() or not fight.is_empty() 			or not Roster.valid_lineup(state, tuning, state.preferred_lineup) or _any_training(state.preferred_lineup):
+	var reason := plant_block_reason()
+	if reason != "":
+		events.toast.emit(reason, &"lock")
 		return false
 	planted = state.preferred_lineup.duplicate()
 	planted_main_event = _lock_main_event()

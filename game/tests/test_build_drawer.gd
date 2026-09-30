@@ -174,7 +174,7 @@ func _gym() -> void:
 
 func _events_only() -> void:
 	# state changed behind the drawer's back: nothing redraws until an Events signal arrives
-	_game.state.buildings["restaurant"] = {"level": 3, "cell": Vector2i(14, 3)}
+	_game.state.buildings["restaurant"] = {"level": 3, "cell": [14, 3]}
 	_check(_entry(&"restaurant").level == 0, "no redraw without a signal")
 	_game.events.building_changed.emit(&"restaurant")
 	_check(_entry(&"restaurant").level == 3 and _entry(&"restaurant").buy.text == "Max", "building_changed refreshes the entry")

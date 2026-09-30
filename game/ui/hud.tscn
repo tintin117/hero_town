@@ -130,6 +130,21 @@ layout_mode = 2
 theme_type_variation = &"SmallLabel"
 text = "Hold the arena to plant"
 
+[node name="Action" type="Button" parent="Layout/Middle"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(190, 44)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -60.0
+offset_right = 200.0
+offset_bottom = -16.0
+grow_vertical = 0
+theme_type_variation = &"RedButton"
+text = "Plant"
+
 [node name="Tools" type="VBoxContainer" parent="Layout/Middle"]
 layout_mode = 1
 anchors_preset = 6
