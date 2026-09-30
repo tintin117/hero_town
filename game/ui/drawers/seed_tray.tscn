@@ -1,20 +1,23 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://game/ui/components/drawer.tscn" id="1"]
 [ext_resource type="Script" path="res://game/ui/drawers/seed_tray.gd" id="2"]
 [ext_resource type="Theme" path="res://game/ui/theme/fight_club_theme.tres" id="3"]
+[ext_resource type="PackedScene" path="res://game/ui/components/star_rating.tscn" id="4"]
 
 [node name="SeedTray" instance=ExtResource("1")]
 theme = ExtResource("3")
 script = ExtResource("2")
 title = "Pick your fighters"
 edge = 2
-panel_size = Vector2(1240, 122)
+panel_size = Vector2(1240, 160)
 margin = 4.0
+
+[node name="Body" parent="Column" index="1"]
+theme_override_constants/separation = 2
 
 [node name="Scroll" type="ScrollContainer" parent="Column/Body" index="0"]
 layout_mode = 2
-size_flags_vertical = 3
 horizontal_scroll_mode = 1
 vertical_scroll_mode = 0
 
@@ -23,8 +26,47 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Hint" type="Label" parent="Column/Body" index="1"]
+[node name="Extras" type="HBoxContainer" parent="Column/Body" index="1"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Stories" type="ScrollContainer" parent="Column/Body/Extras" index="0"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+horizontal_scroll_mode = 1
+vertical_scroll_mode = 0
+
+[node name="Chips" type="HBoxContainer" parent="Column/Body/Extras/Stories" index="0"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NoStories" type="Label" parent="Column/Body/Extras/Stories/Chips" index="0"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
-text = "Pick fighters"
+text = "No stories yet - win streaks and rematches make them"
+
+[node name="Preview" type="VBoxContainer" parent="Column/Body/Extras" index="1"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"TightVBox"
+
+[node name="Stars" parent="Column/Body/Extras/Preview" index="0" instance=ExtResource("4")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="PreviewText" type="Label" parent="Column/Body/Extras/Preview" index="1"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SmallLabel"
+text = "~0 gold per bout"
+horizontal_alignment = 1
+
+[node name="Props" type="HBoxContainer" parent="Column/Body/Extras" index="2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 2

@@ -3,6 +3,7 @@ extends RefCounted
 ## The HUD gets its own Game/Events (core_kit) through the `game` / `events` vars, since --script has no autoloads.
 
 const Kit := preload("res://game/tests/core_kit.gd")
+const Stories := preload("res://game/tests/fake_stories.gd")  # the HUD reads the stories contract
 const HUD := "res://game/ui/hud.tscn"
 
 var problems: Array[String] = []
@@ -11,7 +12,7 @@ var problems: Array[String] = []
 func run() -> Array[String]:
 	problems.clear()
 	var fake := Kit.FakeSim.new()
-	var g: Node = Kit.game(fake)
+	var g: Node = Stories.make(fake)
 	g.new_game()
 	var vp := SubViewport.new()
 	vp.size = Vector2i(1280, 420)
@@ -39,7 +40,7 @@ func _builds(hud: Control, g: Node) -> void:
 	for path in ["Layout", "Layout/Middle", "%Drawers", "%Toasts", "%Excitement"]:
 		_check((hud.get_node(path) as Control).mouse_filter == Control.MOUSE_FILTER_IGNORE, "%s must ignore the mouse" % path)
 	_check(not hud.get_node("%Excitement").visible, "excitement gauge is hidden while idle")
-	_check(hud.get_node("%Stories").disabled and hud.get_node("%Stories").tooltip_text.contains("coming soon"), "Stories is locked")
+	_check(not hud.get_node("%Stories").disabled and hud.get_node("%Stories").tooltip_text == "Stories", "Stories is unlocked (test_stories_drawer covers its drawer)")
 	_check(not hud.get_node("%Build").disabled, "Build is unlocked (test_build_drawer covers its drawer)")
 	var roster_exists := ResourceLoader.exists("res://game/ui/drawers/roster_drawer.tscn")
 	_check(hud.get_node("%Roster").disabled == not roster_exists, "Roster button follows the roster drawer's existence")
