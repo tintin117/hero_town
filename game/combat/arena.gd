@@ -4,7 +4,8 @@ extends Node2D
 ## Events.combat_event drives attacks, hits and numbers. It never changes game state.
 ##
 ## Town: instance at the ArenaSlot. Size SIZE (512x256), origin = top-left corner, no other setup.
-## API: fighter_count(), is_fighting(), signal celebration_finished.
+## API: fighter_count(), is_fighting(), show_active(), signal celebration_finished.
+## The series show (banner, props, crowd mood) follows Events.series_started / series_finished.
 ## Tests may assign `game` before adding the node; otherwise the /root/Game autoload is used.
 
 signal celebration_finished
@@ -17,8 +18,11 @@ const CENTER := Vector2(256, 140)  # ring centre
 const RADII := Vector2(150, 84)  # ring half-size in pixels: sim radius 260 maps onto this ellipse
 const SIM_RADIUS := 260.0
 const START_RADIUS := 0.72  # idle fighters stand where the sim starts them
-const CELEBRATE_TIME := 3.0
-const NAME_TIME := 2.5  # names show when a fight starts, then only the bars remain
+const CELEBRATE_TIME := 3.0  # the series winner celebrates
+const CELEBRATE_BETWEEN := 1.4  # between bouts: cheer, then everyone walks back to their spot
+const HOME_SPEED := 150.0  # px/s back to the idle spot
+const HIT_LIFE := 0.6  # hit numbers float briefly; skill names and tips linger
+const SKILL_LIFE := 1.0
 const CROWD_POLL := 0.25  # seat upgrades emit no signal, so the idle crowd is re-read on a timer
 
 var game: GameScript
@@ -36,6 +40,8 @@ var _poll := 0.0
 @onready var _crowd: Node2D = $Crowd
 @onready var _fighters_node: Node2D = $Fighters
 @onready var _fx: Node2D = $Fx
+@onready var _show: Node2D = $Show
+@onready var _sfx: Node = $Sfx
 
 
 func _ready() -> void:
@@ -49,7 +55,10 @@ func _ready() -> void:
 	game.events.combat_event.connect(_on_combat_event)
 	game.events.fight_finished.connect(_on_fight_finished)
 	game.events.roster_changed.connect(_on_roster_changed)
+	game.events.series_started.connect(_on_series_started)
+	game.events.series_finished.connect(_on_series_finished)
 	_fx.bounds = Rect2(Vector2.ZERO, SIZE)
+	_show.setup(_crowd, _fx, _sfx)
 	_show_idle()
 
 
@@ -96,52 +105,92 @@ func is_fighting() -> bool:
 	return _fighting
 
 
+func show_active() -> bool:
+	return _show.active
+
+
 func _process(delta: float) -> void:
 	if _fighting and game.fight.is_empty():  # new_game / continue_game cut the fight short
 		_fighting = false
+		_clear()
 		_show_idle()
+	if _show.active and game.series.is_empty():  # ... or the whole series
+		_show.finish()
 	if _celebrate_left > 0.0:
 		_celebrate_left -= delta
 		if _celebrate_left <= 0.0:
 			celebration_finished.emit()
-			_show_idle()
+			_release_pit()
 	_poll += delta
-	if _poll >= CROWD_POLL and not _fighting and _celebrate_left <= 0.0:
+	if _poll >= CROWD_POLL:
 		_poll = 0.0
 		_refresh_crowd()
-	_place_fighters()
+	_crowd.murmur = not game.series.is_empty() and not _fighting
+	_show.tick(delta)
+	_place_fighters(delta)
 
 
 # --- scene state ----------------------------------------------------------------------------
 
 func _show_idle() -> void:
-	_clear()
-	var lineup: Array[int] = game.state.preferred_lineup
-	for slot in lineup.size():
-		_add_fighter(lineup[slot], 1, false, _start_ground(slot, lineup.size()))
+	_sync(_idle_lineup(), false, {})
 	_refresh_crowd()
-	_place_fighters()
+	_place_fighters(0.0)
+
+
+## The bout's fighters stay in the pit while a series runs; otherwise the picked lineup.
+func _idle_lineup() -> Array:
+	return game.series.lineup if not game.series.is_empty() else game.state.preferred_lineup
 
 
 func _clear() -> void:
 	_tracks = {}
 	_celebrate_left = 0.0
-	for fighter: FighterScript in _fighters.values():
-		_fighters_node.remove_child(fighter)
-		fighter.queue_free()
-	_fighters.clear()
+	for id: int in _fighters.keys():
+		_remove(id)
 	_fx.clear()
 
 
-func _add_fighter(id: int, health: int, bar: bool, ground: Vector2) -> void:
+func _remove(id: int) -> void:
+	var fighter: FighterScript = _fighters[id]
+	_fighters.erase(id)
+	_fighters_node.remove_child(fighter)
+	fighter.queue_free()
+
+
+## Makes the pit match `lineup`: missing fighters fade in on their spot, extra ones leave, the
+## rest are revived and walk to their (possibly new) spot. `health` (id -> max HP) is for a bout.
+func _sync(lineup: Array, bout: bool, health: Dictionary) -> void:
+	for id: int in _fighters.keys():
+		if not lineup.has(id):
+			_remove(id)
+	for slot in lineup.size():
+		var id: int = lineup[slot]
+		var home := _project(_start_ground(slot, lineup.size()))
+		if _fighters.has(id):
+			_fighters[id].home = home
+			_fighters[id].reset(health.get(id, 1), bout)
+		else:
+			_add_fighter(id, health.get(id, 1), bout, home)
+
+
+func _add_fighter(id: int, health: int, bar: bool, home: Vector2) -> void:
 	var def: HeroDef = game.hero_defs[id]
 	var fighter := FighterScene.instantiate() as FighterScript
 	_fighters_node.add_child(fighter)
 	fighter.setup(id, def.unit, def.red, def.display_name, health)
 	fighter.show_bar = bar
-	fighter.name_left = NAME_TIME if bar else INF
-	fighter.position = _project(ground)
+	fighter.name_left = FighterScript.NAME_TIME if bar else INF
+	fighter.home = home
+	fighter.position = home
+	fighter.fade_in()
 	_fighters[id] = fighter
+
+
+## The celebration is over: drop the bout's tracks and let everyone walk back to their spot.
+func _release_pit() -> void:
+	_tracks = {}
+	_show_idle()
 
 
 func _refresh_crowd() -> void:
@@ -150,10 +199,15 @@ func _refresh_crowd() -> void:
 	_crowd.set_attendance(game.crowd_now(), seats)
 
 
-func _place_fighters() -> void:
+func _place_fighters(delta: float) -> void:
 	var step := int(roundf(game.fight.clock * 60.0)) if _fighting else 1 << 30
+	var gone: Array[int] = []
 	for id: int in _fighters:
 		var fighter: FighterScript = _fighters[id]
+		fighter.tick(delta)
+		if fighter.gone:
+			gone.append(id)
+			continue
 		var speed := 0.0
 		var look := 0.0
 		var pos := fighter.position
@@ -164,9 +218,17 @@ func _place_fighters() -> void:
 			speed = moved.length() * 60.0
 			look = moved.x if speed > FighterScript.WALK_ABOVE else _nearest_dx(fighter)
 			pos = _project(track[at])
-		else:
-			look = CENTER.x - fighter.position.x if fighter.position.x != CENTER.x else 0.0
+		else:  # idle: walk back to the spot, then face the ring
+			var to := fighter.home - pos
+			if to.length() > 1.0:
+				pos += to.limit_length(HOME_SPEED * delta)
+				speed = 100.0 if delta > 0.0 else 0.0
+				look = to.x
+			else:
+				look = CENTER.x - pos.x
 		fighter.move(pos, speed, look)
+	for id in gone:
+		_remove(id)
 
 
 func _nearest_dx(fighter: FighterScript) -> float:
@@ -195,17 +257,30 @@ func _on_roster_changed() -> void:
 		_show_idle()
 
 
+func _on_series_started(info: Dictionary) -> void:
+	_show.begin(info)
+	_crowd.set_seats(int(info.get("seats", 0)))
+	_crowd.set_attendance(int(info.get("attendance", 0)), int(info.get("seats", 0)))
+	_sfx.play(&"bell")
+
+
+func _on_series_finished(result: Dictionary) -> void:
+	_show.finish()
+	var winner: FighterScript = _fighters.get(int(result.get("winner", -1)))
+	if winner != null:
+		winner.crown()
+		_fx.sparkle(winner.position)
+
+
 func _on_fight_started(info: Dictionary) -> void:
-	_clear()
 	_fighting = true
+	_celebrate_left = 0.0
 	_tracks = game.fight.get("result", {}).get("tracks", {})
 	var health := _max_health(game.fight.get("events", []), game.fight.get("result", {}).get("hp_left", {}))
-	var lineup: Array = info.lineup
-	for slot in lineup.size():
-		_add_fighter(lineup[slot], health.get(lineup[slot], 1), true, _start_ground(slot, lineup.size()))
+	_sync(info.lineup, true, health)
 	_crowd.set_seats(info.seats)
 	_crowd.set_attendance(info.attendance, info.seats)
-	_place_fighters()
+	_place_fighters(0.0)
 
 
 ## Full HP of each fighter, recovered from the replay (hp_left + damage taken - healing done).
@@ -237,14 +312,15 @@ func _on_combat_event(event: Dictionary) -> void:
 		_apply_hit(hit, skill)
 	if int(event.healing) > 0:
 		caster.heal(event.healing)
-		_fx.text("+%d" % event.healing, caster.position + Vector2(0, -68), _fx.GREEN, 16)
+		_fx.text("+%d" % event.healing, caster.position + Vector2(0, -68), _fx.GREEN, 16, HIT_LIFE)
 	if not skill:
 		return
 	var def: HeroDef = game.hero_defs[event.attacker]
-	_crowd.cheer(1.0)
-	_fx.text(def.skill.name, caster.position + Vector2(0, -84), _fx.GOLD, 16)
+	_crowd.cheer(1.0 * _crowd.loud)
+	_sfx.play(&"skill")
+	_fx.text(def.skill.name, caster.position + Vector2(0, -84), _fx.GOLD, 16, SKILL_LIFE)
 	if int(event.tip) > 0:
-		_fx.text("+%d" % event.tip, caster.position + Vector2(0, -100), _fx.GOLD, 16)
+		_fx.text("+%d" % event.tip, caster.position + Vector2(0, -100), _fx.GOLD, 16, SKILL_LIFE)
 	_fx.skill(def.skill.kind, caster.position, aim, float(event.radius) * RADII / SIM_RADIUS)
 
 
@@ -255,16 +331,19 @@ func _apply_hit(hit: Dictionary, skill: bool) -> void:
 	var at := _project(hit.position)
 	victim.take_hit(int(hit.damage))
 	_fx.hit(at, skill)
-	_fx.text(str(hit.damage), at + Vector2(0, -64), _fx.GOLD if skill else _fx.CREAM, 24 if skill else 16)
+	_fx.text(str(hit.damage), at + Vector2(0, -64), _fx.GOLD if skill else _fx.CREAM, 24 if skill else 16, HIT_LIFE)
+	_sfx.play(&"hit")
 	if victim.dead:
 		_fx.dust(at)
 
 
 func _on_fight_finished(result: Dictionary) -> void:
 	_fighting = false
-	_celebrate_left = CELEBRATE_TIME
+	_celebrate_left = CELEBRATE_BETWEEN if not game.series.is_empty() else CELEBRATE_TIME
 	var winner: FighterScript = _fighters.get(int(result.get("winner", -1)))
 	if winner != null:
 		winner.celebrate()
 		_fx.sparkle(winner.position)
+		_sfx.play(&"win")
 	_crowd.cheer(2.0)
+	_show.bout_paid(result)
