@@ -6,6 +6,8 @@ const MIN_WINDOW := Vector2i(960, 420)
 const ARENA_SCENE := preload("res://game/combat/arena.tscn")
 const ARENA_CELLS := Rect2i(16, 0, 16, 8)  # the town cells the arena occupies
 
+var _moving := false  ## the placement in progress moves an existing building
+
 @onready var town: Control = %Town
 @onready var hud: Control = %HUD
 @onready var menu: Control = %MainMenu
@@ -22,6 +24,13 @@ func _ready() -> void:
 		if ARENA_CELLS.has_point(cell):
 			hud.press_arena())
 	town.released.connect(hud.release_arena)
+	# Buildings: the Build drawer asks for a placement, the town's ghost picks the cell, the game builds.
+	hud.placement_requested.connect(_begin_placement)
+	town.placement_confirmed.connect(_place)
+	town.cell_clicked.connect(func(cell: Vector2i) -> void:
+		var id: StringName = town.building_id_at(cell)
+		if id != &"":
+			hud.focus_building(id))
 	hud.plant_progress.connect(arena.set_plant_progress)
 	menu.new_game_requested.connect(func() -> void: _start(Game.new_game()))
 	menu.continue_requested.connect(func() -> void: _start(Game.continue_game()))
@@ -29,6 +38,20 @@ func _ready() -> void:
 	hud.main_menu_requested.connect(_show_menu)
 	hud.quit_requested.connect(get_tree().quit)
 	_show_menu()
+
+
+func _begin_placement(id: StringName, moving: bool) -> void:
+	_moving = moving
+	for def: BuildingDef in Game.building_defs():
+		if def.id == id:
+			town.begin_placement(id, def.footprint, func(cell: Vector2i) -> bool: return Game.can_place(id, cell))
+
+
+func _place(id: StringName, cell: Vector2i) -> void:
+	if _moving:
+		Game.move_building(id, cell)
+	else:
+		Game.build(id, cell)
 
 
 func _show_menu() -> void:
