@@ -6,7 +6,7 @@
 script = ExtResource("1_def")
 id = &"ringside_bar"
 display_name = "Ringside Bar"
-description = "Each fan spends half a gold more every bout."
+description = "Each fan adds 0.5 gold per bout."
 icon_name = &"drink"
 base_price = 120
 value = 0.5

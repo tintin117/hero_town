@@ -6,7 +6,7 @@
 script = ExtResource("1_def")
 id = &"spotlights"
 display_name = "Spotlights"
-description = "The afterglow of the series lingers 50% longer."
+description = "Afterglow after the series x1.5."
 icon_name = &"spotlight"
 base_price = 100
 value = 1.5
