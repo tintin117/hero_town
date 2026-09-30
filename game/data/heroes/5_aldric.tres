@@ -22,3 +22,4 @@ ranged = false
 skill = SubResource("Resource_skill")
 price = 400
 start_owned = false
+trait_ids = Array[StringName]([&"brawler", &"grudge_holder"])

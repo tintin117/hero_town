@@ -62,10 +62,13 @@ static func decode(data: Dictionary, t: Tuning, hero_count: int, catalog: Catalo
 			return null
 	if catalog == null:
 		catalog = load(CATALOG_PATH)
-	if not _valid_buildings(s.get("buildings", {}), catalog) or not _valid_training(s.get("training", {}), heroes, t):
+	if not _valid_buildings(s.get("buildings", {}), catalog) or not _valid_training(s.get("training", {}), heroes, t) \
+			or not _valid_stories(s.get("stories", []), s.get("next_story_id", 0), hero_count, t) \
+			or not _valid_meetings(s.get("meetings", {}), hero_count) or not _valid_props(s.get("props", {}), catalog, t):
 		return null
 	var state := GameState.from_dict(s)
-	if state.training.size() > Buildings.training_slots(state, catalog):
+	if state.training.size() > Buildings.training_slots(state, catalog) \
+			or state.stories.size() > t.story_slots_base + Buildings.level(state, Buildings.OFFICE):
 		return null
 	for id: String in state.buildings:  # symmetric overlap test, so one pass finds every clash
 		if not Buildings.can_place(state, catalog, StringName(id), Buildings.cell(state, StringName(id))):
@@ -103,8 +106,53 @@ static func _valid_training(training: Variant, heroes: Array, t: Tuning) -> bool
 	return true
 
 
+static func _valid_stories(stories: Variant, next_id: Variant, hero_count: int, t: Tuning) -> bool:
+	if not stories is Array or not _int(next_id, 0, MAX_INT):
+		return false
+	var seen := {}
+	for s: Variant in stories:
+		if not s is Dictionary or not _int(s.get("id"), 0, MAX_INT) or seen.has(int(s.id)):
+			return false
+		seen[int(s.id)] = true
+		var heroes: Variant = s.get("heroes")
+		if not s.get("kind") is String or not StringName(s.kind) in Stories.KINDS or not s.get("title") is String \
+				or not heroes is Array or heroes.size() != Stories.hero_count(StringName(s.kind)) \
+				or not _number(s.get("ripeness"), 0.0, Stories.MAX_RIPENESS) or not s.get("cooling") is bool \
+				or s.get("ripe") != (s.ripeness >= t.story_ripe_threshold) or not _int(s.get("full_bouts"), 0, MAX_INT):
+			return false
+		for i in heroes.size():
+			if not _int(heroes[i], 0, hero_count - 1) or (i > 0 and (heroes[i] == heroes[0]
+					or (s.kind == Stories.RIVALRY and heroes[0] > heroes[1]))):
+				return false
+	return true
+
+
+## Keys are "a-b" with a < b.
+static func _valid_meetings(meetings: Variant, hero_count: int) -> bool:
+	if not meetings is Dictionary:
+		return false
+	for key: Variant in meetings:
+		var ids: PackedStringArray = key.split("-") if key is String else PackedStringArray()
+		var m: Variant = meetings[key]
+		if ids.size() != 2 or not ids[0].is_valid_int() or not ids[1].is_valid_int() \
+				or not _int(int(ids[0]), 0, int(ids[1]) - 1) or not _int(int(ids[1]), 0, hero_count - 1) \
+				or not m is Dictionary or not _int(m.get("wins_a"), 0, MAX_INT) or not _int(m.get("wins_b"), 0, MAX_INT):
+			return false
+	return true
+
+
+static func _valid_props(props: Variant, catalog: Catalog, t: Tuning) -> bool:
+	if not props is Dictionary:
+		return false
+	for id: Variant in props:
+		if not id is String or Props.def(catalog, StringName(id)) == null or not _int(props[id], 0, t.prop_cap):
+			return false
+	return true
+
+
 static func _valid_hero(hero: Variant, t: Tuning) -> bool:
-	if not hero is Dictionary or not hero.get("owned") is bool or not _int(hero.get("level"), 1, t.level_cap):
+	if not hero is Dictionary or not hero.get("owned") is bool or not _int(hero.get("level"), 1, t.level_cap) \
+			or (hero.has("recent_losses") and not _int(hero.recent_losses, 0, MAX_INT)):
 		return false
 	for key in ["xp", "wins", "losses", "streak"]:
 		if not _int(hero.get(key), 0, MAX_INT):

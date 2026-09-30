@@ -62,6 +62,30 @@ static func dispose(g: Node) -> void:
 	g.free()
 
 
+## Advances until no fight or series is running (bounded).
+static func play_out(g: Node, step := 0.25) -> void:
+	for i in 20000:
+		if g.fight.is_empty() and g.series.is_empty():
+			return
+		g.advance(step)
+
+
+## Rings the bell for one bout (a series of one) that `winner` takes, and plays it out.
+static func bout(g: Node, fake: FakeSim, winner: int, lineup: Array[int] = [0, 1]) -> void:
+	fake.winner = winner
+	g.book_fight(lineup)
+	play_out(g)
+
+
+## Puts a story straight on the board and returns its id.
+static func add_story(g: Node, kind: StringName, heroes: Array[int], ripeness: float) -> int:
+	var id: int = g.state.next_story_id
+	g.state.next_story_id += 1
+	g.state.stories.append({"id": id, "kind": kind, "title": "test story", "heroes": heroes, "ripeness": ripeness,
+		"ripe": ripeness >= g.tuning.story_ripe_threshold, "cooling": false, "full_bouts": 0})
+	return id
+
+
 ## Collects [signal_name, args...] entries for the signals tests care about.
 static func record(events: Node) -> Array:
 	var log: Array = []

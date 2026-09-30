@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="Catalog" load_steps=18 format=3]
+[gd_resource type="Resource" script_class="Catalog" load_steps=29 format=3]
 
 [ext_resource type="Script" path="res://game/data/defs/catalog.gd" id="1_cat"]
 [ext_resource type="Script" path="res://game/data/defs/hero_def.gd" id="2_hero"]
@@ -16,9 +16,22 @@
 [ext_resource type="Resource" path="res://game/data/heroes/5_aldric.tres" id="h5"]
 [ext_resource type="Resource" path="res://game/data/heroes/6_vera.tres" id="h6"]
 [ext_resource type="Resource" path="res://game/data/heroes/7_oswin.tres" id="h7"]
+[ext_resource type="Script" path="res://game/data/defs/trait_def.gd" id="5_tdef"]
+[ext_resource type="Script" path="res://game/data/defs/prop_def.gd" id="6_pdef"]
+[ext_resource type="Resource" path="res://game/data/traits/showman.tres" id="t0"]
+[ext_resource type="Resource" path="res://game/data/traits/brawler.tres" id="t1"]
+[ext_resource type="Resource" path="res://game/data/traits/crowd_pleaser.tres" id="t2"]
+[ext_resource type="Resource" path="res://game/data/traits/grudge_holder.tres" id="t3"]
+[ext_resource type="Resource" path="res://game/data/traits/underdog.tres" id="t4"]
+[ext_resource type="Resource" path="res://game/data/props/fireworks.tres" id="p0"]
+[ext_resource type="Resource" path="res://game/data/props/announcer.tres" id="p1"]
+[ext_resource type="Resource" path="res://game/data/props/spotlights.tres" id="p2"]
+[ext_resource type="Resource" path="res://game/data/props/ringside_bar.tres" id="p3"]
 
 [resource]
 script = ExtResource("1_cat")
 tuning = ExtResource("3_tun")
 heroes = Array[ExtResource("2_hero")]([ExtResource("h0"), ExtResource("h1"), ExtResource("h2"), ExtResource("h3"), ExtResource("h4"), ExtResource("h5"), ExtResource("h6"), ExtResource("h7")])
 buildings = Array[ExtResource("4_bdef")]([ExtResource("b0"), ExtResource("b1"), ExtResource("b2"), ExtResource("b3")])
+traits = Array[ExtResource("5_tdef")]([ExtResource("t0"), ExtResource("t1"), ExtResource("t2"), ExtResource("t3"), ExtResource("t4")])
+props = Array[ExtResource("6_pdef")]([ExtResource("p0"), ExtResource("p1"), ExtResource("p2"), ExtResource("p3")])

@@ -28,6 +28,14 @@ var series := {}
 ## The lineup planted for the next series: hype only grows while one is planted (like a seed), and the
 ## series consumes it. Empty when nothing is planted. Not saved.
 var planted: Array[int] = []
+## The story chosen for the next plant (-1 = none). Ripe stories only; lineup edits that drop its heroes clear it.
+var main_event_id := -1
+## The prop picked for the next plant (&"" = none), one of `state.props`.
+var selected_prop: StringName = &""
+## What `plant` locked in for the planted lineup: the main event ({} or {id, kind, title, ripeness, multiplier})
+## and the consumed prop (&"" = none). Not saved; uprooting gives the prop back.
+var planted_main_event := {}
+var planted_prop: StringName = &""
 var _hype_emit_acc := 0.0
 
 
@@ -52,6 +60,8 @@ func _physics_process(dt: float) -> void:
 ## hype stays frozen. A step that crosses the end of a fight drops its leftover time.
 func advance(dt: float) -> void:
 	_train(dt)
+	if not state.stories.is_empty():
+		_story_signals(Stories.tick(state, catalog, dt))
 	if not fight.is_empty():
 		_play(dt)
 		return
@@ -69,7 +79,7 @@ func advance(dt: float) -> void:
 		_hype_emit_acc = 0.0
 		events.hype_changed.emit(state.hype)
 	if AutoManager.should_book(state, tuning, planted):
-		book_fight(planted)
+		book_fight(planted, {"main_event": planted_main_event, "prop": planted_prop})
 
 
 # --- commands ------------------------------------------------------------------------------
@@ -77,9 +87,7 @@ func advance(dt: float) -> void:
 func new_game() -> bool:
 	state = GameState.create(tuning, hero_defs)
 	state.manager.enabled = true  # the bell rings by itself; there is no manual Book
-	fight = {}
-	series = {}
-	planted = []
+	_reset_transient()
 	_announce()
 	_autosave()
 	return true
@@ -91,9 +99,7 @@ func continue_game() -> bool:
 		return false
 	state = loaded.state
 	state.manager.enabled = true
-	fight = {}
-	series = {}
-	planted = []
+	_reset_transient()
 	_announce()
 	if loaded.recovered:
 		events.toast.emit("Save restored from backup", &"save")
@@ -112,7 +118,8 @@ func set_paused(value: bool) -> bool:
 
 
 ## Rings the bell: starts a series with the crowd hype has built (locked for every bout).
-## `opts`: main_event (StringName), mods (combat mods), seed (int, tests; bout n uses seed + n).
+## `opts`: main_event (the locked Dictionary `plant` makes), prop (StringName), mods (combat mods),
+## seed (int, tests; bout n uses seed + n).
 func book_fight(lineup: Array[int], opts := {}) -> bool:
 	if not fight.is_empty() or not series.is_empty() or not Roster.valid_lineup(state, tuning, lineup) 			or _any_training(lineup):
 		return false
@@ -122,11 +129,14 @@ func book_fight(lineup: Array[int], opts := {}) -> bool:
 	var attendance := Hype.attendance(seats, state.hype, tuning)
 	var rng_seed := int(opts.get("seed", state.rng_seed_counter))
 	state.rng_seed_counter += 1
+	var main_event: Variant = opts.get("main_event", {})
+	main_event = main_event.duplicate() if main_event is Dictionary else {}
+	var prop := StringName(opts.get("prop", &""))
 	series = {"lineup": lineup.duplicate(), "attendance": attendance, "seats": seats, "wins": {},
-		"bout": 0, "pause": 0.0, "seed": rng_seed, "opts": opts}
-	events.fight_booked.emit(lineup.duplicate(), StringName(opts.get("main_event", &"")))
+		"bout": 0, "pause": 0.0, "seed": rng_seed, "opts": opts, "main_event": main_event, "prop": prop}
+	events.fight_booked.emit(lineup.duplicate(), StringName(main_event.get("kind", &"")))
 	events.series_started.emit({"lineup": lineup.duplicate(), "attendance": attendance, "seats": seats,
-		"wins_needed": tuning.series_wins})
+		"wins_needed": tuning.series_wins, "main_event": main_event.duplicate(), "prop": prop})
 	if not _start_bout():
 		series = {}
 		return false
@@ -138,15 +148,26 @@ func plant() -> bool:
 	if not planted.is_empty() or not series.is_empty() or not fight.is_empty() 			or not Roster.valid_lineup(state, tuning, state.preferred_lineup) or _any_training(state.preferred_lineup):
 		return false
 	planted = state.preferred_lineup.duplicate()
+	planted_main_event = _lock_main_event()
+	planted_prop = selected_prop if props_owned(selected_prop) > 0 else &""
+	if planted_prop != &"":
+		state.props[String(planted_prop)] -= 1
+		selected_prop = &""
+		events.prop_changed.emit()
 	events.planted_changed.emit()
 	return true
 
 
-## Takes the planted lineup back out before its series starts.
+## Takes the planted lineup back out before its series starts. The prop comes back; the story was never spent.
 func uproot() -> bool:
 	if planted.is_empty() or not series.is_empty():
 		return false
+	if planted_prop != &"":
+		state.props[String(planted_prop)] = props_owned(planted_prop) + 1
+		events.prop_changed.emit()
 	planted = []
+	planted_main_event = {}
+	planted_prop = &""
 	events.planted_changed.emit()
 	return true
 
@@ -168,8 +189,43 @@ func set_preferred_lineup(ids: Array[int]) -> bool:
 	if not Roster.valid_lineup(state, tuning, ids):
 		return false
 	state.preferred_lineup = ids.duplicate()
+	var story_heroes: Array = Stories.get_story(state, main_event_id).get("heroes", [])
+	if not story_heroes.all(func(hero: int) -> bool: return hero in ids):
+		clear_main_event()
 	events.roster_changed.emit()
 	_autosave()
+	return true
+
+
+## Picks a ripe story for the next plant and sets the lineup to its heroes (a one-hero story brings a partner:
+## the first other owned hero in the current lineup, else the first owned one). False, and nothing changes,
+## when the story is missing or unripe, a hero is not owned or is training, or the lineup does not fit.
+func set_main_event(story_id: int) -> bool:
+	var story := Stories.get_story(state, story_id)
+	if story.is_empty() or not story.ripe:
+		return false
+	var ids: Array[int] = story.heroes.duplicate()
+	var partners: Array[int] = state.preferred_lineup.duplicate()
+	for id in state.heroes.size():
+		partners.append(id)  # after the lineup, in id order
+	for id in partners:
+		if ids.size() >= tuning.min_lineup:
+			break
+		if state.heroes[id].owned and not state.training.has(id) and id not in ids:
+			ids.append(id)
+	if not Roster.valid_lineup(state, tuning, ids) or _any_training(ids) or not set_preferred_lineup(ids):
+		return false
+	main_event_id = story_id  # after the lineup edit, which clears the previous choice
+	events.story_changed.emit(story_id)
+	return true
+
+
+func clear_main_event() -> bool:
+	if main_event_id < 0:
+		return false
+	var id := main_event_id
+	main_event_id = -1
+	events.story_changed.emit(id)
 	return true
 
 
@@ -267,6 +323,29 @@ func recall_training(hero_id: int) -> bool:
 	return true
 
 
+## Buys one prop at its seat-scaled price; at most `prop_cap` are held (a planted one still counts).
+func buy_prop(id: StringName) -> bool:
+	var price := prop_price(id)
+	var held := props_owned(id) + (1 if planted_prop == id else 0)
+	if price < 0 or held >= tuning.prop_cap or not can_afford(price):
+		return false
+	_spend(price)
+	state.props[String(id)] = props_owned(id) + 1
+	events.prop_changed.emit()
+	_autosave()
+	return true
+
+
+## Picks the prop the next plant uses; &"" clears the choice. Needs one in stock.
+func select_prop(id: StringName) -> bool:
+	if id != &"" and props_owned(id) < 1:
+		return false
+	if selected_prop != id:
+		selected_prop = id
+		events.prop_changed.emit()
+	return true
+
+
 # --- queries -------------------------------------------------------------------------------
 
 func can_afford(cost: int) -> bool:
@@ -329,6 +408,46 @@ func income_preview(lineup: Array[int]) -> int:
 	return Economy.base_income(state, tuning, lineup, attendance_if_booked_now())
 
 
+## Expected result of ringing the bell for `lineup`: {stars_min, stars_max (1..5 in halves), income_min,
+## income_max (ticket payout per bout at the manager's bell threshold)}; zeros for an invalid lineup.
+## `opts`: prop (StringName, default `selected_prop`), main_event (story id, default `main_event_id`). Pure.
+func preview(lineup: Array[int], opts := {}) -> Dictionary:
+	var prop := Props.def(catalog, StringName(opts.get("prop", selected_prop)))
+	var fits := func(story: Dictionary) -> bool:
+		return story.ripe and story.heroes.all(func(hero: int) -> bool: return hero in lineup)
+	var chosen := Stories.get_story(state, int(opts.get("main_event", main_event_id)))
+	var multiplier := Stories.multiplier(chosen.ripeness, tuning) if not chosen.is_empty() and fits.call(chosen) else 1.0
+	return Preview.estimate(state, catalog, lineup, prop, state.stories.any(fits), multiplier)
+
+
+func hero_traits(hero_id: int) -> Array[TraitDef]:
+	var none: Array[TraitDef] = []
+	return Traits.of_hero(catalog, hero_id) if hero_id >= 0 and hero_id < hero_defs.size() else none
+
+
+func story(id: int) -> Dictionary:
+	return Stories.get_story(state, id).duplicate()
+
+
+## Story board size: the base slots plus one per Promotion Office level.
+func story_slots() -> int:
+	return tuning.story_slots_base + building_level(Buildings.OFFICE)
+
+
+func prop_defs() -> Array[PropDef]:
+	return catalog.props
+
+
+## Seat-scaled price of a prop, or -1 for an unknown id.
+func prop_price(id: StringName) -> int:
+	var d := Props.def(catalog, id)
+	return Props.price(d, Roster.seats(state, tuning), tuning) if d != null else -1
+
+
+func props_owned(id: StringName) -> int:
+	return Props.owned(state, id)
+
+
 # --- internals -----------------------------------------------------------------------------
 
 func _simulator() -> Callable:
@@ -340,7 +459,10 @@ func _simulator() -> Callable:
 ## Simulates the next bout of the running series and starts its playback.
 func _start_bout() -> bool:
 	var lineup: Array[int] = series.lineup
-	var out: Dictionary = _simulator().call(_fighters(lineup), int(series.seed) + int(series.bout), series.opts.get("mods", {}))
+	var mods: Dictionary = series.opts.get("mods", {}).duplicate(true)
+	Traits.combat_mods(state, catalog, lineup, mods)  # levels may have changed since the last bout
+	Props.apply(Props.def(catalog, series.prop), mods)
+	var out: Dictionary = _simulator().call(_fighters(lineup), int(series.seed) + int(series.bout), mods)
 	if not out.get("events") is Array or not out.get("result") is Dictionary:
 		return false
 	var duration := float(out.result.get("duration", 0.0))
@@ -386,8 +508,10 @@ func _settle() -> void:
 	var done := fight
 	fight = {}
 	var tier_before := Fame.tier(state.fame_points, tuning)
+	var main_event: Dictionary = series.get("main_event", {})
+	var concessions := Buildings.concession_rate(state, catalog) + Props.concession_bonus(Props.def(catalog, series.get("prop", &"")))
 	var out := Economy.settle(state, tuning, done.lineup, done.result, done.attendance, done.locked_base,
-			Buildings.concession_rate(state, catalog))
+			concessions, float(main_event.get("multiplier", 1.0)))
 	events.gold_changed.emit(state.gold, out.payout + out.concessions)
 	_hype_emit_acc = 0.0
 	events.hype_changed.emit(state.hype)
@@ -400,6 +524,7 @@ func _settle() -> void:
 		leveled = leveled or hero.level > hero.level_before
 	if leveled:
 		events.roster_changed.emit()
+	_story_signals(Stories.on_bout(state, catalog, out, story_slots()))
 	var ended := _count_bout(int(done.result.get("winner", -1)))  # before the signal so listeners see the score
 	events.fight_finished.emit(out)
 	if not ended.is_empty():
@@ -419,16 +544,66 @@ func _count_bout(winner: int) -> Dictionary:
 	if not won and series.bout < tuning.series_max_bouts:
 		series.pause = tuning.series_pause
 		return {}
+	var main_event: Dictionary = series.main_event
 	var bonus := tuning.series_fame_bonus if won else 0
+	if won and not main_event.is_empty():
+		bonus += roundi(main_event.ripeness / tuning.main_event_fame_divisor)
 	state.fame_points += bonus
 	var result := {"winner": winner if won else -1, "wins": series.wins.duplicate(), "bouts": series.bout,
-		"fame_bonus": bonus, "lineup": series.lineup.duplicate()}
+		"fame_bonus": bonus, "lineup": series.lineup.duplicate(), "main_event": main_event.duplicate(), "prop": series.prop}
+	var glow := Traits.afterglow_mult(catalog, series.lineup) * Props.afterglow_mult(Props.def(catalog, series.prop))
 	series = {}
 	planted = []
+	planted_main_event = {}
+	planted_prop = &""
 	events.planted_changed.emit()
 	if bonus > 0:
 		events.fame_changed.emit(state.fame_points, Fame.tier(state.fame_points, tuning))
+	if glow != 1.0:  # the crowd lingers when the series is over
+		state.hype = minf(state.hype * glow, tuning.hype_max)
+		_hype_emit_acc = 0.0
+		events.hype_changed.emit(state.hype)
+	if not main_event.is_empty():  # cashed in
+		Stories.remove(state, main_event.id)
+		events.story_changed.emit(main_event.id)
+		_check_main_event()
 	return result
+
+
+## The chosen main event as the plant freezes it, or {} when none is chosen or it is no longer ripe.
+func _lock_main_event() -> Dictionary:
+	var story := Stories.get_story(state, main_event_id)
+	if story.is_empty() or not story.ripe:
+		return {}
+	return {"id": story.id, "kind": story.kind, "title": story.title, "ripeness": story.ripeness,
+		"multiplier": Stories.multiplier(story.ripeness, tuning)}
+
+
+## Emits what a story update changed (`Stories.tick` / `on_bout` report) and drops a main event that died.
+func _story_signals(report: Dictionary) -> void:
+	for id: int in report.changed:
+		events.story_changed.emit(id)
+	for id: int in report.ripe:
+		var story := Stories.get_story(state, id)
+		events.story_ripe.emit(id)
+		events.toast.emit("%s ripe: %s" % [Stories.KIND_NAMES[story.kind], Stories.names(catalog, story.heroes)], &"story")
+	_check_main_event()
+
+
+## The chosen main event must stay a ripe story on the board.
+func _check_main_event() -> void:
+	if main_event_id >= 0 and not Stories.get_story(state, main_event_id).get("ripe", false):
+		clear_main_event()
+
+
+func _reset_transient() -> void:
+	fight = {}
+	series = {}
+	planted = []
+	planted_main_event = {}
+	planted_prop = &""
+	main_event_id = -1
+	selected_prop = &""
 
 
 func _any_training(ids: Array[int]) -> bool:

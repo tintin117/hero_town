@@ -18,7 +18,7 @@ func run() -> Array[String]:
 		Kit.check(p, defs[i].id == i, "hero %d has id %d" % [i, defs[i].id])
 		Kit.check(p, defs[i].price == prices[i], "hero %d price" % i)
 		Kit.check(p, defs[i].start_owned == (i < 2), "hero %d start_owned" % i)
-		Kit.check(p, defs[i].trait_ids.is_empty(), "hero %d has no traits yet" % i)
+		Kit.check(p, defs[i].trait_ids.size() in [1, 2], "hero %d has one or two traits" % i)
 		var g: Dictionary = golden.heroes[i]
 		Kit.check(p, defs[i].display_name == g.name and defs[i].health == g.health and defs[i].attack == g.attack
 				and defs[i].red == g.red and defs[i].ranged == g.ranged and defs[i].unit == StringName(g.unit),

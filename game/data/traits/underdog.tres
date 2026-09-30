@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/defs/trait_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"underdog"
+display_name = "Underdog"
+description = "Starts the bout with 10 excitement when facing a higher level."
+icon_name = &"shield"
+value = 10

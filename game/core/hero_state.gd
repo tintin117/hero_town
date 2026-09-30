@@ -8,10 +8,12 @@ var xp := 0
 var wins := 0
 var losses := 0
 var streak := 0
+var recent_losses := 0  ## consecutive losses, reset by a win
 
 
 func to_dict() -> Dictionary:
-	return {"owned": owned, "level": level, "xp": xp, "wins": wins, "losses": losses, "streak": streak}
+	return {"owned": owned, "level": level, "xp": xp, "wins": wins, "losses": losses, "streak": streak,
+		"recent_losses": recent_losses}
 
 
 static func from_dict(d: Dictionary) -> HeroState:
@@ -22,4 +24,5 @@ static func from_dict(d: Dictionary) -> HeroState:
 	hero.wins = int(d.get("wins", 0))
 	hero.losses = int(d.get("losses", 0))
 	hero.streak = int(d.get("streak", 0))
+	hero.recent_losses = int(d.get("recent_losses", 0))
 	return hero

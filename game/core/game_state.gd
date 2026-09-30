@@ -15,6 +15,13 @@ var manager := {"enabled": false, "threshold": 0.0}
 var buildings := {}
 ## Gym trainees: hero id (int) -> seconds since their last training payout.
 var training := {}
+## Stories (see Stories): {id, kind, title, heroes, ripeness, ripe, cooling, full_bouts}.
+var stories: Array[Dictionary] = []
+var next_story_id := 0
+## Head-to-head results "a-b" (a < b) -> {wins_a, wins_b}.
+var meetings := {}
+## Owned props: prop id (String) -> count.
+var props := {}
 var fight_count := 0
 var rng_seed_counter := 0
 
@@ -40,7 +47,8 @@ func to_dict() -> Dictionary:
 		"heroes": heroes.map(func(h: HeroState) -> Dictionary: return h.to_dict()),
 		"preferred_lineup": preferred_lineup.duplicate(),
 		"buildings": buildings.duplicate(true), "training": _training_json(),
-		"manager": manager.duplicate(), "fight_count": fight_count, "rng_seed_counter": rng_seed_counter,
+		"stories": stories.map(func(s: Dictionary) -> Dictionary: return _story_json(s)), "next_story_id": next_story_id, "meetings": meetings.duplicate(true),
+		"props": props.duplicate(), "manager": manager.duplicate(), "fight_count": fight_count, "rng_seed_counter": rng_seed_counter,
 	}
 
 
@@ -65,9 +73,25 @@ static func from_dict(d: Dictionary) -> GameState:
 	var saved_training: Dictionary = d.get("training", {})
 	for id: Variant in saved_training:
 		state.training[int(id)] = float(saved_training[id])
+	for saved_story: Dictionary in d.get("stories", []):
+		state.stories.append(Stories.from_dict(saved_story))
+		state.next_story_id = maxi(state.next_story_id, state.stories[-1].id + 1)
+	state.next_story_id = maxi(state.next_story_id, int(d.get("next_story_id", 0)))
+	var saved_meetings: Dictionary = d.get("meetings", {})
+	for key: String in saved_meetings:
+		state.meetings[key] = {"wins_a": int(saved_meetings[key].wins_a), "wins_b": int(saved_meetings[key].wins_b)}
+	var saved_props: Dictionary = d.get("props", {})
+	for id: String in saved_props:
+		state.props[id] = int(saved_props[id])
 	state.fight_count = int(d.get("fight_count", 0))
 	state.rng_seed_counter = int(d.get("rng_seed_counter", 0))
 	return state
+
+
+func _story_json(story: Dictionary) -> Dictionary:
+	var result := story.duplicate(true)
+	result.kind = String(story.kind)
+	return result
 
 
 func _training_json() -> Dictionary:
