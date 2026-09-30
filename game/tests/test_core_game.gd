@@ -63,7 +63,12 @@ func _lifecycle(p: Array[String]) -> void:
 	Kit.check(p, Kit.count(log, "finished") == 1, "no repeat settlement")
 
 	# idle again: hype grows, and a second fight can start (Bram levels up on his second win)
-	Kit.check(p, g.state.hype > 13.5, "hype grows after the fight")
+	Kit.check(p, g.planted.is_empty(), "the series consumed the planted lineup")
+	g.advance(1.0)
+	Kit.check(p, g.state.hype == 13.5, "nothing planted, nothing grows")
+	Kit.check(p, g.plant() and not g.plant(), "plant once")
+	g.advance(1.0)
+	Kit.check(p, g.state.hype > 13.5, "hype grows after the fight once planted")
 	Kit.check(p, g.book_fight([0, 1] as Array[int]) and fake.last_seed == 1, "second fight starts with the seed counter")
 	Kit.check(p, fake.last_lineup[0].health == 225 and fake.last_lineup[0].attack == 17, "level 1 stats until settled")
 	for k in 20:
@@ -79,6 +84,7 @@ func _manager_and_pause(p: Array[String]) -> void:
 	var log := Kit.record(g.events)
 	g.state.hype = 69.0
 	Kit.check(p, g.set_manager(true, 70.0) and Kit.count(log, "manager") == 1, "set_manager")
+	Kit.check(p, g.plant(), "plant the lineup")
 	g.advance(0.5)
 	Kit.check(p, fake.calls == 0 and g.fight.is_empty(), "manager waits below threshold")
 	g.advance(2.0)
@@ -91,11 +97,13 @@ func _manager_and_pause(p: Array[String]) -> void:
 	g2._physics_process(100.0)
 	Kit.check(p, g2.state.hype == 15.0, "paused sim does not advance")
 	g2.set_paused(false)
+	g2.plant()
 	g2._physics_process(1.0)
 	Kit.check(p, g2.state.hype > 15.0, "unpaused sim advances")
 
 	var g3 := Kit.game(fake)
 	var log3 := Kit.record(g3.events)
+	g3.plant()
 	for i in 60:
 		g3.advance(1.0 / 60.0)
 	var emitted := Kit.count(log3, "hype")

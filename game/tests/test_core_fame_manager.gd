@@ -18,16 +18,17 @@ func run() -> Array[String]:
 
 	var state := GameState.create(t, Kit.catalog().heroes)
 	Kit.check(p, state.manager.threshold == 70.0 and not state.manager.enabled, "manager defaults: off, 70")
+	var lineup: Array[int] = [0, 1]
 	state.hype = 80.0
-	Kit.check(p, not AutoManager.should_book(state, t), "disabled manager never books")
+	Kit.check(p, not AutoManager.should_book(state, t, lineup), "disabled manager never books")
 	state.manager.enabled = true
-	Kit.check(p, AutoManager.should_book(state, t), "enabled, hype above threshold")
+	Kit.check(p, AutoManager.should_book(state, t, lineup), "enabled, hype above threshold")
 	state.hype = 69.9
-	Kit.check(p, not AutoManager.should_book(state, t), "below threshold waits")
+	Kit.check(p, not AutoManager.should_book(state, t, lineup), "below threshold waits")
 	state.hype = 70.0
-	Kit.check(p, AutoManager.should_book(state, t), "at threshold books")
-	state.preferred_lineup = [0] as Array[int]
-	Kit.check(p, not AutoManager.should_book(state, t), "invalid lineup never books")
-	state.preferred_lineup = [0, 2] as Array[int]
-	Kit.check(p, not AutoManager.should_book(state, t), "unowned fighter never books")
+	Kit.check(p, AutoManager.should_book(state, t, lineup), "at threshold books")
+	lineup = [0] as Array[int]
+	Kit.check(p, not AutoManager.should_book(state, t, lineup), "a planted lineup that is too small never books")
+	lineup = [0, 2] as Array[int]
+	Kit.check(p, not AutoManager.should_book(state, t, lineup), "an unowned fighter never books")
 	return p

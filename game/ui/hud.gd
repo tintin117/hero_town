@@ -13,6 +13,7 @@ signal quit_requested
 const ICONS := "res://resources/ui/icons/"
 const CARD := preload("res://game/ui/components/hero_card.tscn")
 const TOAST := preload("res://game/ui/components/toast.tscn")
+const HOLD_TIME := 0.7  ## seconds to hold the Bell button to plant
 const DRAWERS := {
 	&"roster": "res://game/ui/drawers/roster_drawer.tscn",
 	&"manager": "res://game/ui/drawers/manager_drawer.tscn",
@@ -23,6 +24,7 @@ var game: Node
 var events: Node
 var router: DrawerRouter
 
+var _hold := -1.0  ## seconds the plant button has been held, -1 when not held
 var _hp := {}  ## hero id -> hit points during a fight (empty when idle)
 var _mana := {}
 var _cards := {}  ## hero id -> HeroCard
@@ -33,8 +35,8 @@ var _toasts := []  ## slot -> live toast; toasts stack upwards
 @onready var _hype: HypeGauge = %Hype
 @onready var _seats: StatPill = %Seats
 @onready var _excitement: ExcitementGauge = %Excitement
-@onready var _bell: Control = %Bell
-@onready var _bell_text: Label = %Text
+@onready var _bell: Button = %Bell
+@onready var _fill: ProgressBar = %Fill
 @onready var _pause: Control = %PauseMenu
 
 
@@ -57,6 +59,9 @@ func _ready() -> void:
 	_excitement.tier_marks = marks
 
 	%Menu.pressed.connect(open_pause)
+	_bell.button_down.connect(_start_hold)
+	_bell.button_up.connect(_stop_hold)
+	events.planted_changed.connect(_refresh_bell)
 	%Manager.pressed.connect(toggle_drawer.bind(&"manager"))
 	%Roster.pressed.connect(toggle_drawer.bind(&"roster"))
 	%Roster.disabled = not router.has_drawer(&"roster")
@@ -155,24 +160,63 @@ func _refresh_manager() -> void:
 
 # --- bottom bar ------------------------------------------------------------------------------
 
-## The bell rings by itself once hype reaches the threshold: idle it shows the target, during a
-## series the bout number and score.
+## The Bell button is the plant action: hold it to plant the selected lineup. Afterwards it shows
+## the state (growing towards the bell, then the bout and score).
 func _refresh_bell() -> void:
 	var manager: Dictionary = game.state.manager
 	var series: Dictionary = game.series
-	if series.is_empty():
-		_bell_text.text = "Bell at
-hype %d" % int(manager.threshold) if manager.enabled else "Bell off"
-		_bell.tooltip_text = "The bell rings by itself when hype reaches %d. First to %d wins the series." 				% [int(manager.threshold), game.tuning.series_wins]
-		return
-	var score := []
-	var names := []
-	for id: int in series.lineup:
-		score.append(str(series.wins.get(id, 0)))
-		names.append("%s %d" % [game.hero_defs[id].display_name, series.wins.get(id, 0)])
-	_bell_text.text = "Bout %d
+	var text := ""
+	var tip := ""
+	if not series.is_empty():
+		var score := []
+		var names := []
+		for id: int in series.lineup:
+			score.append(str(series.wins.get(id, 0)))
+			names.append("%s %d" % [game.hero_defs[id].display_name, series.wins.get(id, 0)])
+		text = "Bout %d
 %s" % [series.bout + 1, "-".join(score)]
-	_bell.tooltip_text = "First to %d wins.  %s" % [game.tuning.series_wins, "  ".join(names)]
+		tip = "First to %d wins.  %s" % [game.tuning.series_wins, "  ".join(names)]
+	elif not game.planted.is_empty():
+		text = "Growing
+bell at %d" % int(manager.threshold)
+		tip = "Planted. The bell rings by itself when hype reaches %d." % int(manager.threshold)
+	elif not manager.enabled:
+		text = "Bell off"
+		tip = "The auto bell is off (see the manager)."
+	elif not Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup):
+		text = "Pick %d+
+fighters" % game.tuning.min_lineup
+		tip = "Pick the fighters to plant from the cards on the left."
+	else:
+		text = "Hold to
+plant"
+		tip = "Hold to plant the selected fighters. Hype grows once they are planted; the bell rings at %d." % int(manager.threshold)
+	_bell.text = text
+	_bell.tooltip_text = tip
+	var ready: bool = series.is_empty() and game.planted.is_empty() and manager.enabled 			and Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup)
+	_bell.disabled = not ready
+	if not ready:
+		_stop_hold()
+
+
+func _start_hold() -> void:
+	_hold = 0.0
+
+
+func _stop_hold() -> void:
+	_hold = -1.0
+	_fill.value = 0.0
+
+
+## Hold-to-plant: the bar fills while the button is held; releasing early cancels.
+func _process(delta: float) -> void:
+	if _hold < 0.0:
+		return
+	_hold += delta
+	_fill.value = minf(1.0, _hold / HOLD_TIME)
+	if _hold >= HOLD_TIME:
+		_stop_hold()
+		game.plant()
 
 
 func _rebuild_cards() -> void:
@@ -180,12 +224,16 @@ func _rebuild_cards() -> void:
 		%Cards.remove_child(card)
 		card.queue_free()
 	_cards.clear()
-	for id: int in game.state.preferred_lineup:
+	for id in game.state.heroes.size():
+		if not game.state.heroes[id].owned:
+			continue
 		var card := CARD.instantiate() as HeroCard
 		card.portrait = HeroPortraits.portrait(id)
 		card.hero_name = game.hero_defs[id].display_name
 		card.level = game.state.heroes[id].level
-		card.pressed.connect(func() -> void: router.open(&"roster"))
+		card.selected = id in game.state.preferred_lineup
+		card.tooltip_text = "Click to pick or drop %s for the next series." % card.hero_name
+		card.pressed.connect(game.toggle_lineup.bind(id))
 		%Cards.add_child(card)
 		_cards[id] = card
 		_paint_card(id)

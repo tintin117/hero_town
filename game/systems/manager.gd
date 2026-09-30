@@ -1,8 +1,8 @@
 class_name AutoManager
 extends RefCounted
-## The hired promoter: books the preferred lineup once hype reaches the threshold.
+## The hired promoter: rings the bell for the planted lineup once hype reaches the threshold.
 
 
-static func should_book(state: GameState, t: Tuning) -> bool:
+static func should_book(state: GameState, t: Tuning, planted: Array[int]) -> bool:
 	return state.manager.enabled and state.hype >= state.manager.threshold \
-			and Roster.valid_lineup(state, t, state.preferred_lineup)
+			and Roster.valid_lineup(state, t, planted)

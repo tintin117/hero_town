@@ -40,6 +40,7 @@ UI / input ──command──▶ Game ──▶ systems mutate GameState ──
 
 ## 3. Fight lifecycle
 
+0. **Planting.** The player picks a lineup (`Game.toggle_lineup`, swap-when-full) and holds the Bell button to `Game.plant()` it. Hype grows only while a lineup is planted; the series consumes it (`Game.planted`, `planted_changed`). Nothing is planted after a series, new game or load.
 0. **Series (bo5, first to 3).** The bell rings by itself when hype reaches the manager threshold (default 70; there is no manual Book). It locks `attendance` for the whole series and plays bouts 1..n with a `series_pause` (3 s) of crowd chatter between them; each bout runs steps 1–3 below and pays as it finishes. The series ends at `series_wins` wins (fame bonus) or after `series_max_bouts` (draw guard, no winner). Hype falls to the last bout's afterglow when the series ends and grows only while idle. `Game.series` holds the running series; `Game.crowd_now()` is the locked crowd or what the bell would draw now.
 1. **Bout start** (`Game.book_fight` rings the bell, `_start_bout` per bout): `hype`→`attendance`; `combat_sim.simulate(lineup, seed, mods)` runs the whole fight instantly and deterministically, returning `{events, result}`.
 2. **Playback**: `Game` releases `events` by fight clock. Each event fires `Events.combat_event(e)`; a skill event pays its 10-gold tip when released. The Arena only replays events for display.
@@ -65,6 +66,7 @@ Skipping presentation gives identical outcomes (needed for offline progress late
 | `fight_started` | `info: Dictionary` (`lineup, attendance, seats, seed, duration`) | playback begins |
 | `combat_event` | `event: Dictionary` | playback releases a sim event |
 | `fight_finished` | `result: Dictionary` | one bout settled |
+| `planted_changed` | – | a lineup was planted, uprooted or consumed by its series |
 | `series_started` | `info: Dictionary` (`lineup, attendance, seats, wins_needed`) | the bell rings |
 | `series_finished` | `result: Dictionary` (`winner` (-1 = unresolved), `wins`, `bouts`, `fame_bonus`) | a fighter reaches the win count |
 | `roster_changed` | – | recruit, lineup or level change |
@@ -81,7 +83,7 @@ Skipping presentation gives identical outcomes (needed for offline progress late
 
 `new_game()`, `continue_game()`, `save()`, `set_paused(bool)`,
 `book_fight(lineup: Array[int], opts := {}) -> bool` (`opts`: `main_event` story id, `prop` id),
-`set_preferred_lineup(ids)`, `set_manager(enabled, threshold)`,
+`set_preferred_lineup(ids)`, `toggle_lineup(id)`, `plant()`, `uproot()`, `set_manager(enabled, threshold)`,
 `recruit(hero_id)`, `assign_training(hero_id)`, `recall_training(hero_id)`,
 `build(building_id, cell)`, `upgrade(building_id)`, `move_building(building_id, cell)`,
 `buy_prop(prop_id)`, `select_prop(prop_id)`, `expand_seats()`, `expand_fighters()`.

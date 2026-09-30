@@ -9,6 +9,7 @@ signal fight_booked(lineup: Array[int], main_event: StringName)
 signal fight_started(info: Dictionary)  ## lineup, attendance, seats, seed, duration
 signal combat_event(event: Dictionary)
 signal fight_finished(result: Dictionary)  ## one bout settled
+signal planted_changed  ## a lineup was planted, uprooted or consumed by its series
 signal series_started(info: Dictionary)  ## lineup, attendance, seats, wins_needed
 signal series_finished(result: Dictionary)  ## winner (-1 = unresolved), wins {id: n}, bouts, fame_bonus
 signal roster_changed

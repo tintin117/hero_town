@@ -153,20 +153,28 @@ size_flags_vertical = 4
 [node name="Sep" type="VSeparator" parent="Layout/BottomBar/Row"]
 layout_mode = 2
 
-[node name="Bell" type="PanelContainer" parent="Layout/BottomBar/Row"]
+[node name="Bell" type="Button" parent="Layout/BottomBar/Row"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(132, 64)
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"Pill"
+theme_type_variation = &"RedButton"
+text = "Hold to
+plant"
 
-[node name="Text" type="Label" parent="Layout/BottomBar/Row/Bell"]
+[node name="Fill" type="ProgressBar" parent="Layout/BottomBar/Row/Bell"]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 1
-text = "Bell"
-horizontal_alignment = 1
-vertical_alignment = 1
+modulate = Color(1, 1, 1, 0.4)
+mouse_filter = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+max_value = 1.0
+step = 0.01
+show_percentage = false
 
 [node name="Sep2" type="VSeparator" parent="Layout/BottomBar/Row"]
 layout_mode = 2

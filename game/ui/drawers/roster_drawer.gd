@@ -71,16 +71,9 @@ func _on_event(_a: Variant = null, _b: Variant = null) -> void:
 	refresh()
 
 
-## Game.set_preferred_lineup is the rule keeper (2..capacity, owned, no duplicates); we only explain a refusal.
+## Game.toggle_lineup is the rule keeper (2..capacity, owned, swap when full); we only explain a refusal.
 func _toggle_lineup(id: int) -> void:
-	var lineup: Array[int] = game.state.preferred_lineup.duplicate()
-	if id in lineup:
-		lineup.erase(id)
-	else:
-		if lineup.size() >= Roster.fighter_capacity(game.state, game.tuning):
-			lineup.pop_front()  # full: the oldest pick makes room, so swapping never dips below the minimum
-		lineup.append(id)
-	if not game.set_preferred_lineup(lineup):
+	if not game.toggle_lineup(id):
 		hint.text = "Keep at least %d fighters" % game.tuning.min_lineup if id in game.state.preferred_lineup \
 				else "That fighter is not in the club yet"
 

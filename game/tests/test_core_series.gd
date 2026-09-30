@@ -40,6 +40,9 @@ func run() -> Array[String]:
 	Kit.check(p, g.state.hype < 60.0, "hype falls to the afterglow when the series ends")
 	var grown: float = g.state.hype
 	g.advance(1.0)
+	Kit.check(p, g.state.hype == grown and g.planted.is_empty(), "nothing grows until a lineup is planted again")
+	g.plant()
+	g.advance(1.0)
 	Kit.check(p, g.state.hype > grown, "hype grows again after the series")
 	# a draw does not count and the guard ends an endless series
 	fake.winner = -1

@@ -22,6 +22,9 @@ var fight := {}
 ## Running series (first to `tuning.series_wins`), empty while idle: lineup, attendance (locked at the
 ## bell), seats, wins {hero id: n}, bout (bouts settled), pause (seconds until the next bout), seed. Not saved.
 var series := {}
+## The lineup planted for the next series: hype only grows while one is planted (like a seed), and the
+## series consumes it. Empty when nothing is planted. Not saved.
+var planted: Array[int] = []
 var _hype_emit_acc := 0.0
 
 
@@ -53,14 +56,16 @@ func advance(dt: float) -> void:
 		if series.pause <= 0.0 and not _start_bout():
 			series = {}
 		return
+	if planted.is_empty():
+		return  # nothing planted, nothing grows
 	var before := state.hype
 	state.hype = Hype.grow(before, dt, tuning)
 	_hype_emit_acc += dt
 	if _hype_emit_acc >= tuning.hype_emit_interval and state.hype != before:
 		_hype_emit_acc = 0.0
 		events.hype_changed.emit(state.hype)
-	if AutoManager.should_book(state, tuning):
-		book_fight(state.preferred_lineup)
+	if AutoManager.should_book(state, tuning, planted):
+		book_fight(planted)
 
 
 # --- commands ------------------------------------------------------------------------------
@@ -70,6 +75,7 @@ func new_game() -> bool:
 	state.manager.enabled = true  # the bell rings by itself; there is no manual Book
 	fight = {}
 	series = {}
+	planted = []
 	_announce()
 	_autosave()
 	return true
@@ -83,6 +89,7 @@ func continue_game() -> bool:
 	state.manager.enabled = true
 	fight = {}
 	series = {}
+	planted = []
 	_announce()
 	if loaded.recovered:
 		events.toast.emit("Save restored from backup", &"save")
@@ -120,6 +127,37 @@ func book_fight(lineup: Array[int], opts := {}) -> bool:
 		series = {}
 		return false
 	return true
+
+
+## Plants the selected lineup: from now on hype grows, and the bell rings the series with these fighters.
+func plant() -> bool:
+	if not planted.is_empty() or not series.is_empty() or not fight.is_empty() 			or not Roster.valid_lineup(state, tuning, state.preferred_lineup):
+		return false
+	planted = state.preferred_lineup.duplicate()
+	events.planted_changed.emit()
+	return true
+
+
+## Takes the planted lineup back out before its series starts.
+func uproot() -> bool:
+	if planted.is_empty() or not series.is_empty():
+		return false
+	planted = []
+	events.planted_changed.emit()
+	return true
+
+
+## Picks or drops one fighter in the selection. Picking into a full lineup swaps out the oldest pick,
+## so changing fighters never has to dip below the minimum first.
+func toggle_lineup(id: int) -> bool:
+	var lineup: Array[int] = state.preferred_lineup.duplicate()
+	if id in lineup:
+		lineup.erase(id)
+	else:
+		if lineup.size() >= Roster.fighter_capacity(state, tuning):
+			lineup.pop_front()
+		lineup.append(id)
+	return set_preferred_lineup(lineup)
 
 
 func set_preferred_lineup(ids: Array[int]) -> bool:
@@ -292,6 +330,8 @@ func _count_bout(winner: int) -> Dictionary:
 	var result := {"winner": winner if won else -1, "wins": series.wins.duplicate(), "bouts": series.bout,
 		"fame_bonus": bonus, "lineup": series.lineup.duplicate()}
 	series = {}
+	planted = []
+	events.planted_changed.emit()
 	if bonus > 0:
 		events.fame_changed.emit(state.fame_points, Fame.tier(state.fame_points, tuning))
 	return result
