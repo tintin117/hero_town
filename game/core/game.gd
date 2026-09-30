@@ -354,5 +354,6 @@ func _announce() -> void:
 	events.fame_changed.emit(state.fame_points, Fame.tier(state.fame_points, tuning))
 	events.roster_changed.emit()
 	events.manager_changed.emit()
+	events.planted_changed.emit()
 	for id in state.heroes.size():
 		events.hero_changed.emit(id)

@@ -133,34 +133,26 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="BottomBar" type="PanelContainer" parent="Layout"]
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_type_variation = &"HudBar"
 
 [node name="Row" type="HBoxContainer" parent="Layout/BottomBar"]
 layout_mode = 2
 
-[node name="Lineup" type="ScrollContainer" parent="Layout/BottomBar/Row"]
-layout_mode = 2
-size_flags_horizontal = 3
-vertical_scroll_mode = 0
-
-[node name="Cards" type="HBoxContainer" parent="Layout/BottomBar/Row/Lineup"]
+[node name="Cards" type="HBoxContainer" parent="Layout/BottomBar/Row"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 4
-
-[node name="Sep" type="VSeparator" parent="Layout/BottomBar/Row"]
-layout_mode = 2
 
 [node name="Bell" type="Button" parent="Layout/BottomBar/Row"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(132, 64)
+custom_minimum_size = Vector2(190, 44)
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"RedButton"
-text = "Hold to
-plant"
+text = "Hold to plant"
 
 [node name="Fill" type="ProgressBar" parent="Layout/BottomBar/Row/Bell"]
 unique_name_in_owner = true
@@ -176,63 +168,43 @@ max_value = 1.0
 step = 0.01
 show_percentage = false
 
-[node name="Sep2" type="VSeparator" parent="Layout/BottomBar/Row"]
+[node name="Sep" type="VSeparator" parent="Layout/BottomBar/Row"]
 layout_mode = 2
 
-[node name="ManagerTool" type="VBoxContainer" parent="Layout/BottomBar/Row"]
-custom_minimum_size = Vector2(68, 0)
+[node name="Seeds" parent="Layout/BottomBar/Row" instance=ExtResource("5")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"TightVBox"
+icon_texture = ExtResource("13")
+tip = "Pick fighters"
 
-[node name="Manager" parent="Layout/BottomBar/Row/ManagerTool" instance=ExtResource("5")]
+[node name="Manager" parent="Layout/BottomBar/Row" instance=ExtResource("5")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-size_flags_horizontal = 4
+size_flags_vertical = 4
 icon_texture = ExtResource("14")
 tip = "Manager"
 
-[node name="ManagerCaption" type="Label" parent="Layout/BottomBar/Row/ManagerTool"]
+[node name="Roster" parent="Layout/BottomBar/Row" instance=ExtResource("5")]
 unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Manual"
-horizontal_alignment = 1
-
-[node name="RosterTool" type="VBoxContainer" parent="Layout/BottomBar/Row"]
-custom_minimum_size = Vector2(68, 0)
+custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"TightVBox"
-
-[node name="Roster" parent="Layout/BottomBar/Row/RosterTool" instance=ExtResource("5")]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 4
 icon_texture = ExtResource("15")
 tip = "Roster"
 
-[node name="Caption" type="Label" parent="Layout/BottomBar/Row/RosterTool"]
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Roster"
-horizontal_alignment = 1
-
-[node name="BuildTool" type="VBoxContainer" parent="Layout/BottomBar/Row"]
-custom_minimum_size = Vector2(68, 0)
+[node name="Build" parent="Layout/BottomBar/Row" instance=ExtResource("5")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"TightVBox"
-
-[node name="Build" parent="Layout/BottomBar/Row/BuildTool" instance=ExtResource("5")]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 4
 disabled = true
 icon_texture = ExtResource("16")
 tip = "Build: coming soon"
 
-[node name="Lock" parent="Layout/BottomBar/Row/BuildTool/Build" instance=ExtResource("7")]
+[node name="Lock" parent="Layout/BottomBar/Row/Build" instance=ExtResource("7")]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -245,27 +217,16 @@ grow_horizontal = 0
 tint = Color(0.45, 0.48, 0.55, 1)
 icon = ExtResource("18")
 
-[node name="Caption" type="Label" parent="Layout/BottomBar/Row/BuildTool"]
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Build"
-horizontal_alignment = 1
-
-[node name="StoriesTool" type="VBoxContainer" parent="Layout/BottomBar/Row"]
-custom_minimum_size = Vector2(68, 0)
+[node name="Stories" parent="Layout/BottomBar/Row" instance=ExtResource("5")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"TightVBox"
-
-[node name="Stories" parent="Layout/BottomBar/Row/StoriesTool" instance=ExtResource("5")]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 4
 disabled = true
 icon_texture = ExtResource("17")
 tip = "Stories: coming soon"
 
-[node name="Lock" parent="Layout/BottomBar/Row/StoriesTool/Stories" instance=ExtResource("7")]
+[node name="Lock" parent="Layout/BottomBar/Row/Stories" instance=ExtResource("7")]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -277,12 +238,6 @@ offset_bottom = 16.0
 grow_horizontal = 0
 tint = Color(0.45, 0.48, 0.55, 1)
 icon = ExtResource("18")
-
-[node name="Caption" type="Label" parent="Layout/BottomBar/Row/StoriesTool"]
-layout_mode = 2
-theme_type_variation = &"SmallLabel"
-text = "Stories"
-horizontal_alignment = 1
 
 [node name="PauseMenu" parent="." instance=ExtResource("8")]
 unique_name_in_owner = true

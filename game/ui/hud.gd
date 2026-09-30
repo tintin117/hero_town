@@ -11,12 +11,13 @@ signal main_menu_requested
 signal quit_requested
 
 const ICONS := "res://resources/ui/icons/"
-const CARD := preload("res://game/ui/components/hero_card.tscn")
+const CHIP := preload("res://game/ui/components/hero_chip.tscn")
 const TOAST := preload("res://game/ui/components/toast.tscn")
 const HOLD_TIME := 0.7  ## seconds to hold the Bell button to plant
 const DRAWERS := {
 	&"roster": "res://game/ui/drawers/roster_drawer.tscn",
 	&"manager": "res://game/ui/drawers/manager_drawer.tscn",
+	&"seeds": "res://game/ui/drawers/seed_tray.tscn",
 }
 const TOAST_ICONS := {&"fame": "laurel", &"seats": "crowd", &"fighters": "shield", &"recruit": "sword"}
 
@@ -27,7 +28,7 @@ var router: DrawerRouter
 var _hold := -1.0  ## seconds the plant button has been held, -1 when not held
 var _hp := {}  ## hero id -> hit points during a fight (empty when idle)
 var _mana := {}
-var _cards := {}  ## hero id -> HeroCard
+var _cards := {}  ## hero id -> HeroChip
 var _toasts := []  ## slot -> live toast; toasts stack upwards
 
 @onready var _gold: StatPill = %Gold
@@ -64,6 +65,9 @@ func _ready() -> void:
 	events.planted_changed.connect(_refresh_bell)
 	%Manager.pressed.connect(toggle_drawer.bind(&"manager"))
 	%Roster.pressed.connect(toggle_drawer.bind(&"roster"))
+	%Seeds.pressed.connect(toggle_drawer.bind(&"seeds"))
+	events.planted_changed.connect(_sync_tray)
+	events.series_started.connect(func(_info: Dictionary) -> void: _sync_tray())
 	%Roster.disabled = not router.has_drawer(&"roster")
 	%Roster.tip = "Roster" if router.has_drawer(&"roster") else "Roster: coming soon"
 
@@ -91,6 +95,7 @@ func sync_all() -> void:
 	_refresh_manager()
 	_rebuild_cards()
 	_refresh_seats()
+	_sync_tray()
 
 
 func open_pause() -> void:
@@ -154,7 +159,7 @@ func _refresh_seats() -> void:
 func _refresh_manager() -> void:
 	var manager: Dictionary = game.state.manager
 	_hype.set_threshold(manager.threshold if manager.enabled else -1.0)
-	%ManagerCaption.text = "Auto %d" % int(manager.threshold) if manager.enabled else "Manual"
+	_refresh_bell()
 	%Manager.tip = "Bell rings at hype >= %d" % int(manager.threshold) if manager.enabled else "Auto bell is off"
 
 
@@ -173,27 +178,24 @@ func _refresh_bell() -> void:
 		for id: int in series.lineup:
 			score.append(str(series.wins.get(id, 0)))
 			names.append("%s %d" % [game.hero_defs[id].display_name, series.wins.get(id, 0)])
-		text = "Bout %d
-%s" % [series.bout + 1, "-".join(score)]
+		text = "Bout %d\n%s" % [series.bout + 1, "-".join(score)]
 		tip = "First to %d wins.  %s" % [game.tuning.series_wins, "  ".join(names)]
 	elif not game.planted.is_empty():
-		text = "Growing
-bell at %d" % int(manager.threshold)
+		text = "Growing\nbell at %d" % int(manager.threshold)
 		tip = "Planted. The bell rings by itself when hype reaches %d." % int(manager.threshold)
 	elif not manager.enabled:
 		text = "Bell off"
 		tip = "The auto bell is off (see the manager)."
 	elif not Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup):
-		text = "Pick %d+
-fighters" % game.tuning.min_lineup
+		text = "Pick %d+\nfighters" % game.tuning.min_lineup
 		tip = "Pick the fighters to plant from the cards on the left."
 	else:
-		text = "Hold to
-plant"
+		text = "Hold to\nplant"
 		tip = "Hold to plant the selected fighters. Hype grows once they are planted; the bell rings at %d." % int(manager.threshold)
 	_bell.text = text
 	_bell.tooltip_text = tip
-	var ready: bool = series.is_empty() and game.planted.is_empty() and manager.enabled 			and Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup)
+	var ready: bool = series.is_empty() and game.planted.is_empty() and manager.enabled \
+			and Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup)
 	_bell.disabled = not ready
 	if not ready:
 		_stop_hold()
@@ -219,30 +221,37 @@ func _process(delta: float) -> void:
 		game.plant()
 
 
+## Chips show who is planted (or, before planting, who is picked).
 func _rebuild_cards() -> void:
-	for card in %Cards.get_children():
-		%Cards.remove_child(card)
-		card.queue_free()
+	for chip in %Cards.get_children():
+		%Cards.remove_child(chip)
+		chip.queue_free()
 	_cards.clear()
-	for id in game.state.heroes.size():
-		if not game.state.heroes[id].owned:
-			continue
-		var card := CARD.instantiate() as HeroCard
-		card.portrait = HeroPortraits.portrait(id)
-		card.hero_name = game.hero_defs[id].display_name
-		card.level = game.state.heroes[id].level
-		card.selected = id in game.state.preferred_lineup
-		card.tooltip_text = "Click to pick or drop %s for the next series." % card.hero_name
-		card.pressed.connect(game.toggle_lineup.bind(id))
-		%Cards.add_child(card)
-		_cards[id] = card
+	var ids: Array[int] = game.planted if not game.planted.is_empty() else game.state.preferred_lineup
+	for id in ids:
+		var chip := CHIP.instantiate() as HeroChip
+		chip.portrait = HeroPortraits.portrait(id)
+		chip.hero_name = "%s  Lv %d" % [game.hero_defs[id].display_name, game.state.heroes[id].level]
+		%Cards.add_child(chip)
+		_cards[id] = chip
 		_paint_card(id)
 	_refresh_bell()
 
 
+## The seed tray slides up whenever nothing is planted and tucks away once a lineup is planted.
+func _sync_tray() -> void:
+	_rebuild_cards()
+	if not is_visible_in_tree():
+		return  # a drawer opened behind the main menu would be laid out against a hidden parent
+	if game.planted.is_empty() and game.series.is_empty():
+		if router.current == &"":
+			router.open(&"seeds")
+	elif router.current == &"seeds":
+		router.close()
+
+
 func _on_hero_changed(id: int) -> void:
 	if _cards.has(id):
-		_cards[id].level = game.state.heroes[id].level
 		_paint_card(id)
 
 
@@ -254,7 +263,6 @@ func _max_hp(id: int) -> int:
 func _paint_card(id: int) -> void:
 	if _cards.has(id):
 		_cards[id].set_hp(_hp.get(id, _max_hp(id)), _max_hp(id))
-		_cards[id].set_mana(_mana.get(id, 0), CombatSim.MANA_MAX)
 
 
 # --- fight -----------------------------------------------------------------------------------

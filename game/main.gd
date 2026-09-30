@@ -36,5 +36,7 @@ func _start(loaded: bool) -> void:
 		return
 	menu.hide()
 	hud.show()
+	await get_tree().process_frame  # let the HUD lay out before its drawers slide in
+	hud.sync_all()
 	town.center_on_arena()
 	Game.set_paused(false)
