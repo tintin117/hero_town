@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://game/town/town.gd" id="1"]
 [ext_resource type="TileSet" path="res://game/town/town_tileset.tres" id="2"]
@@ -6,6 +6,8 @@
 [ext_resource type="Script" path="res://game/town/town_decor.gd" id="4"]
 [ext_resource type="Script" path="res://game/town/ambient_walkers.gd" id="5"]
 [ext_resource type="Theme" path="res://game/ui/theme/fight_club_theme.tres" id="6"]
+[ext_resource type="Script" path="res://game/town/town_buildings.gd" id="7"]
+[ext_resource type="Script" path="res://game/town/placement_ghost.gd" id="8"]
 
 [node name="Town" type="Control"]
 clip_contents = true
@@ -50,12 +52,20 @@ script = ExtResource("4")
 [node name="BuildingLayer" type="Node2D" parent="World"]
 y_sort_enabled = true
 
+[node name="TownBuildings" type="Node2D" parent="World/BuildingLayer"]
+y_sort_enabled = true
+script = ExtResource("7")
+
 [node name="ArenaSlot" type="Node2D" parent="World"]
 position = Vector2(512, 0)
 
 [node name="ActorLayer" type="Node2D" parent="World"]
 y_sort_enabled = true
 script = ExtResource("5")
+
+[node name="PlacementGhost" type="Node2D" parent="World"]
+visible = false
+script = ExtResource("8")
 
 [node name="Dim" type="Node2D" parent="World"]
 position = Vector2(0, 1000)
