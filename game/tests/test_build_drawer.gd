@@ -96,7 +96,7 @@ func _states() -> void:
 	# built, mid level: Upgrade with the next cost, the pips, the Move button
 	_set_level(&"promotion_office", 2)
 	var e := _entry(&"promotion_office")
-	_check(e.buy.text.begins_with("Upgrade") and e.buy.cost == 2000000 and e.buy.cost == _game.building_next_cost(&"promotion_office"), "level 2: Upgrade to level 3 (%s)" % e.buy.text)
+	_check(e.buy.text.begins_with("Upgrade") and e.buy.cost == 2700000 and e.buy.cost == _game.building_next_cost(&"promotion_office"), "level 2: Upgrade to level 3 (%s)" % e.buy.text)
 	_check(e.buy.disabled and _lit_pips(&"promotion_office") == 2, "level 2: two lit pips, upgrade unaffordable at 300 gold")
 	_check(e.move.visible, "built: Move shows")
 	_check(_label(&"promotion_office", "Now") == Buildings.describe(_game.catalog, &"promotion_office", 2), "current effect text: %s" % _label(&"promotion_office", "Now"))

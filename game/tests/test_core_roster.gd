@@ -13,7 +13,7 @@ func run() -> Array[String]:
 
 	# content
 	Kit.check(p, defs.size() == 8, "8 heroes")
-	var prices := [0, 0, 100, 150, 250, 400, 350000, 500000]
+	var prices := [0, 0, 100, 150, 250, 400, 470000, 675000]
 	for i in defs.size():
 		Kit.check(p, defs[i].id == i, "hero %d has id %d" % [i, defs[i].id])
 		Kit.check(p, defs[i].price == prices[i], "hero %d price" % i)

@@ -53,7 +53,7 @@ func _lifecycle(p: Array[String]) -> void:
 	Kit.check(p, deltas == [10, 10, 91], "gold: two tips then payout 91 (got %s)" % [deltas])
 	Kit.check(p, g.state.gold == 111, "gold 111 (got %d)" % g.state.gold)
 	Kit.check(p, Kit.count(log, "finished") == 1 and g.fight.is_empty(), "settled exactly once")
-	Kit.check(p, Kit.near(g.state.hype, 13.5), "hype reset to afterglow")
+	Kit.check(p, Kit.near(g.state.hype, 9.0), "hype reset to afterglow")
 	Kit.check(p, Kit.count(log, "hype") == 1 and Kit.count(log, "fame") == 1, "hype and fame announced once")
 	Kit.check(p, g.state.fight_count == 1 and g.state.fame_points == 5, "fight_count and fame")
 	var result: Dictionary = log.filter(func(e: Array) -> bool: return e[0] == "finished")[0][1]
@@ -66,10 +66,10 @@ func _lifecycle(p: Array[String]) -> void:
 	# idle again: hype grows, and a second fight can start (Bram levels up on his second win)
 	Kit.check(p, g.planted.is_empty(), "the series consumed the planted lineup")
 	g.advance(1.0)
-	Kit.check(p, g.state.hype == 13.5, "nothing planted, nothing grows")
+	Kit.check(p, g.state.hype == 9.0, "nothing planted, nothing grows")
 	Kit.check(p, g.plant() and not g.plant(), "plant once")
 	g.advance(1.0)
-	Kit.check(p, g.state.hype > 13.5, "hype grows after the fight once planted")
+	Kit.check(p, g.state.hype > 9.0, "hype grows after the fight once planted")
 	Kit.check(p, g.book_fight([0, 1] as Array[int]) and fake.last_seed == 1, "second fight starts with the seed counter")
 	Kit.check(p, fake.last_lineup[0].health == 225 and fake.last_lineup[0].attack == 17, "level 1 stats until settled")
 	for k in 20:

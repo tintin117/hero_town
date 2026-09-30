@@ -19,10 +19,10 @@ func run() -> Array[String]:
 
 func _content(p: Array[String]) -> void:
 	var catalog := Kit.catalog()
-	var expected := {&"promotion_office": [Vector2i(2, 2), [300, 50000, 2000000], [0.85, 0.70, 0.55]],
-		&"recruitment_hall": [Vector2i(3, 2), [200, 350, 900000], [5.0, 6.0, 8.0]],
-		&"gym": [Vector2i(3, 2), [250, 150000, 1000000], [1.0, 2.0, 3.0]],
-		&"restaurant": [Vector2i(2, 2), [100, 300000, 7000000], [0.3, 0.8, 1.5]]}
+	var expected := {&"promotion_office": [Vector2i(2, 2), [300, 50000, 2700000], [0.85, 0.70, 0.55]],
+		&"recruitment_hall": [Vector2i(3, 2), [200, 350, 1200000], [5.0, 6.0, 8.0]],
+		&"gym": [Vector2i(3, 2), [250, 30000, 160000], [1.0, 2.0, 3.0]],
+		&"restaurant": [Vector2i(2, 2), [100, 270000, 3400000], [0.5, 2.0, 4.0]]}
 	Kit.check(p, catalog.buildings.size() == 4, "four buildings")
 	for id: StringName in expected:
 		var d := Buildings.def(catalog, id)
@@ -33,7 +33,7 @@ func _content(p: Array[String]) -> void:
 	Kit.check(p, Buildings.describe(catalog, &"promotion_office", 2) == "Hype builds 30% faster", Buildings.describe(catalog, &"promotion_office", 2))
 	Kit.check(p, Buildings.describe(catalog, &"recruitment_hall", 1) == "Up to 5 heroes", "hall text")
 	Kit.check(p, Buildings.describe(catalog, &"gym", 2) == "2 training slots" and Buildings.describe(catalog, &"gym", 1) == "1 training slot", "gym text")
-	Kit.check(p, Buildings.describe(catalog, &"restaurant", 2) == "+0.8 gold per fan each bout", Buildings.describe(catalog, &"restaurant", 2))
+	Kit.check(p, Buildings.describe(catalog, &"restaurant", 2) == "+2.0 gold per fan each bout", Buildings.describe(catalog, &"restaurant", 2))
 	Kit.check(p, Buildings.describe(catalog, &"gym", 0) == "" and Buildings.describe(catalog, &"gym", 4) == "", "no text outside levels")
 	var g := Kit.game()
 	Kit.check(p, g.state.buildings.is_empty() and g.state.training.is_empty(), "nothing built at start")
@@ -87,7 +87,7 @@ func _commands(p: Array[String]) -> void:
 	Kit.check(p, g.building_next_cost(&"promotion_office") == 50000 and not g.upgrade(&"promotion_office"), "upgrade unaffordable")
 	g.state.gold = 50000
 	Kit.check(p, g.upgrade(&"promotion_office") and g.building_level(&"promotion_office") == 2 and g.state.gold == 0, "upgrade to 2")
-	g.state.gold = 2000000
+	g.state.gold = 2700000
 	Kit.check(p, g.upgrade(&"promotion_office") and g.building_level(&"promotion_office") == 3, "upgrade to 3")
 	Kit.check(p, g.building_next_cost(&"promotion_office") == -1 and not g.upgrade(&"promotion_office"), "maxed")
 	var gold: int = g.state.gold
@@ -137,10 +137,10 @@ func _effects(p: Array[String]) -> void:
 	for k in 20:
 		g.advance(STEP)
 	var result: Dictionary = log.filter(func(e: Array) -> bool: return e[0] == "finished")[0][1]
-	Kit.check(p, result.attendance == 73 and result.payout == 91 and result.concessions == 22, "payout 91 plus concessions round(73 x 0.3) = 22 (got %s / %s)" % [result.payout, result.concessions])
-	Kit.check(p, g.state.gold == 20 + 91 + 22, "gold: tips + payout + concessions (got %d)" % g.state.gold)
+	Kit.check(p, result.attendance == 73 and result.payout == 91 and result.concessions == 37, "payout 91 plus concessions round(73 x 0.5) = 37 (got %s / %s)" % [result.payout, result.concessions])
+	Kit.check(p, g.state.gold == 20 + 91 + 37, "gold: tips + payout + concessions (got %d)" % g.state.gold)
 	var deltas := log.filter(func(e: Array) -> bool: return e[0] == "gold").map(func(e: Array) -> int: return e[2])
-	Kit.check(p, deltas.back() == 113, "final gold delta covers concessions (%s)" % [deltas])
+	Kit.check(p, deltas.back() == 128, "final gold delta covers concessions (%s)" % [deltas])
 	Kit.dispose(g)
 
 	var state := GameState.create(Kit.tuning(), Kit.catalog().heroes)

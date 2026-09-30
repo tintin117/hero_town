@@ -85,8 +85,8 @@ func _manager_drawer(router: DrawerRouter, host: Control, g: Node) -> void:
 	_check(Kit.near(g.state.manager.threshold, 55.0) and g.state.manager.enabled, "slider commits the threshold")
 	g.state.hype = 15.0
 	g.events.hype_changed.emit(15.0)
-	# 50 s * ln((100 - 15) / (100 - 55)) = 31.8 -> 32
-	_check(estimate.text == "Bell in ~32 s", "estimate from the hype curve: %s" % estimate.text)
+	# 40 s * ln((100 - 15) / (100 - 55)) = 25.4 -> 26 (the drawer rounds up)
+	_check(estimate.text == "Bell in ~26 s", "estimate from the hype curve: %s" % estimate.text)
 	g.state.hype = 60.0
 	g.events.hype_changed.emit(60.0)
 	_check(estimate.text == "Bell rings now.", "estimate at/above the threshold: %s" % estimate.text)

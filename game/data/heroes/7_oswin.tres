@@ -20,6 +20,6 @@ health = 210
 attack = 13
 ranged = false
 skill = SubResource("Resource_skill")
-price = 500000
+price = 675000
 start_owned = false
 trait_ids = Array[StringName]([&"underdog", &"crowd_pleaser"])
