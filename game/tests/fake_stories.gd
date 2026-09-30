@@ -1,52 +1,40 @@
 extends "res://game/core/game.gd"
-## FAKE of the stories / traits / preview / props contract (docs: G4+G5) on top of the real Game, until CORE merges.
-## UI tests and the screenshot demo use `Stories.make()` instead of `Kit.game()`. DELETE this file after the merge:
-## its overrides have looser types than the real ones (which use Array[TraitDef] / Array[PropDef]), so they clash.
-## Stand-ins (`FakeTrait`, `FakeProp`) have the real classes' fields: id, display_name, description, icon_name (+ base_price).
+## The real Game with the stories / traits / preview / props queries replaced by scripted data, so UI tests can
+## set up any situation directly (story_list, stock, trait_map, story_capacity). `FakeStories.make()` replaces
+## `Kit.game()`; the real rules are covered by test_core_*.gd and the shell playthrough.
 
 const Kit := preload("res://game/tests/core_kit.gd")
 const SELF := "res://game/tests/fake_stories.gd"
 
 
-class FakeTrait extends RefCounted:
-	var id: StringName
-	var display_name: String
-	var description: String
-	var icon_name: StringName
-
-	func _init(i: StringName, n: String, d: String, icon: StringName) -> void:
-		id = i
-		display_name = n
-		description = d
-		icon_name = icon
+static func _trait(i: StringName, n: String, d: String, icon: StringName) -> TraitDef:
+	var t := TraitDef.new()
+	t.id = i
+	t.display_name = n
+	t.description = d
+	t.icon_name = icon
+	return t
 
 
-class FakeProp extends RefCounted:
-	var id: StringName
-	var display_name: String
-	var description: String
-	var icon_name: StringName
-	var base_price: int
-
-	func _init(i: StringName, n: String, d: String, icon: StringName, price: int) -> void:
-		id = i
-		display_name = n
-		description = d
-		icon_name = icon
-		base_price = price
+static func _prop(i: StringName, n: String, d: String, icon: StringName, price: int) -> PropDef:
+	var p := PropDef.new()
+	p.id = i
+	p.display_name = n
+	p.description = d
+	p.icon_name = icon
+	p.base_price = price
+	return p
 
 
 var story_list: Array[Dictionary] = []
 var story_capacity := 3
-var main_event_id := -1
-var selected_prop: StringName = &""
-var trait_map := {}  ## hero id -> Array[FakeTrait]
+var trait_map := {}  ## hero id -> Array[TraitDef]
 var stock := {}  ## prop id -> owned count
-var props: Array = [
-	FakeProp.new(&"fireworks", "Fireworks", "Start the fight with excitement 15", &"fireworks", 120),
-	FakeProp.new(&"announcer", "Announcer", "Skills add +50% excitement", &"megaphone", 300),
-	FakeProp.new(&"spotlights", "Spotlights", "Afterglow x1.5", &"spotlight", 500),
-	FakeProp.new(&"ringside_bar", "Ringside Bar", "Concessions x2 this fight", &"drink", 800),
+var props: Array[PropDef] = [
+	_prop(&"fireworks", "Fireworks", "Start the fight with excitement 15", &"fireworks", 120),
+	_prop(&"announcer", "Announcer", "Skills add +50% excitement", &"megaphone", 300),
+	_prop(&"spotlights", "Spotlights", "Afterglow x1.5", &"spotlight", 500),
+	_prop(&"ringside_bar", "Ringside Bar", "Concessions x2 this fight", &"drink", 800),
 ]
 var preview_calls: Array = []  ## [lineup, opts] of every preview() call
 
@@ -79,10 +67,10 @@ func demo() -> void:
 	state.preferred_lineup = [0, 1] as Array[int]
 	state.gold = 400
 	trait_map = {
-		0: [FakeTrait.new(&"showman", "Showman", "Skills add +50% excitement", &"star")],
-		1: [FakeTrait.new(&"brawler", "Brawler", "Fights end faster; more damage", &"sword"),
-			FakeTrait.new(&"grudge", "Grudge Holder", "Rivalries ripen faster", &"shield")],
-		2: [FakeTrait.new(&"crowd_pleaser", "Crowd Pleaser", "Afterglow x1.5", &"crowd")],
+		0: [_trait(&"showman", "Showman", "Skills add +50% excitement", &"star")],
+		1: [_trait(&"brawler", "Brawler", "Fights end faster; more damage", &"sword"),
+			_trait(&"grudge", "Grudge Holder", "Rivalries ripen faster", &"shield")],
+		2: [_trait(&"crowd_pleaser", "Crowd Pleaser", "Afterglow x1.5", &"crowd")],
 	}
 	story_list = [
 		{"id": 1, "kind": &"win_streak", "title": "Rex on a roll", "heroes": [0] as Array[int], "ripeness": 62.0, "ripe": true, "cooling": false, "full_bouts": 4},
@@ -101,8 +89,10 @@ func set_story(id: int, changes: Dictionary) -> void:
 
 # --- the contract ---------------------------------------------------------------------------------
 
-func hero_traits(hero_id: int) -> Array:
-	return trait_map.get(hero_id, [])
+func hero_traits(hero_id: int) -> Array[TraitDef]:
+	var out: Array[TraitDef] = []
+	out.assign(trait_map.get(hero_id, []))
+	return out
 
 
 func stories() -> Array[Dictionary]:
@@ -144,7 +134,7 @@ func preview(lineup: Array[int], opts := {}) -> Dictionary:
 	return {"stars_min": lo, "stars_max": minf(5.0, lo + 1.5), "income_min": 55 * lineup.size(), "income_max": 95 * lineup.size()}
 
 
-func prop_defs() -> Array:
+func prop_defs() -> Array[PropDef]:
 	return props
 
 

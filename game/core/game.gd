@@ -425,6 +425,14 @@ func hero_traits(hero_id: int) -> Array[TraitDef]:
 	return Traits.of_hero(catalog, hero_id) if hero_id >= 0 and hero_id < hero_defs.size() else none
 
 
+## The story board as copies (UI reads it; only the rules change it).
+func stories() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for story in state.stories:
+		out.append(story.duplicate())
+	return out
+
+
 func story(id: int) -> Dictionary:
 	return Stories.get_story(state, id).duplicate()
 
