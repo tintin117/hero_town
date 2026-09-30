@@ -43,7 +43,7 @@ func _builds(hud: Control, g: Node) -> void:
 		_check(hud.get_node(locked).disabled and hud.get_node(locked).tooltip_text.contains("coming soon"), "%s is locked" % locked)
 	var roster_exists := ResourceLoader.exists("res://game/ui/drawers/roster_drawer.tscn")
 	_check(hud.get_node("%Roster").disabled == not roster_exists, "Roster button follows the roster drawer's existence")
-	_check(hud.get_node("%Bell").text.contains("plant") and not hud.get_node("%Bell").disabled, "the plant button is ready: %s" % hud.get_node("%Bell").text)
+	_check(hud.get_node("%Text").text.contains("Hold the arena"), "the status says to hold the arena: %s" % hud.get_node("%Text").text)
 	_check(hud.get_node("%Seats").text == "%d/100" % g.attendance_if_booked_now(), "seats pill shows the crowd now: %s" % hud.get_node("%Seats").text)
 
 
@@ -68,24 +68,32 @@ func _widgets_follow_signals(hud: Control, g: Node) -> void:
 
 
 func _book_button(hud: Control, g: Node, fake: Object) -> void:
-	var bell: Button = hud.get_node("%Bell")
+	var status: Label = hud.get_node("%Text")
+	var progress := [0.0]
+	hud.plant_progress.connect(func(ratio: float) -> void: progress[0] = ratio)
 	g.state.manager.enabled = false
 	g.events.manager_changed.emit()
-	_check(bell.text == "Bell off" and bell.disabled, "bell status when the auto bell is off: %s" % bell.text)
+	_check(status.text == "Bell off", "status when the auto bell is off: %s" % status.text)
+	hud.press_arena()
+	hud._process(hud.HOLD_TIME)
+	_check(g.planted.is_empty(), "nothing plants while the bell is off")
+	hud.release_arena()
 	g.state.manager.enabled = true
 	g.events.manager_changed.emit()
-	bell.button_down.emit()  # hold to plant
-	hud._process(hud.HOLD_TIME * 0.5)
-	_check(g.planted.is_empty() and hud.get_node("%Fill").value > 0.4, "holding fills the bar without planting yet")
-	bell.button_up.emit()
-	_check(g.planted.is_empty() and hud.get_node("%Fill").value == 0.0, "releasing early cancels the plant")
-	bell.button_down.emit()
+	hud.press_arena()  # hold the arena to plant
+	hud._process(hud.HOLD_TIME * 0.5 + hud.TAP_TIME)
+	_check(g.planted.is_empty() and progress[0] > 0.4, "holding fills the arc without planting yet: %f" % progress[0])
+	hud.release_arena()
+	_check(g.planted.is_empty() and progress[0] == 0.0, "releasing early cancels the plant")
+	hud.press_arena()
+	hud._process(hud.TAP_TIME)
 	hud._process(hud.HOLD_TIME + 0.01)
-	_check(g.planted == g.state.preferred_lineup and bell.text.begins_with("Growing"), "a full hold plants: %s" % bell.text)
+	_check(g.planted == g.state.preferred_lineup and status.text.begins_with("Growing"), "a full hold plants: %s" % status.text)
+	hud.release_arena()
 	_check(g.book_fight(g.planted), "the bell starts the series")
 	_check(fake.calls == 1 and not g.fight.is_empty(), "the series plays its first bout")
 	_check(fake.last_lineup.size() == g.state.preferred_lineup.size(), "the whole preferred lineup fights")
-	_check(bell.text.begins_with("Bout 1"), "bell status shows the bout during a series: %s" % bell.text)
+	_check(status.text.begins_with("Bout 1"), "status shows the bout during a series: %s" % status.text)
 	_check(hud.get_node("%Seats").text == "100/100", "seats pill shows the locked crowd")
 	_check(not g.book_fight(g.state.preferred_lineup), "no second bell during a series")
 
@@ -110,4 +118,4 @@ func _fight(hud: Control, g: Node) -> void:
 		_check(text.contains("Bram") and text.contains("gold") and text.contains("fame") and text.contains("x1.25"), "summary toast content: %s" % text)
 	g.events.toast.emit("Hello", &"fame")
 	_check(toasts.get_child_count() == 3, "Events.toast makes a toast")
-	_check(hud.get_node("%Bell").text.contains("plant"), "the plant button is ready again after the series")
+	_check(hud.get_node("%Text").text.contains("Hold the arena"), "ready to plant again after the series")

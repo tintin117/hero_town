@@ -14,6 +14,7 @@ var events: Node
 
 func _ready() -> void:
 	super()
+	$Column/Header.visible = false  # compact: tap the arena or press ESC to tuck it away
 	game = game if game else get_node_or_null("/root/Game")
 	events = events if events else get_node_or_null("/root/Events")
 	for signal_name in [&"roster_changed", &"hero_changed"]:
@@ -43,5 +44,5 @@ func refresh() -> void:
 		var hp: int = Roster.stats_for(game.hero_defs[id], game.state.heroes[id].level, game.tuning).health
 		card.set_hp(hp, hp)
 	var capacity: int = Roster.fighter_capacity(game.state, game.tuning)
-	hint.text = "Picked %d/%d - then hold Plant" % [picked.size(), capacity] \
+	hint.text = "Picked %d/%d - now hold the arena to plant" % [picked.size(), capacity] \
 			if picked.size() >= game.tuning.min_lineup else "Pick at least %d fighters (%d/%d)" % [game.tuning.min_lineup, picked.size(), capacity]

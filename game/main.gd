@@ -4,6 +4,7 @@ extends Control
 
 const MIN_WINDOW := Vector2i(960, 420)
 const ARENA_SCENE := preload("res://game/combat/arena.tscn")
+const ARENA_CELLS := Rect2i(16, 0, 16, 8)  # the town cells the arena occupies
 
 @onready var town: Control = %Town
 @onready var hud: Control = %HUD
@@ -14,7 +15,14 @@ func _ready() -> void:
 	var window := get_window()
 	window.title = "Fight club"
 	window.min_size = MIN_WINDOW
-	town.get_node("World/ArenaSlot").add_child(ARENA_SCENE.instantiate())
+	var arena := ARENA_SCENE.instantiate()
+	town.get_node("World/ArenaSlot").add_child(arena)
+	# The arena is the control surface: tap to pick fighters, hold to plant.
+	town.pressed.connect(func(cell: Vector2i) -> void:
+		if ARENA_CELLS.has_point(cell):
+			hud.press_arena())
+	town.released.connect(hud.release_arena)
+	hud.plant_progress.connect(arena.set_plant_progress)
 	menu.new_game_requested.connect(func() -> void: _start(Game.new_game()))
 	menu.continue_requested.connect(func() -> void: _start(Game.continue_game()))
 	menu.quit_requested.connect(get_tree().quit)

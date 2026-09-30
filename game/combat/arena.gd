@@ -22,6 +22,12 @@ const NAME_TIME := 2.5  # names show when a fight starts, then only the bars rem
 const CROWD_POLL := 0.25  # seat upgrades emit no signal, so the idle crowd is re-read on a timer
 
 var game: GameScript
+## 0..1 while the player holds the arena to plant; drawn as a gold arc around the ring.
+var plant_progress := 0.0:
+	set(v):
+		plant_progress = v
+		queue_redraw()
+
 var _fighters := {}  # hero id -> fighter
 var _tracks := {}  # hero id -> PackedVector2Array of the fight on screen (kept during the celebration)
 var _fighting := false
@@ -55,9 +61,25 @@ func _draw() -> void:
 	_ellipse(RADII + Vector2(4, 4), Vector2.ZERO, Color("59685f"))
 	_ellipse(RADII, Vector2.ZERO, Color("e2bf80"))
 	_ellipse(RADII - Vector2(10, 6), Vector2.ZERO, Color("d4ae73"))
+	if plant_progress > 0.0:
+		_draw_plant_arc()
 	for i in 40:  # sand specks
 		var at := CENTER + Vector2.from_angle(i * 2.399) * sqrt(i / 40.0) * RADII * 0.92
 		draw_rect(Rect2(at.snapped(Vector2(2, 2)), Vector2(4 if i % 4 == 0 else 2, 2)), Color("bb955f") if i % 3 == 0 else Color("efcf94"))
+
+
+## Gold arc around the ring while the player holds the arena to plant.
+func _draw_plant_arc() -> void:
+	var points := PackedVector2Array()
+	var steps := int(64 * plant_progress)
+	for i in range(steps + 1):
+		var angle := -PI / 2.0 + TAU * plant_progress * i / maxf(1.0, steps)
+		points.append(CENTER + Vector2(cos(angle), sin(angle)) * (RADII + Vector2(14, 10)))
+	draw_polyline(points, Color("f2c94c"), 4.0)
+
+
+func set_plant_progress(ratio: float) -> void:
+	plant_progress = ratio
 
 
 func _ellipse(radii: Vector2, offset: Vector2, color: Color) -> void:

@@ -9,7 +9,7 @@ theme = ExtResource("3")
 script = ExtResource("2")
 title = "Pick your fighters"
 edge = 2
-panel_size = Vector2(1240, 150)
+panel_size = Vector2(1240, 122)
 margin = 4.0
 
 [node name="Scroll" type="ScrollContainer" parent="Column/Body" index="0"]

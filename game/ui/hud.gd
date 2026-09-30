@@ -1,18 +1,20 @@
 extends Control
-## The in-game HUD: top bar (gold, fame, hype, crowd, menu), bottom bar (lineup, bell status, manager, roster, locked tabs),
+## The in-game HUD: top bar (gold, fame, hype, crowd, menu), a status pill, a tool column (manager, roster, locked tabs),
 ## the fight excitement gauge, a drawer host and a toast layer. It never writes state: it calls Game commands
 ## and redraws from Events signals. Only its own widgets take the mouse, so the town below stays draggable.
 ##
 ## `game` / `events` default to the autoloads (which do not exist under --script); tests assign them before add_child.
 ## Shell API: signals main_menu_requested / quit_requested (forwarded from the pause menu), `router` (open drawers),
-## open_pause(). Named nodes for tests: %Gold %Fame %Hype %Seats %Bell %Manager %Roster %Excitement %Cards.
+## open_pause(). Named nodes for tests: %Gold %Fame %Hype %Seats %Text (status) %Manager %Roster %Excitement. Arena gestures: press_arena() / release_arena().
 
 signal main_menu_requested
 signal quit_requested
+signal plant_progress(ratio: float)  ## 0..1 while the arena is held to plant
 
 const ICONS := "res://resources/ui/icons/"
 const TOAST := preload("res://game/ui/components/toast.tscn")
-const HOLD_TIME := 0.7  ## seconds to hold the Bell button to plant
+const HOLD_TIME := 0.9  ## seconds to hold the arena to plant
+const TAP_TIME := 0.25  ## a press shorter than this is a tap
 const DRAWERS := {
 	&"roster": "res://game/ui/drawers/roster_drawer.tscn",
 	&"manager": "res://game/ui/drawers/manager_drawer.tscn",
@@ -24,7 +26,9 @@ var game: Node
 var events: Node
 var router: DrawerRouter
 
-var _hold := -1.0  ## seconds the plant button has been held, -1 when not held
+var _hold := -1.0  ## seconds the arena has been held for planting, -1 when not held
+var _pressed_for := 0.0
+var _taps := false  ## an arena press is in progress
 var _toasts := []  ## slot -> live toast; toasts stack upwards
 
 @onready var _gold: StatPill = %Gold
@@ -32,8 +36,7 @@ var _toasts := []  ## slot -> live toast; toasts stack upwards
 @onready var _hype: HypeGauge = %Hype
 @onready var _seats: StatPill = %Seats
 @onready var _excitement: ExcitementGauge = %Excitement
-@onready var _bell: Button = %Bell
-@onready var _fill: ProgressBar = %Fill
+@onready var _status: Label = %Text
 @onready var _pause: Control = %PauseMenu
 
 
@@ -56,12 +59,9 @@ func _ready() -> void:
 	_excitement.tier_marks = marks
 
 	%Menu.pressed.connect(open_pause)
-	_bell.button_down.connect(_start_hold)
-	_bell.button_up.connect(_stop_hold)
-	events.planted_changed.connect(_refresh_bell)
+	events.planted_changed.connect(_refresh_status)
 	%Manager.pressed.connect(toggle_drawer.bind(&"manager"))
 	%Roster.pressed.connect(toggle_drawer.bind(&"roster"))
-	%Seeds.pressed.connect(toggle_drawer.bind(&"seeds"))
 	events.planted_changed.connect(_sync_tray)
 	events.series_started.connect(func(_info: Dictionary) -> void: _sync_tray())
 	%Roster.disabled = not router.has_drawer(&"roster")
@@ -71,13 +71,13 @@ func _ready() -> void:
 	events.hype_changed.connect(_on_hype)
 	events.fame_changed.connect(_on_fame)
 	events.manager_changed.connect(_refresh_manager)
-	events.roster_changed.connect(_refresh_bell)
+	events.roster_changed.connect(_refresh_status)
 	events.fight_started.connect(_on_fight_started)
 	events.combat_event.connect(_on_combat_event)
 	events.fight_finished.connect(_on_fight_finished)
-	events.series_started.connect(func(_info: Dictionary) -> void: _refresh_seats(); _refresh_bell())
+	events.series_started.connect(func(_info: Dictionary) -> void: _refresh_seats(); _refresh_status())
 	events.series_finished.connect(_on_series_finished)
-	events.paused_changed.connect(func(_paused: bool) -> void: _refresh_bell())
+	events.paused_changed.connect(func(_paused: bool) -> void: _refresh_status())
 	events.toast.connect(func(text: String, icon: StringName) -> void: show_toast(TOAST_ICONS.get(icon, "info"), text))
 	sync_all()
 
@@ -88,7 +88,7 @@ func sync_all() -> void:
 	_hype.value = game.state.hype
 	_on_fame(game.state.fame_points, Fame.tier(game.state.fame_points, game.tuning))
 	_refresh_manager()
-	_refresh_bell()
+	_refresh_status()
 	_refresh_seats()
 	_sync_tray()
 
@@ -131,7 +131,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_hype(hype: float) -> void:
 	_hype.set_value(hype)
 	_refresh_seats()
-	_refresh_bell()
+	_refresh_status()
 
 
 func _on_fame(points: int, tier: int) -> void:
@@ -154,15 +154,14 @@ func _refresh_seats() -> void:
 func _refresh_manager() -> void:
 	var manager: Dictionary = game.state.manager
 	_hype.set_threshold(manager.threshold if manager.enabled else -1.0)
-	_refresh_bell()
+	_refresh_status()
 	%Manager.tip = "Bell rings at hype >= %d" % int(manager.threshold) if manager.enabled else "Auto bell is off"
 
 
 # --- bottom bar ------------------------------------------------------------------------------
 
-## The Bell button is the plant action: hold it to plant the selected lineup. Afterwards it shows
-## the state (growing towards the bell, then the bout and score).
-func _refresh_bell() -> void:
+## The status pill says what the arena wants next: pick, plant, wait, or the series score.
+func _refresh_status() -> void:
 	var manager: Dictionary = game.state.manager
 	var series: Dictionary = game.series
 	var text := ""
@@ -173,56 +172,72 @@ func _refresh_bell() -> void:
 		for id: int in series.lineup:
 			score.append(str(series.wins.get(id, 0)))
 			names.append("%s %d" % [game.hero_defs[id].display_name, series.wins.get(id, 0)])
-		text = "Bout %d\n%s" % [series.bout + 1, "-".join(score)]
+		text = "Bout %d  %s" % [series.bout + 1, "-".join(score)]
 		tip = "First to %d wins.  %s" % [game.tuning.series_wins, "  ".join(names)]
 	elif not game.planted.is_empty():
-		text = "Growing\nbell at %d" % int(manager.threshold)
+		text = "Growing - bell at %d" % int(manager.threshold)
 		tip = "Planted. The bell rings by itself when hype reaches %d." % int(manager.threshold)
 	elif not manager.enabled:
 		text = "Bell off"
 		tip = "The auto bell is off (see the manager)."
 	elif not Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup):
-		text = "Pick %d+\nfighters" % game.tuning.min_lineup
-		tip = "Pick the fighters to plant from the cards on the left."
+		text = "Tap the arena: pick %d+ fighters" % game.tuning.min_lineup
+		tip = "Tap the arena to pick the fighters to plant."
 	else:
-		text = "Hold to\nplant"
-		tip = "Hold to plant the selected fighters. Hype grows once they are planted; the bell rings at %d." % int(manager.threshold)
-	_bell.text = text
-	_bell.tooltip_text = tip
-	var ready: bool = series.is_empty() and game.planted.is_empty() and manager.enabled \
-			and Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup)
-	_bell.disabled = not ready
-	if not ready:
+		text = "Hold the arena to plant"
+		tip = "Hold the arena to plant the picked fighters. Tap it to change them. The bell rings at hype %d." % int(manager.threshold)
+	_status.text = text
+	_status.tooltip_text = tip
+	if not _can_plant():
 		_stop_hold()
 
 
-func _start_hold() -> void:
-	_hold = 0.0
+func _can_plant() -> bool:
+	return game.series.is_empty() and game.planted.is_empty() and game.state.manager.enabled 			and Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup)
+
+
+## Arena gestures (the shell forwards the pointer): a tap opens the seed tray, a hold plants.
+func press_arena() -> void:
+	_pressed_for = 0.0
+	_hold = 0.0 if _can_plant() else -1.0
+	_taps = true
+
+
+func release_arena() -> void:
+	var was_tap := _taps and _pressed_for < TAP_TIME
+	_stop_hold()
+	_taps = false
+	if was_tap and game.planted.is_empty() and game.series.is_empty():
+		toggle_drawer(&"seeds")
 
 
 func _stop_hold() -> void:
 	_hold = -1.0
-	_fill.value = 0.0
+	plant_progress.emit(0.0)
 
 
-## Hold-to-plant: the bar fills while the button is held; releasing early cancels.
 func _process(delta: float) -> void:
-	if _hold < 0.0:
+	if not _taps:
+		return
+	_pressed_for += delta
+	if _hold < 0.0 or _pressed_for < TAP_TIME:
 		return
 	_hold += delta
-	_fill.value = minf(1.0, _hold / HOLD_TIME)
+	plant_progress.emit(minf(1.0, _hold / HOLD_TIME))
 	if _hold >= HOLD_TIME:
+		_taps = false
 		_stop_hold()
 		game.plant()
 
 
-## The seed tray slides up whenever nothing is planted and tucks away once a lineup is planted.
+## The seed tray tucks away once a lineup is planted. It only pops up by itself when the pick is
+## unusable (tap the arena to open it otherwise): the last pick is remembered, so replanting is one hold.
 func _sync_tray() -> void:
-	_refresh_bell()
+	_refresh_status()
 	if not is_visible_in_tree():
 		return  # a drawer opened behind the main menu would be laid out against a hidden parent
 	if game.planted.is_empty() and game.series.is_empty():
-		if router.current == &"":
+		if router.current == &"" and not Roster.valid_lineup(game.state, game.tuning, game.state.preferred_lineup):
 			router.open(&"seeds")
 	elif router.current == &"seeds":
 		router.close()
@@ -233,7 +248,7 @@ func _on_fight_started(_info: Dictionary) -> void:
 	_excitement.set_multiplier(_multiplier_text(game.tuning.excitement_multipliers[0]))
 	_excitement.visible = true
 	_refresh_seats()
-	_refresh_bell()
+	_refresh_status()
 
 
 ## HP lives on the fighters in the arena; the HUD only follows excitement.
@@ -246,7 +261,7 @@ func _on_combat_event(event: Dictionary) -> void:
 func _on_fight_finished(result: Dictionary) -> void:
 	_excitement.visible = false
 	_refresh_seats()
-	_refresh_bell()
+	_refresh_status()
 	var winner := int(result.get("winner", -1))
 	if winner >= 0 and winner < game.hero_defs.size():
 		show_toast("trophy", "%s wins!  +%d gold (%s)  +%d fame" % [game.hero_defs[winner].display_name,
@@ -255,7 +270,7 @@ func _on_fight_finished(result: Dictionary) -> void:
 
 func _on_series_finished(result: Dictionary) -> void:
 	_refresh_seats()
-	_refresh_bell()
+	_refresh_status()
 	var winner := int(result.winner)
 	if winner >= 0:
 		var lost := 0

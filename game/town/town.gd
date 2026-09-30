@@ -5,6 +5,8 @@ extends Control
 
 signal scrolled(x: float)
 signal cell_clicked(cell: Vector2i)
+signal pressed(cell: Vector2i)  ## left button down on a cell (for hold gestures)
+signal released  ## left button up anywhere
 
 const CELL := 32
 const GRID := Vector2i(48, 8)
@@ -86,10 +88,13 @@ func _gui_input(event: InputEvent) -> void:
 			MOUSE_BUTTON_LEFT:
 				if event.pressed:
 					_press_position = event.position
-				elif event.position.distance_to(_press_position) <= CLICK_SLOP:
-					var cell := cell_for_point(event.position)
-					if Rect2i(Vector2i.ZERO, GRID).has_point(cell):
-						cell_clicked.emit(cell)
+					pressed.emit(cell_for_point(event.position))
+				else:
+					released.emit()
+					if event.position.distance_to(_press_position) <= CLICK_SLOP:
+						var cell := cell_for_point(event.position)
+						if Rect2i(Vector2i.ZERO, GRID).has_point(cell):
+							cell_clicked.emit(cell)
 			MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_LEFT:
 				if event.pressed and (event.shift_pressed or event.button_index == MOUSE_BUTTON_WHEEL_LEFT):
 					_scroll_by_user(scroll_x - WHEEL_STEP)
