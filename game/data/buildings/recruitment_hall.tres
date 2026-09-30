@@ -15,7 +15,7 @@ effect = 6.0
 
 [sub_resource type="Resource" id="Resource_l3"]
 script = ExtResource("2_lvl")
-cost = 900000
+cost = 1200000
 effect = 8.0
 
 [resource]

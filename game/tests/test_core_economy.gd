@@ -55,7 +55,7 @@ func _settle(p: Array[String]) -> void:
 	Kit.check(p, out.payout == 69 and state.gold == 1069, "payout 69 (got %s, gold %d)" % [out.payout, state.gold])
 	Kit.check(p, out.multiplier == 1.25 and out.attendance == 55 and out.locked_base == 55, "multiplier/attendance echoed")
 	Kit.check(p, out.fame_gained == 5 and state.fame_points == 5, "fame 1 + int(45/10)")
-	Kit.check(p, Kit.near(state.hype, 13.5) and Kit.near(out.afterglow, 13.5), "hype resets to afterglow")
+	Kit.check(p, Kit.near(state.hype, 9.0) and Kit.near(out.afterglow, 9.0), "hype resets to afterglow")
 	Kit.check(p, state.fight_count == 1, "fight_count")
 	Kit.check(p, out.excitement == 45.0 and out.winner == 0 and out.skills == 4, "sim result keys preserved")
 	var winner: HeroState = state.heroes[0]

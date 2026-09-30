@@ -50,6 +50,14 @@ static func game(fake: FakeSim = null) -> Node:
 	g.tuning.series_max_bouts = 1
 	g.tuning.series_pause = 0.0
 	g.tuning.series_fame_bonus = 0
+	# story rules are tested against the original round numbers; the shipped pacing lives in data/tuning.tres (docs/BALANCE.md)
+	g.tuning.story_start = 20.0
+	g.tuning.story_time_seconds = 6.0
+	g.tuning.story_streak_step = 25.0
+	g.tuning.story_rivalry_step = 20.0
+	g.tuning.story_grudge_step = 15.0
+	g.tuning.story_comeback_step = 15.0
+	g.tuning.story_legend_step = 10.0
 	g.autosave = false
 	g.save_path = SAVE_DIR + "/game_save.json"
 	if fake != null:
