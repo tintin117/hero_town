@@ -11,6 +11,10 @@ var fighter_tier := 0
 var heroes: Array[HeroState] = []
 var preferred_lineup: Array[int] = []
 var manager := {"enabled": false, "threshold": 0.0}
+## Built buildings: id (String) -> {level: int, cell: [x, y]}. Unbuilt ids are absent.
+var buildings := {}
+## Gym trainees: hero id (int) -> seconds since their last training payout.
+var training := {}
 var fight_count := 0
 var rng_seed_counter := 0
 
@@ -35,6 +39,7 @@ func to_dict() -> Dictionary:
 		"seats_tier": seats_tier, "fighter_tier": fighter_tier,
 		"heroes": heroes.map(func(h: HeroState) -> Dictionary: return h.to_dict()),
 		"preferred_lineup": preferred_lineup.duplicate(),
+		"buildings": buildings.duplicate(true), "training": _training_json(),
 		"manager": manager.duplicate(), "fight_count": fight_count, "rng_seed_counter": rng_seed_counter,
 	}
 
@@ -53,6 +58,20 @@ static func from_dict(d: Dictionary) -> GameState:
 		state.preferred_lineup.append(int(id))
 	var saved: Dictionary = d.get("manager", {})
 	state.manager = {"enabled": bool(saved.get("enabled", false)), "threshold": float(saved.get("threshold", 0.0))}
+	var saved_buildings: Dictionary = d.get("buildings", {})
+	for id: String in saved_buildings:
+		var b: Dictionary = saved_buildings[id]
+		state.buildings[id] = {"level": int(b.level), "cell": [int(b.cell[0]), int(b.cell[1])]}
+	var saved_training: Dictionary = d.get("training", {})
+	for id: Variant in saved_training:
+		state.training[int(id)] = float(saved_training[id])
 	state.fight_count = int(d.get("fight_count", 0))
 	state.rng_seed_counter = int(d.get("rng_seed_counter", 0))
 	return state
+
+
+func _training_json() -> Dictionary:
+	var result := {}
+	for id: int in training:
+		result[str(id)] = training[id]  # JSON keys are strings
+	return result

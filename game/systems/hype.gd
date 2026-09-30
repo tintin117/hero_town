@@ -4,8 +4,9 @@ extends RefCounted
 
 
 ## Exact solution of dH/dt = (max - H) / tau, so any step size gives the same curve.
-static func grow(hype: float, dt: float, t: Tuning) -> float:
-	return t.hype_max - (t.hype_max - hype) * exp(-dt / t.hype_tau)
+## `tau_mult` is the Promotion Office's shortening of tau (1.0 without one).
+static func grow(hype: float, dt: float, t: Tuning, tau_mult := 1.0) -> float:
+	return t.hype_max - (t.hype_max - hype) * exp(-dt / (t.hype_tau * tau_mult))
 
 
 static func attendance(seats: int, hype: float, t: Tuning) -> int:

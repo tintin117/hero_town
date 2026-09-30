@@ -1,5 +1,8 @@
 extends Node
 ## Autoload "Game": owns GameState, runs the sim clock, and is the whole write API (contract sections 2, 3, 5).
+## Gym rules: a trainee is owned, below the level cap and not in the planted lineup or the running series;
+## while the game runs (not paused, in any phase) it earns `gym_xp` every `gym_interval` seconds. Trainees
+## are never auto-recalled: `plant` and `book_fight` refuse them instead, and the level cap releases them.
 ## Testability: scripts run through --script have no autoloads, so tests do `Game.new()` and assign
 ## `events` (an Events instance), `save_path` and `sim` (a fake simulator) before calling commands.
 
@@ -48,6 +51,7 @@ func _physics_process(dt: float) -> void:
 ## One sim step. Idle: hype grows and the manager may book. Fighting: the playback clock runs and
 ## hype stays frozen. A step that crosses the end of a fight drops its leftover time.
 func advance(dt: float) -> void:
+	_train(dt)
 	if not fight.is_empty():
 		_play(dt)
 		return
@@ -59,7 +63,7 @@ func advance(dt: float) -> void:
 	if planted.is_empty():
 		return  # nothing planted, nothing grows
 	var before := state.hype
-	state.hype = Hype.grow(before, dt, tuning)
+	state.hype = Hype.grow(before, dt, tuning, Buildings.hype_tau_multiplier(state, catalog))
 	_hype_emit_acc += dt
 	if _hype_emit_acc >= tuning.hype_emit_interval and state.hype != before:
 		_hype_emit_acc = 0.0
@@ -82,7 +86,7 @@ func new_game() -> bool:
 
 
 func continue_game() -> bool:
-	var loaded := SaveStore.load_state(tuning, hero_defs.size(), save_path)
+	var loaded := SaveStore.load_state(tuning, hero_defs.size(), save_path, catalog)
 	if loaded.is_empty():
 		return false
 	state = loaded.state
@@ -110,7 +114,7 @@ func set_paused(value: bool) -> bool:
 ## Rings the bell: starts a series with the crowd hype has built (locked for every bout).
 ## `opts`: main_event (StringName), mods (combat mods), seed (int, tests; bout n uses seed + n).
 func book_fight(lineup: Array[int], opts := {}) -> bool:
-	if not fight.is_empty() or not series.is_empty() or not Roster.valid_lineup(state, tuning, lineup):
+	if not fight.is_empty() or not series.is_empty() or not Roster.valid_lineup(state, tuning, lineup) 			or _any_training(lineup):
 		return false
 	if not _simulator().is_valid():
 		return false
@@ -131,7 +135,7 @@ func book_fight(lineup: Array[int], opts := {}) -> bool:
 
 ## Plants the selected lineup: from now on hype grows, and the bell rings the series with these fighters.
 func plant() -> bool:
-	if not planted.is_empty() or not series.is_empty() or not fight.is_empty() 			or not Roster.valid_lineup(state, tuning, state.preferred_lineup):
+	if not planted.is_empty() or not series.is_empty() or not fight.is_empty() 			or not Roster.valid_lineup(state, tuning, state.preferred_lineup) or _any_training(state.preferred_lineup):
 		return false
 	planted = state.preferred_lineup.duplicate()
 	events.planted_changed.emit()
@@ -179,7 +183,7 @@ func set_manager(enabled: bool, threshold: float) -> bool:
 
 
 func recruit(hero_id: int) -> bool:
-	if not Roster.can_recruit(state, hero_defs, hero_id):
+	if not Roster.can_recruit(state, hero_defs, hero_id, hero_capacity()):
 		return false
 	_spend(hero_defs[hero_id].price)
 	state.heroes[hero_id].owned = true
@@ -214,10 +218,99 @@ func expand_fighters() -> bool:
 	return true
 
 
+## Places an unbuilt building at `cell` (its top-left) and pays its level-1 price.
+func build(id: StringName, cell: Vector2i) -> bool:
+	var cost := building_next_cost(id)
+	if building_level(id) != 0 or cost < 0 or not can_place(id, cell) or not can_afford(cost):
+		return false
+	_spend(cost)
+	state.buildings[String(id)] = {"level": 1, "cell": [cell.x, cell.y]}
+	_building_done(id, "%s built" % Buildings.def(catalog, id).display_name)
+	return true
+
+
+func upgrade(id: StringName) -> bool:
+	var cost := building_next_cost(id)
+	if building_level(id) == 0 or cost < 0 or not can_afford(cost):
+		return false
+	_spend(cost)
+	state.buildings[String(id)].level += 1
+	_building_done(id, "%s upgraded" % Buildings.def(catalog, id).display_name)
+	return true
+
+
+## Free. Moving onto its own spot is a successful no-op.
+func move_building(id: StringName, cell: Vector2i) -> bool:
+	if building_level(id) == 0 or not can_place(id, cell):
+		return false
+	if cell != building_cell(id):
+		state.buildings[String(id)].cell = [cell.x, cell.y]
+		events.building_changed.emit(id)
+		_autosave()
+	return true
+
+
+func assign_training(hero_id: int) -> bool:
+	if hero_id < 0 or hero_id >= state.heroes.size() or state.training.has(hero_id) 			or state.training.size() >= training_slots() or not state.heroes[hero_id].owned 			or state.heroes[hero_id].level >= tuning.level_cap or hero_id in planted 			or (not series.is_empty() and hero_id in series.lineup):
+		return false
+	state.training[hero_id] = 0.0
+	events.hero_changed.emit(hero_id)
+	_autosave()
+	return true
+
+
+func recall_training(hero_id: int) -> bool:
+	if not state.training.erase(hero_id):
+		return false
+	events.hero_changed.emit(hero_id)
+	_autosave()
+	return true
+
+
 # --- queries -------------------------------------------------------------------------------
 
 func can_afford(cost: int) -> bool:
 	return state.gold >= cost
+
+
+func building_level(id: StringName) -> int:
+	return Buildings.level(state, id)
+
+
+## (-1, -1) while unbuilt.
+func building_cell(id: StringName) -> Vector2i:
+	return Buildings.cell(state, id)
+
+
+func can_place(id: StringName, cell: Vector2i) -> bool:
+	return Buildings.can_place(state, catalog, id, cell)
+
+
+func building_at(cell: Vector2i) -> StringName:
+	return Buildings.building_at(state, catalog, cell)
+
+
+## Price of the next level, or -1 when maxed.
+func building_next_cost(id: StringName) -> int:
+	return Buildings.next_cost(state, catalog, id)
+
+
+func building_defs() -> Array[BuildingDef]:
+	return catalog.buildings
+
+
+func training_heroes() -> Array[int]:
+	var ids: Array[int] = []
+	ids.assign(state.training.keys())
+	return ids
+
+
+func training_slots() -> int:
+	return Buildings.training_slots(state, catalog)
+
+
+func hero_capacity() -> int:
+	return Buildings.hero_capacity(state, catalog)
 
 
 ## The crowd in the arena: the locked one during a series, otherwise what the bell would draw now.
@@ -293,8 +386,9 @@ func _settle() -> void:
 	var done := fight
 	fight = {}
 	var tier_before := Fame.tier(state.fame_points, tuning)
-	var out := Economy.settle(state, tuning, done.lineup, done.result, done.attendance, done.locked_base)
-	events.gold_changed.emit(state.gold, out.payout)
+	var out := Economy.settle(state, tuning, done.lineup, done.result, done.attendance, done.locked_base,
+			Buildings.concession_rate(state, catalog))
+	events.gold_changed.emit(state.gold, out.payout + out.concessions)
 	_hype_emit_acc = 0.0
 	events.hype_changed.emit(state.hype)
 	events.fame_changed.emit(state.fame_points, out.fame_tier)
@@ -337,6 +431,44 @@ func _count_bout(winner: int) -> Dictionary:
 	return result
 
 
+func _any_training(ids: Array[int]) -> bool:
+	return ids.any(func(id: int) -> bool: return state.training.has(id))
+
+
+## Gym: every trainee earns `gym_xp` per `gym_interval`; planted/series fighters and the capped are skipped.
+func _train(dt: float) -> void:
+	if state.training.is_empty():
+		return
+	var changed := false
+	var leveled := false
+	for id: int in state.training.keys():
+		var hero := state.heroes[id]
+		if id in planted or (not series.is_empty() and id in series.lineup):
+			continue
+		state.training[id] += dt
+		while state.training[id] >= tuning.gym_interval and hero.level < tuning.level_cap:
+			state.training[id] -= tuning.gym_interval
+			var before := hero.level
+			Roster.award_xp(hero, tuning.gym_xp, tuning)
+			leveled = leveled or hero.level > before
+			changed = true
+			events.hero_changed.emit(id)
+		if hero.level >= tuning.level_cap:
+			state.training.erase(id)
+			changed = true
+			events.hero_changed.emit(id)
+	if leveled:
+		events.roster_changed.emit()
+	if changed:
+		_autosave()
+
+
+func _building_done(id: StringName, text: String) -> void:
+	events.building_changed.emit(id)
+	events.toast.emit(text, &"building")
+	_autosave()
+
+
 func _spend(cost: int) -> void:
 	state.gold -= cost
 	events.gold_changed.emit(state.gold, -cost)
@@ -357,3 +489,5 @@ func _announce() -> void:
 	events.planted_changed.emit()
 	for id in state.heroes.size():
 		events.hero_changed.emit(id)
+	for def in catalog.buildings:
+		events.building_changed.emit(def.id)

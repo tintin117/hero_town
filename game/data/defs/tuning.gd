@@ -50,3 +50,15 @@ extends Resource
 
 @export_group("Manager")
 @export var manager_threshold := 0.0
+
+@export_group("Buildings")
+@export var grid_columns := 0  ## town grid width in cells (the town spans grid_columns x grid_rows)
+@export var grid_rows := 0
+@export var land_first_col := 0  ## owned land, inclusive columns; buildings go on rows 0..path_row-1
+@export var land_last_col := 0
+@export var arena_first_col := 0  ## the arena reserves these columns on every row
+@export var arena_last_col := 0
+@export var path_row := 0  ## public path along the bottom, not buildable
+@export var hall_base_capacity := 0  ## owned-hero cap before a Recruitment Hall
+@export var gym_xp := 0  ## XP a trainee earns every gym_interval
+@export var gym_interval := 1.0  ## seconds

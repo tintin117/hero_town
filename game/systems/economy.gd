@@ -36,11 +36,12 @@ static func fighters_cost(state: GameState, t: Tuning) -> int:
 ## Applies a finished fight to `state` (gold, XP, wins, fame, hype) exactly once and returns
 ## the sim result extended with everything that changed. `result` is the simulator's dictionary.
 static func settle(state: GameState, t: Tuning, lineup: Array[int], result: Dictionary,
-		attendance: int, locked_base: int) -> Dictionary:
+		attendance: int, locked_base: int, concession_rate := 0.0) -> Dictionary:
 	var excitement := float(result.get("excitement", 0.0))
 	var winner := int(result.get("winner", -1))
 	var multiplier := excitement_multiplier(excitement, t)
 	var payout := roundi(locked_base * multiplier)
+	var concessions := roundi(attendance * concession_rate)  # Restaurant gold per attendee, outside the multiplier
 	var fame_before := Fame.tier(state.fame_points, t)
 	var fame_gain := Fame.gained(excitement, t)
 	var heroes: Array[Dictionary] = []
@@ -55,13 +56,13 @@ static func settle(state: GameState, t: Tuning, lineup: Array[int], result: Dict
 		var xp := Roster.award_xp(hero, t.xp_per_fight + (t.xp_win_bonus if won else 0), t)
 		heroes.append({"id": id, "won": won, "xp": xp.xp, "level_before": xp.before, "level": xp.after,
 			"wins": hero.wins, "losses": hero.losses, "streak": hero.streak})
-	state.gold += payout
+	state.gold += payout + concessions
 	state.fame_points += fame_gain
 	state.fight_count += 1
 	state.hype = Hype.afterglow(excitement, t)
 	var out := result.duplicate()
 	out.merge({"lineup": lineup.duplicate(), "attendance": attendance, "locked_base": locked_base,
-		"multiplier": multiplier, "payout": payout, "fame_gained": fame_gain,
+		"multiplier": multiplier, "payout": payout, "concessions": concessions, "fame_gained": fame_gain,
 		"fame_points": state.fame_points, "fame_tier_before": fame_before,
 		"fame_tier": Fame.tier(state.fame_points, t), "afterglow": state.hype, "heroes": heroes}, true)
 	return out

@@ -85,20 +85,22 @@ Skipping presentation gives identical outcomes (needed for offline progress late
 `book_fight(lineup: Array[int], opts := {}) -> bool` (`opts`: `main_event` story id, `prop` id),
 `set_preferred_lineup(ids)`, `toggle_lineup(id)`, `plant()`, `uproot()`, `set_manager(enabled, threshold)`,
 `recruit(hero_id)`, `assign_training(hero_id)`, `recall_training(hero_id)`,
-`build(building_id, cell)`, `upgrade(building_id)`, `move_building(building_id, cell)`,
+`build(building_id, cell)` (unbuilt only, valid cell, pays level 1), `upgrade(building_id)`, `move_building(building_id, cell)` (free; onto its own spot is a silent success),
 `buy_prop(prop_id)`, `select_prop(prop_id)`, `expand_seats()`, `expand_fighters()`.
 
-Queries: `Game.state`, `Game.can_afford(cost)`, `Game.preview(lineup, opts) -> {stars_min, stars_max, income_min, income_max}`, `Game.attendance_if_booked_now()`.
+Every building command emits `building_changed(id)`, autosaves and returns `false` (no throw) on invalid input. `assign_training(hero_id)` needs a free gym slot and an owned, uncapped hero who is not planted or in the running series; `plant()` and `book_fight` refuse trainees (no auto-recall); trainees earn `gym_xp` every `gym_interval` s whenever the game runs and are released at the level cap. `recruit` refuses at `hero_capacity()`.
+
+Queries: `Game.state`, `Game.can_afford(cost)`, `building_level(id) -> int` (0 = unbuilt), `building_cell(id) -> Vector2i` ((-1, -1) unbuilt), `can_place(id, cell)`, `building_at(cell) -> StringName` (`&""` = none), `building_next_cost(id)` (-1 = maxed), `building_defs()`, `training_heroes() -> Array[int]`, `training_slots()`, `hero_capacity()`, `Game.preview(lineup, opts) -> {stars_min, stars_max, income_min, income_max}`, `Game.attendance_if_booked_now()`.
 
 ## 6. `GameState` (single serialisable Resource)
 
-`gold`, `hype`, `fame_points`, `seats_tier`, `fighter_tier`, `heroes: Array[HeroState]` (`owned, level, xp, wins, losses, streak, training_elapsed`), `preferred_lineup`, `buildings: Dictionary` (id → `{level, cell}`), `manager: {enabled, threshold}`, `stories: Array`, `props: {owned, selected}`, `fight_count`, `afterglow_pending`, `rng_seed_counter`. `save_store` writes JSON via temp file + backup at `user://fight_club_save.json`, version `1`; corrupt primary falls back to the backup. No offline progress in this scope.
+`gold`, `hype`, `fame_points`, `seats_tier`, `fighter_tier`, `heroes: Array[HeroState]` (`owned, level, xp, wins, losses, streak`), `preferred_lineup`, `buildings: Dictionary` (id String → `{level: 1..3, cell: [x, y]}`, absent = unbuilt), `training: Dictionary` (hero id → seconds since the last gym payout), `manager: {enabled, threshold}`, `stories: Array`, `props: {owned, selected}`, `fight_count`, `afterglow_pending`, `rng_seed_counter`. `save_store` writes JSON via temp file + backup at `user://fight_club_save.json`, version `1`; corrupt primary falls back to the backup. `buildings` / `training` are optional in old saves (default empty); when present, `SaveStore.decode` rejects an unknown building id, a level outside 1..3, a cell off the buildable land or overlapping the arena or another building, and trainees that are unowned, past the interval or exceed the gym slots. No offline progress in this scope.
 
 ## 7. Content schemas (`data/defs/`)
 
 - `HeroDef`: `id, display_name, unit, red, health, attack, ranged, skill: SkillDef, price, trait_ids`.
 - `SkillDef`: `name, kind (strike|sweep|heal|drain), power, description`.
-- `BuildingDef`: `id, display_name, footprint: Vector2i, unlock_tier, levels: Array[BuildingLevel]` (`cost, effects: Dictionary`).
+- `BuildingDef`: `id: StringName, display_name, description, footprint: Vector2i, levels: Array[BuildingLevel]`; `BuildingLevel`: `cost: int, effect: float` (one number per level). Catalog holds `buildings: Array[BuildingDef]` (`data/buildings/*.tres`). The `Buildings` system (`systems/buildings.gd`) gives each id its meaning: `promotion_office` = hype tau multiplier (`Hype.grow`), `recruitment_hall` = owned-hero capacity (`Roster.can_recruit`; baseline `Tuning.hall_base_capacity`), `gym` = training slots (`gym_xp` per `gym_interval`), `restaurant` = gold per attendee at bout settlement (`Economy.settle` returns `concessions`, paid outside the excitement multiplier). Unbuilt = neutral (1.0 / baseline / 0 / 0). Grid (48x8, owned columns 10..37, arena columns 16..31, path row 7) is in `Tuning` (`grid_*`, `land_*`, `arena_*`, `path_row`).
 - `PropDef`: `id, display_name, icon, base_price, effect: Dictionary`.
 - `TraitDef`: `id, display_name, icon, effect: Dictionary`.
 - `StoryDef`: `id, kind, create_rule, ripen_rule`, `Tuning`: hype `tau`, base attendance floor, afterglow factor, story caps, fame tiers.

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://game/data/defs/building_def.gd" id="1_def"]
+[ext_resource type="Script" path="res://game/data/defs/building_level.gd" id="2_lvl"]
+
+[sub_resource type="Resource" id="Resource_l1"]
+script = ExtResource("2_lvl")
+cost = 200
+effect = 5.0
+
+[sub_resource type="Resource" id="Resource_l2"]
+script = ExtResource("2_lvl")
+cost = 350
+effect = 6.0
+
+[sub_resource type="Resource" id="Resource_l3"]
+script = ExtResource("2_lvl")
+cost = 900000
+effect = 8.0
+
+[resource]
+script = ExtResource("1_def")
+id = &"recruitment_hall"
+display_name = "Recruitment Hall"
+description = "Room for more heroes on the roster."
+footprint = Vector2i(3, 2)
+levels = Array[ExtResource("2_lvl")]([SubResource("Resource_l1"), SubResource("Resource_l2"), SubResource("Resource_l3")])

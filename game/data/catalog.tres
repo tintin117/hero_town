@@ -1,8 +1,13 @@
-[gd_resource type="Resource" script_class="Catalog" load_steps=12 format=3]
+[gd_resource type="Resource" script_class="Catalog" load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://game/data/defs/catalog.gd" id="1_cat"]
 [ext_resource type="Script" path="res://game/data/defs/hero_def.gd" id="2_hero"]
 [ext_resource type="Resource" path="res://game/data/tuning.tres" id="3_tun"]
+[ext_resource type="Script" path="res://game/data/defs/building_def.gd" id="4_bdef"]
+[ext_resource type="Resource" path="res://game/data/buildings/promotion_office.tres" id="b0"]
+[ext_resource type="Resource" path="res://game/data/buildings/recruitment_hall.tres" id="b1"]
+[ext_resource type="Resource" path="res://game/data/buildings/gym.tres" id="b2"]
+[ext_resource type="Resource" path="res://game/data/buildings/restaurant.tres" id="b3"]
 [ext_resource type="Resource" path="res://game/data/heroes/0_bram.tres" id="h0"]
 [ext_resource type="Resource" path="res://game/data/heroes/1_ivo.tres" id="h1"]
 [ext_resource type="Resource" path="res://game/data/heroes/2_nia.tres" id="h2"]
@@ -16,3 +21,4 @@
 script = ExtResource("1_cat")
 tuning = ExtResource("3_tun")
 heroes = Array[ExtResource("2_hero")]([ExtResource("h0"), ExtResource("h1"), ExtResource("h2"), ExtResource("h3"), ExtResource("h4"), ExtResource("h5"), ExtResource("h6"), ExtResource("h7")])
+buildings = Array[ExtResource("4_bdef")]([ExtResource("b0"), ExtResource("b1"), ExtResource("b2"), ExtResource("b3")])

@@ -5,6 +5,7 @@ extends RefCounted
 
 const VERSION := 1
 const DEFAULT_PATH := "user://fight_club_save.json"
+const CATALOG_PATH := "res://game/data/catalog.tres"  # building footprints, when the caller passes no catalog
 const MAX_INT := 1000000000000000
 const MAX_BYTES := 100000  # ponytail: sanity cap against garbage files; raise if the state ever grows
 
@@ -29,15 +30,16 @@ static func save(state: GameState, path: String = DEFAULT_PATH) -> Error:
 
 
 ## Returns {state, recovered} (recovered = read from the backup), or {} when nothing valid exists.
-static func load_state(t: Tuning, hero_count: int, path: String = DEFAULT_PATH) -> Dictionary:
+static func load_state(t: Tuning, hero_count: int, path: String = DEFAULT_PATH, catalog: Catalog = null) -> Dictionary:
 	for candidate in [[path, false], [path + ".bak", true]]:
-		var state := decode(_parse(candidate[0]), t, hero_count)
+		var state := decode(_parse(candidate[0]), t, hero_count, catalog)
 		if state != null:
 			return {"state": state, "recovered": candidate[1]}
 	return {}
 
 
-static func decode(data: Dictionary, t: Tuning, hero_count: int) -> GameState:
+## `buildings` and `training` are optional (older saves), but when present they must be consistent.
+static func decode(data: Dictionary, t: Tuning, hero_count: int, catalog: Catalog = null) -> GameState:
 	if not _int(data.get("version"), VERSION, VERSION) or not data.get("state") is Dictionary:
 		return null
 	var s: Dictionary = data.state
@@ -58,7 +60,16 @@ static func decode(data: Dictionary, t: Tuning, hero_count: int) -> GameState:
 	for hero: Variant in heroes:
 		if not _valid_hero(hero, t):
 			return null
+	if catalog == null:
+		catalog = load(CATALOG_PATH)
+	if not _valid_buildings(s.get("buildings", {}), catalog) or not _valid_training(s.get("training", {}), heroes, t):
+		return null
 	var state := GameState.from_dict(s)
+	if state.training.size() > Buildings.training_slots(state, catalog):
+		return null
+	for id: String in state.buildings:  # symmetric overlap test, so one pass finds every clash
+		if not Buildings.can_place(state, catalog, StringName(id), Buildings.cell(state, StringName(id))):
+			return null
 	var seen := {}
 	for id: Variant in lineup:
 		if not _int(id, 0, hero_count - 1) or seen.has(int(id)) or not state.heroes[int(id)].owned:
@@ -67,6 +78,29 @@ static func decode(data: Dictionary, t: Tuning, hero_count: int) -> GameState:
 	if lineup.size() > t.fighter_tiers[state.fighter_tier]:
 		return null
 	return state
+
+
+static func _valid_buildings(buildings: Variant, catalog: Catalog) -> bool:
+	if not buildings is Dictionary:
+		return false
+	for id: Variant in buildings:
+		var d := Buildings.def(catalog, StringName(id)) if id is String else null
+		var b: Variant = buildings[id]
+		if d == null or not b is Dictionary or not _int(b.get("level"), 1, d.levels.size()):
+			return false
+		var cell: Variant = b.get("cell")
+		if not cell is Array or cell.size() != 2 or not _int(cell[0], 0, catalog.tuning.grid_columns) 				or not _int(cell[1], 0, catalog.tuning.grid_rows):
+			return false
+	return true
+
+
+static func _valid_training(training: Variant, heroes: Array, t: Tuning) -> bool:
+	if not training is Dictionary:
+		return false
+	for id: Variant in training:
+		if not id is String or not id.is_valid_int() or not _int(int(id), 0, heroes.size() - 1) 				or not heroes[int(id)].owned or not _number(training[id], 0.0, t.gym_interval) or training[id] >= t.gym_interval:
+			return false
+	return true
 
 
 static func _valid_hero(hero: Variant, t: Tuning) -> bool:

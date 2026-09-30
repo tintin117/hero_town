@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="BuildingDef" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://game/data/defs/building_def.gd" id="1_def"]
+[ext_resource type="Script" path="res://game/data/defs/building_level.gd" id="2_lvl"]
+
+[sub_resource type="Resource" id="Resource_l1"]
+script = ExtResource("2_lvl")
+cost = 100
+effect = 0.3
+
+[sub_resource type="Resource" id="Resource_l2"]
+script = ExtResource("2_lvl")
+cost = 300000
+effect = 0.8
+
+[sub_resource type="Resource" id="Resource_l3"]
+script = ExtResource("2_lvl")
+cost = 7000000
+effect = 1.5
+
+[resource]
+script = ExtResource("1_def")
+id = &"restaurant"
+display_name = "Restaurant"
+description = "Every fan buys a bite each bout."
+footprint = Vector2i(2, 2)
+levels = Array[ExtResource("2_lvl")]([SubResource("Resource_l1"), SubResource("Resource_l2"), SubResource("Resource_l3")])

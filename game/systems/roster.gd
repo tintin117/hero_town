@@ -37,8 +37,10 @@ static func owned_count(state: GameState) -> int:
 	return state.heroes.filter(func(h: HeroState) -> bool: return h.owned).size()
 
 
-static func can_recruit(state: GameState, defs: Array[HeroDef], id: int) -> bool:
-	return id >= 0 and id < defs.size() and not state.heroes[id].owned and state.gold >= defs[id].price
+## `capacity` is the Recruitment Hall's owned-hero cap.
+static func can_recruit(state: GameState, defs: Array[HeroDef], id: int, capacity := 1 << 30) -> bool:
+	return id >= 0 and id < defs.size() and not state.heroes[id].owned and state.gold >= defs[id].price \
+			and owned_count(state) < capacity
 
 
 static func valid_lineup(state: GameState, t: Tuning, lineup: Array[int]) -> bool:
