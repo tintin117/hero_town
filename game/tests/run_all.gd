@@ -13,7 +13,8 @@ func _init() -> void:
 		var script: GDScript = load("res://game/tests/" + file)
 		var problems: Array = ["script failed to load (parse error?)"]
 		if script != null and script.can_instantiate():
-			problems = script.new().run()
+			var result: Variant = script.new().run()
+			problems = result if result is Array else ["run() returned nothing (script error?)"]
 		print("%s %s" % ["PASS" if problems.is_empty() else "FAIL", file])
 		for message in problems:
 			print("  - ", message)

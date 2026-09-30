@@ -58,7 +58,7 @@ func _set_gold(gold: int) -> void:
 
 
 func _set_level(id: StringName, level: int) -> void:
-	_game.levels[id] = level
+	Fake.set_level(_game, id, level)
 	_game.events.building_changed.emit(id)
 
 
@@ -91,16 +91,16 @@ func _states() -> void:
 		_check(_label(id, "Next") == "Next: " + Buildings.describe(_game.catalog, id, 1), "%s: next line describes level 1 (%s)" % [id, _label(id, "Next")])
 	_set_gold(300)
 	_check(not _entry(&"promotion_office").buy.disabled, "300 gold affords the 300 Promotion Office")
-	_check(_entry(&"gym").buy.disabled, "but not the 400 Gym")
+	_check(not _entry(&"gym").buy.disabled and _entry(&"recruitment_hall").buy.disabled == false, "the cheaper Gym and Hall are affordable too")
 	# built, mid level: Upgrade with the next cost, the pips, the Move button
 	_set_level(&"promotion_office", 2)
 	var e := _entry(&"promotion_office")
-	_check(e.buy.text.begins_with("Upgrade") and e.buy.cost == 2500 and e.buy.cost == _game.building_next_cost(&"promotion_office"), "level 2: Upgrade to level 3 (%s)" % e.buy.text)
+	_check(e.buy.text.begins_with("Upgrade") and e.buy.cost == 2000000 and e.buy.cost == _game.building_next_cost(&"promotion_office"), "level 2: Upgrade to level 3 (%s)" % e.buy.text)
 	_check(e.buy.disabled and _lit_pips(&"promotion_office") == 2, "level 2: two lit pips, upgrade unaffordable at 300 gold")
 	_check(e.move.visible, "built: Move shows")
 	_check(_label(&"promotion_office", "Now") == Buildings.describe(_game.catalog, &"promotion_office", 2), "current effect text: %s" % _label(&"promotion_office", "Now"))
 	_check(_label(&"promotion_office", "Next") == "Next: " + Buildings.describe(_game.catalog, &"promotion_office", 3), "next effect text: %s" % _label(&"promotion_office", "Next"))
-	_set_gold(5000)
+	_set_gold(3000000)
 	_check(not e.buy.disabled, "upgrade affordable with gold")
 	# maxed
 	_set_level(&"promotion_office", 3)
@@ -113,7 +113,7 @@ func _states() -> void:
 
 
 func _actions() -> void:
-	_set_gold(10000)
+	_set_gold(100000)
 	_drawer.open()
 	_entry(&"restaurant").buy.pressed.emit()
 	_check(_placed == [[&"restaurant", false]], "Build asks for a placement (moving=false): %s" % [_placed])
@@ -126,8 +126,9 @@ func _actions() -> void:
 	_placed.clear()
 	_drawer.open()
 	var gold: int = _game.state.gold
+	var cost: int = _game.building_next_cost(&"promotion_office")
 	_entry(&"promotion_office").buy.pressed.emit()
-	_check(_game.upgrades == 1 and _game.building_level(&"promotion_office") == 2 and _game.state.gold == gold - 900, "Upgrade calls Game.upgrade")
+	_check(_game.building_level(&"promotion_office") == 2 and _game.state.gold == gold - cost, "Upgrade calls Game.upgrade")
 	_check(_placed.is_empty() and _drawer.is_open, "Upgrade asks for no placement and keeps the drawer open")
 	_check(_entry(&"promotion_office").level == 2 and _lit_pips(&"promotion_office") == 2, "the entry follows the upgrade through Events")
 	_drawer.close()
@@ -139,7 +140,7 @@ func _gym() -> void:
 	_check(training.hint.visible and training.hint.text.contains("Build the Gym"), "unbuilt Gym: hint says to build it (%s)" % training.hint.text)
 	_check(training.trainees.get_child_count() == 0 and training.candidates.get_child_count() == 0, "unbuilt Gym: nobody listed")
 	_check(training.modulate.a < 1.0, "unbuilt Gym: the section is dimmed")
-	_game.build(&"gym")  # level 1 = one slot
+	Fake.set_level(_game, &"gym", 1)  # level 1 = one slot
 	_check(training.modulate.a == 1.0 and _label(&"gym", "Now") == Buildings.describe(_game.catalog, &"gym", 1), "built Gym: enabled")
 	var candidates := training.candidates.get_children()
 	_check(candidates.size() == 2, "two owned benched fighters can be sent, got %d" % candidates.size())
@@ -172,7 +173,7 @@ func _gym() -> void:
 
 func _events_only() -> void:
 	# state changed behind the drawer's back: nothing redraws until an Events signal arrives
-	_game.levels[&"restaurant"] = 3
+	_game.state.buildings["restaurant"] = {"level": 3, "cell": Vector2i(14, 3)}
 	_check(_entry(&"restaurant").level == 0, "no redraw without a signal")
 	_game.events.building_changed.emit(&"restaurant")
 	_check(_entry(&"restaurant").level == 3 and _entry(&"restaurant").buy.text == "Max", "building_changed refreshes the entry")
@@ -182,7 +183,7 @@ func _events_only() -> void:
 	_game.state.heroes[3].owned = true
 	_game.events.roster_changed.emit()
 	_check(_drawer.training.candidates.get_child_count() == 3, "roster_changed picks up a new hero")
-	_game.levels.erase(&"restaurant")
+	Fake.set_level(_game, &"restaurant", 0)
 	_game.state.gold = 5000
 	_game.events.gold_changed.emit(5000, 5000)
 	_check(_entry(&"restaurant").buy.text.begins_with("Build") and not _entry(&"restaurant").buy.disabled, "gold_changed refreshes affordability")
@@ -208,8 +209,8 @@ func _layout_and_hud(size: Vector2i) -> void:
 		g.state.heroes[id].owned = true
 	g.state.gold = 1000000
 	for id in IDS:
-		g.levels[id] = 3
-	g.training = [0, 1, 2] as Array[int]
+		Fake.set_level(g, id, 3)
+	g.state.training = {0: 0.0, 1: 0.0, 2: 0.0}
 	var vp := SubViewport.new()
 	vp.size = size
 	(Engine.get_main_loop() as SceneTree).root.add_child(vp)

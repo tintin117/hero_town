@@ -80,14 +80,14 @@ func _hall_capacity() -> void:
 	_check(_drawer.club.text == "Club 3/3 heroes", "club line shows owned / capacity: %s" % _drawer.club.text)
 	_check(_drawer.entries[3].buy.disabled and _drawer.entries[3].buy.tooltip_text == "Recruitment Hall full - upgrade it", "full hall: recruit disabled with the reason")
 	_check(_drawer.entries[2].buy.tooltip_text == "" and not _drawer.entries[2].buy.visible, "an owned hero has no recruit button")
-	_game.capacity = 5
+	Fake.set_capacity(_game, 5)
 	_game.events.roster_changed.emit()
 	_check(_drawer.club.text == "Club 3/5 heroes", "club line follows the capacity: %s" % _drawer.club.text)
 	_check(not _drawer.entries[3].buy.disabled and _drawer.entries[3].buy.tooltip_text == "", "room in the hall: recruit works again")
-	_game.capacity = 3
+	Fake.set_capacity(_game, 3)
 	_game.events.roster_changed.emit()
 	_check(_drawer.entries[3].buy.disabled, "capacity back to 3: disabled again")
-	_game.capacity = 5
+	Fake.set_capacity(_game, 5)
 	_game.events.roster_changed.emit()
 
 

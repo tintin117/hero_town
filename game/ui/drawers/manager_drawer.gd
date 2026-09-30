@@ -64,4 +64,4 @@ func _estimate_text() -> String:
 		return "Bell rings now."
 	# Inverse of Hype.grow: time for hype to climb from `hype` to the threshold.
 	var t: Tuning = game.tuning
-	return "Bell in ~%d s" % ceili(t.hype_tau * log((t.hype_max - hype) / (t.hype_max - _slider.value)))
+	return "Bell in ~%d s" % ceili(t.hype_tau * Buildings.hype_tau_multiplier(game.state, game.catalog) * log((t.hype_max - hype) / (t.hype_max - _slider.value)))
