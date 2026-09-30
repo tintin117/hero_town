@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://game/ui/hud.gd" id="1"]
 [ext_resource type="Theme" path="res://game/ui/theme/fight_club_theme.tres" id="2"]
@@ -17,7 +17,6 @@
 [ext_resource type="Texture2D" path="res://resources/ui/icons/shield.png" id="15"]
 [ext_resource type="Texture2D" path="res://resources/ui/icons/hammer.png" id="16"]
 [ext_resource type="Texture2D" path="res://resources/ui/icons/scroll.png" id="17"]
-[ext_resource type="Texture2D" path="res://resources/ui/icons/lock.png" id="18"]
 
 [node name="Hud" type="Control"]
 layout_mode = 3
@@ -110,7 +109,22 @@ offset_bottom = 6.0
 mouse_filter = 2
 theme_type_variation = &"Pill"
 
-[node name="Text" type="Label" parent="Layout/Middle/Status"]
+[node name="Row" type="HBoxContainer" parent="Layout/Middle/Status"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="PropIcon" type="TextureRect" parent="Layout/Middle/Status/Row"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="Label" parent="Layout/Middle/Status/Row"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SmallLabel"
@@ -156,11 +170,11 @@ tip = "Build"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-disabled = true
 icon_texture = ExtResource("17")
-tip = "Stories: coming soon"
+tip = "Stories"
 
-[node name="Lock" parent="Layout/Middle/Tools/Stories" instance=ExtResource("7")]
+[node name="Ripe" parent="Layout/Middle/Tools/Stories" instance=ExtResource("7")]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -170,8 +184,6 @@ offset_top = -8.0
 offset_right = 10.0
 offset_bottom = 16.0
 grow_horizontal = 0
-tint = Color(0.45, 0.48, 0.55, 1)
-icon = ExtResource("18")
 
 [node name="Excitement" parent="Layout/Middle" instance=ExtResource("6")]
 unique_name_in_owner = true

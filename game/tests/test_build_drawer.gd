@@ -4,6 +4,7 @@ extends RefCounted
 
 const Kit := preload("res://game/tests/core_kit.gd")
 const Fake := preload("res://game/tests/fake_buildings.gd")
+const Stories := preload("res://game/tests/fake_stories.gd")  # the HUD part needs the stories contract too
 const SCENE := "res://game/ui/drawers/build_drawer.tscn"
 const IDS: Array[StringName] = [&"promotion_office", &"recruitment_hall", &"gym", &"restaurant"]
 
@@ -203,7 +204,7 @@ func _layout(n: Node) -> void:
 
 func _layout_and_hud(size: Vector2i) -> void:
 	var label := str(size)
-	var g: Node = Fake.make()
+	var g: Node = Stories.make()
 	g.new_game()
 	for id in range(2, 8):
 		g.state.heroes[id].owned = true

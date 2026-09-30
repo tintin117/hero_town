@@ -2,13 +2,14 @@ extends RefCounted
 ## Main menu (New Game / Continue / Quit, overwrite confirmation) and pause menu (pauses, saves, signals).
 
 const Kit := preload("res://game/tests/core_kit.gd")
+const Stories := preload("res://game/tests/fake_stories.gd")
 
 var problems: Array[String] = []
 
 
 func run() -> Array[String]:
 	problems.clear()
-	var g: Node = Kit.game(Kit.FakeSim.new())
+	var g: Node = Stories.make()
 	g.new_game()
 	Kit.clear_save_files(g.save_path)
 	_main_menu(g)

@@ -7,6 +7,8 @@ extends Control
 ## Shell API: signals main_menu_requested / quit_requested (forwarded from the pause menu), `router` (open drawers),
 ## open_pause(). Named nodes for tests: %Gold %Fame %Hype %Seats %Text (status) %Manager %Roster %Build %Excitement.
 ## Build: signal placement_requested(id, moving) for the shell, focus_building(id) from the town. Arena gestures: press_arena() / release_arena().
+## Stories: %Stories opens the stories drawer, its %Ripe badge counts ripe stories that are not the Main Event; the status pill
+## names the Main Event (and shows the prop icon, %PropIcon) of what is planted or running.
 
 signal main_menu_requested
 signal quit_requested
@@ -22,8 +24,9 @@ const DRAWERS := {
 	&"manager": "res://game/ui/drawers/manager_drawer.tscn",
 	&"seeds": "res://game/ui/drawers/seed_tray.tscn",
 	&"build": "res://game/ui/drawers/build_drawer.tscn",
+	&"stories": "res://game/ui/drawers/stories_drawer.tscn",
 }
-const TOAST_ICONS := {&"fame": "laurel", &"seats": "crowd", &"fighters": "shield", &"recruit": "sword"}
+const TOAST_ICONS := {&"fame": "laurel", &"seats": "crowd", &"fighters": "shield", &"recruit": "sword", &"story": "scroll"}
 
 var game: Node
 var events: Node
@@ -33,6 +36,8 @@ var _hold := -1.0  ## seconds the arena has been held for planting, -1 when not 
 var _pressed_for := 0.0
 var _taps := false  ## an arena press is in progress
 var _toasts := []  ## slot -> live toast; toasts stack upwards
+var _main_event := {}  ## the running series' Main Event {id, kind, title, ripeness, multiplier}, {} if none (kept for the last bout's toast)
+var _prop: StringName = &""  ## the prop the running series uses
 
 @onready var _gold: StatPill = %Gold
 @onready var _fame: StatPill = %Fame
@@ -40,6 +45,8 @@ var _toasts := []  ## slot -> live toast; toasts stack upwards
 @onready var _seats: StatPill = %Seats
 @onready var _excitement: ExcitementGauge = %Excitement
 @onready var _status: Label = %Text
+@onready var _prop_icon: TextureRect = %PropIcon
+@onready var _ripe_badge: Badge = %Ripe
 @onready var _pause: Control = %PauseMenu
 
 
@@ -66,12 +73,14 @@ func _ready() -> void:
 	%Manager.pressed.connect(toggle_drawer.bind(&"manager"))
 	%Roster.pressed.connect(toggle_drawer.bind(&"roster"))
 	%Build.pressed.connect(toggle_drawer.bind(&"build"))
+	%Stories.pressed.connect(toggle_drawer.bind(&"stories"))
 	router.drawer_changed.connect(_on_drawer_changed)
 	events.planted_changed.connect(_sync_tray)
-	events.series_started.connect(func(_info: Dictionary) -> void: _sync_tray())
+	events.series_started.connect(_on_series_started)
 	%Roster.disabled = not router.has_drawer(&"roster")
 	%Roster.tip = "Roster" if router.has_drawer(&"roster") else "Roster: coming soon"
 	%Build.disabled = not router.has_drawer(&"build")
+	%Stories.disabled = not router.has_drawer(&"stories")
 
 	events.gold_changed.connect(func(gold: int, _delta: int) -> void: _gold.set_value(gold))
 	events.hype_changed.connect(_on_hype)
@@ -83,6 +92,9 @@ func _ready() -> void:
 	events.fight_finished.connect(_on_fight_finished)
 	events.series_started.connect(func(_info: Dictionary) -> void: _refresh_seats(); _refresh_status())
 	events.series_finished.connect(_on_series_finished)
+	for signal_name in [&"story_changed", &"story_ripe", &"roster_changed", &"series_started", &"series_finished", &"planted_changed"]:
+		events.get(signal_name).connect(func(_a: Variant = null) -> void: _refresh_ripe_badge())
+	events.prop_changed.connect(_refresh_status)
 	events.paused_changed.connect(func(_paused: bool) -> void: _refresh_status())
 	events.toast.connect(func(text: String, icon: StringName) -> void: show_toast(TOAST_ICONS.get(icon, "info"), text))
 	sync_all()
@@ -96,6 +108,7 @@ func sync_all() -> void:
 	_refresh_manager()
 	_refresh_status()
 	_refresh_seats()
+	_refresh_ripe_badge()
 	_sync_tray()
 
 
@@ -191,7 +204,13 @@ func _refresh_status() -> void:
 	var series: Dictionary = game.series
 	var text := ""
 	var tip := ""
+	var main := ""
+	var prop: StringName = &""
 	if not series.is_empty():
+		_main_event = series.get("main_event", _main_event)
+		_prop = series.get("prop", _prop)
+		main = _main_event_text(_main_event)
+		prop = _prop
 		var score := []
 		var names := []
 		for id: int in series.lineup:
@@ -199,9 +218,16 @@ func _refresh_status() -> void:
 			names.append("%s %d" % [game.hero_defs[id].display_name, series.wins.get(id, 0)])
 		text = "Bout %d  %s" % [series.bout + 1, "-".join(score)]
 		tip = "First to %d wins.  %s" % [game.tuning.series_wins, "  ".join(names)]
+		if main != "":
+			text += "  " + main
 	elif not game.planted.is_empty():
+		var chosen := _story(game.main_event_id)
+		main = _main_event_text(chosen)
+		prop = game.selected_prop
 		text = "Growing - bell at %d" % int(manager.threshold)
 		tip = "Planted. The bell rings by itself when hype reaches %d." % int(manager.threshold)
+		if main != "":
+			text = "%s - bell at %d" % [main, int(manager.threshold)]
 	elif not manager.enabled:
 		text = "Bell off"
 		tip = "The auto bell is off (see the manager)."
@@ -213,8 +239,52 @@ func _refresh_status() -> void:
 		tip = "Hold the arena to plant the picked fighters. Tap it to change them. The bell rings at hype %d." % int(manager.threshold)
 	_status.text = text
 	_status.tooltip_text = tip
+	_show_prop(prop)
+	if main != "":
+		_status.tooltip_text += "  Main Event: every bout pays more."
 	if not _can_plant():
 		_stop_hold()
+
+
+## "Main Event: <title> x2.6" for a story or series dictionary, "" when there is none.
+func _main_event_text(story: Dictionary) -> String:
+	if story.is_empty():
+		return ""
+	var mult := float(story.get("multiplier", StoryLook.multiplier(float(story.get("ripeness", 0.0)))))
+	return "Main Event: %s %s" % [story.title, StoryLook.multiplier_text(mult)]
+
+
+func _story(id: int) -> Dictionary:
+	for story: Dictionary in game.stories():
+		if story.id == id:
+			return story
+	return {}
+
+
+func _show_prop(id: StringName) -> void:
+	_prop_icon.visible = id != &""
+	if _prop_icon.visible:
+		for def in game.prop_defs():
+			if def.id == id:
+				_prop_icon.texture = StoryLook.icon_named(def.icon_name)
+				_prop_icon.tooltip_text = "Prop: " + def.display_name
+
+
+## The Stories button's badge: ripe stories that are not already the Main Event.
+func _refresh_ripe_badge() -> void:
+	var n := 0
+	for story: Dictionary in game.stories():
+		if story.ripe and story.id != game.main_event_id:
+			n += 1
+	_ripe_badge.set_count(n)
+	_ripe_badge.pulsing = n > 0
+	%Stories.tip = "Stories: %d ripe" % n if n > 0 else "Stories"
+
+
+func _on_series_started(info: Dictionary) -> void:
+	_main_event = info.get("main_event", {})
+	_prop = info.get("prop", &"")
+	_sync_tray()
 
 
 func _can_plant() -> bool:
@@ -290,12 +360,16 @@ func _on_fight_finished(result: Dictionary) -> void:
 	var winner := int(result.get("winner", -1))
 	if winner >= 0 and winner < game.hero_defs.size():
 		var snacks := int(result.get("concessions", 0))
-		show_toast("trophy", "%s wins!  +%d gold (%s)  +%d fame%s" % [game.hero_defs[winner].display_name,
+		var main_mult := float(_main_event.get("multiplier", 1.0))
+		show_toast("trophy", "%s wins!  +%d gold (%s)  +%d fame%s%s" % [game.hero_defs[winner].display_name,
 				result.payout, _multiplier_text(result.multiplier), result.fame_gained,
+				"  Main Event %s" % _multiplier_text(main_mult) if main_mult > 1.0 else "",
 				"  +%d snacks" % snacks if snacks > 0 else ""], 4.0)
 
 
 func _on_series_finished(result: Dictionary) -> void:
+	_main_event = {}
+	_prop = &""
 	_refresh_seats()
 	_refresh_status()
 	var winner := int(result.winner)

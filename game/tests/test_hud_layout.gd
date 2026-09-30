@@ -3,6 +3,7 @@ extends RefCounted
 ## the bell status stays visible with a full 5-fighter lineup, and drawers fit between the bars.
 
 const Kit := preload("res://game/tests/core_kit.gd")
+const Stories := preload("res://game/tests/fake_stories.gd")
 const SIZES: Array[Vector2i] = [Vector2i(960, 420), Vector2i(1280, 420), Vector2i(1600, 560)]
 
 var problems: Array[String] = []
@@ -49,7 +50,7 @@ func _inside(items: Array[Control], window: Rect2, label: String) -> void:
 
 
 func _at_size(size: Vector2i) -> void:
-	var g: Node = Kit.game(Kit.FakeSim.new())
+	var g: Node = Stories.make()
 	g.new_game()
 	for id in range(2, 5):  # all five fighters owned, so the lineup can be full
 		g.state.heroes[id].owned = true
