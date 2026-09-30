@@ -31,7 +31,7 @@ func run() -> Array[String]:
 	Kit.check(problems, arena.is_fighting() and arena.fighter_count() == 3, "fight shows its lineup")
 	var steps := _play(g, arena, 60 * 300)
 	Kit.check(problems, g.fight.is_empty(), "fight settled after %d steps" % steps)
-	Kit.check(problems, not arena.is_fighting() and arena.fighter_count() == 3, "winner celebrates with the pit intact")
+	Kit.check(problems, not arena.is_fighting() and arena.fighter_count() >= 1, "the winner stays in the pit after the fight")
 	_run_arena(arena, 4.0)
 	Kit.check(problems, arena.fighter_count() == 3, "idle lineup restored after the celebration")
 

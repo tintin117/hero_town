@@ -2,7 +2,9 @@ extends Node2D
 ## Seating wings and spectators. One draw pass, no nodes per spectator.
 ## set_seats(seats) picks how many bench rows exist (a bigger arena tier shows more rows),
 ## set_attendance(n) how many of the seats are taken, cheer(strength) makes them jump.
+## `murmur` (between bouts) adds idle hops, emote bubbles and a wave; `loud` scales the cheering.
 
+const FONT := preload("res://fonts/PeaberryBase.ttf")
 const BASE := preload("res://asset/Sunnyside_World_Assets/Characters/Human/IDLE/base_idle_strip9.png")
 const HAIRS := [
 	preload("res://asset/Sunnyside_World_Assets/Characters/Human/IDLE/mophair_idle_strip9.png"),
@@ -23,6 +25,15 @@ const WING_WIDTH := 100.0
 const CENTER_Y := 140.0
 const RIGHT_EDGE := 512.0
 const GROW_SPEED := 40.0  # spectators per second while the crowd fills
+const EMOTES := ["!", "?", "$", "+"]
+const EMOTE_BUBBLES := 4
+const WAVE_SPEED := 190.0  # px/s; one sweep every ~3.7 s
+const WAVE_SPAN := 700.0
+
+## Between bouts: hops, bubbles and a wave. Set by the arena.
+var murmur := false
+## Cheer strength multiplier (announcer prop).
+var loud := 1.0
 
 var _rows := 0
 var _slots := PackedVector2Array()  # spectator feet, row by row, left wing then right wing
@@ -87,7 +98,7 @@ func _process(delta: float) -> void:
 	var before := int(_shown)
 	_shown = move_toward(_shown, _target, GROW_SPEED * delta)
 	var frame := int(_clock * 6.0)
-	if _cheer > 0.0 or int(_shown) != before or frame != _last_frame:
+	if murmur or _cheer > 0.0 or int(_shown) != before or frame != _last_frame:
 		_last_frame = frame
 		queue_redraw()
 
@@ -107,6 +118,9 @@ func _draw() -> void:
 	for i in _slots.size():
 		if _rank[i] < taken:
 			_draw_spectator(i)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if murmur:
+		_draw_emotes(taken)
 
 
 func _draw_wing(area: Rect2) -> void:
@@ -119,8 +133,7 @@ func _draw_wing(area: Rect2) -> void:
 
 func _draw_spectator(i: int) -> void:
 	var style := _style[i]
-	var bounce := maxf(0.0, sin(_clock * 8.0 + _phase[i])) * minf(_cheer, 1.0) * 5.0
-	var foot := _slots[i] - Vector2(0, bounce)
+	var foot := _slots[i] - Vector2(0, _lift(i))
 	var frame := (int(_clock * 6.0) + i) % 9
 	var source := Rect2(frame * FRAME.x + CROP.position.x, CROP.position.y, CROP.size.x, CROP.size.y)
 	var size := CROP.size * SCALE
@@ -129,3 +142,35 @@ func _draw_spectator(i: int) -> void:
 	var area := Rect2(Vector2(-size.x * 0.5, foot.y - FOOT_IN_CROP.y * SCALE), size)
 	draw_texture_rect_region(BASE, area, source, SKIN_COLORS[style % 4])
 	draw_texture_rect_region(HAIRS[style / 16], area, source, HAIR_COLORS[(style / 4) % 4])
+
+
+## How high spectator i is off its seat: cheering, plus hops and the wave while murmuring.
+func _lift(i: int) -> float:
+	var lift := maxf(0.0, sin(_clock * 8.0 + _phase[i])) * minf(_cheer, 1.0) * 5.0 * loud
+	if murmur:
+		lift += _hop(i) + _wave(_slots[i].x)
+	return lift
+
+
+func _hop(i: int) -> float:
+	var t := _clock * 1.3 + _phase[i]
+	return sin(fposmod(t, 1.0) * PI) * 3.0 if hash(i * 977 + int(t)) % 7 == 0 else 0.0
+
+
+func _wave(x: float) -> float:
+	var distance := absf(x - (fposmod(_clock * WAVE_SPEED, WAVE_SPAN) - 100.0))
+	return 5.0 * (0.5 + 0.5 * cos(distance / 40.0 * PI)) if distance < 40.0 else 0.0
+
+
+## A few speech bubbles over random seated spectators, changing every ~1.2 s.
+func _draw_emotes(taken: int) -> void:
+	for k in EMOTE_BUBBLES:
+		var beat := int(_clock * 0.8)
+		var i := hash(k * 31 + beat * 7) % _slots.size()
+		if _rank[i] >= taken:
+			continue
+		var top := _slots[i] + Vector2(-6.0, -_lift(i) - CROP.size.y * SCALE - 12.0)
+		var fade := clampf(sin(fposmod(_clock * 0.8, 1.0) * PI) * 3.0, 0.0, 1.0)
+		draw_rect(Rect2(top + Vector2(-1, -1), Vector2(16, 18)), Color("18222f", fade))
+		draw_rect(Rect2(top, Vector2(14, 16)), Color("fff0cf", fade))
+		draw_string(FONT, top + Vector2(0, 13), EMOTES[(k + beat) % EMOTES.size()], HORIZONTAL_ALIGNMENT_CENTER, 14, 16, Color("18222f", fade))

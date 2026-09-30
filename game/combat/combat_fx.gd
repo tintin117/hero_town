@@ -14,22 +14,29 @@ const CREAM := Color("fff0cf")
 const GREEN := Color("8cf5b6")
 const RED := Color("f4768c")
 const RING_TIME := 0.55
+const MAX_POPUPS := 10
 const LIFT := Vector2(0, -23)  # feet to chest
 
 ## Floating text is kept inside this rectangle so it never lands on the HUD above the arena.
 var bounds := Rect2(0, 0, 512, 256)
 var _rings: Array[Dictionary] = []
-var _slot := 0
+var _popups: Array = []  # live floating Labels (untyped: freed ones must be filtered out)
 
 
 func clear() -> void:
 	_rings.clear()
+	_popups.clear()
 	for child in get_children():
 		child.queue_free()
 	queue_redraw()
 
 
-func text(value: String, at: Vector2, color: Color, font_size := 16) -> void:
+## Floating text. Popups never stack on each other (each takes the first free spot around `at`)
+## and at most MAX_POPUPS live at once; `life` is how long it floats.
+func text(value: String, at: Vector2, color: Color, font_size := 16, life := 0.9) -> void:
+	_popups = _popups.filter(func(popup: Variant) -> bool: return is_instance_valid(popup) and not popup.is_queued_for_deletion())
+	while _popups.size() >= MAX_POPUPS:
+		_popups.pop_front().queue_free()
 	var label := Label.new()
 	label.text = value
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -38,21 +45,35 @@ func text(value: String, at: Vector2, color: Color, font_size := 16) -> void:
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color("18222f"))
 	label.add_theme_constant_override("outline_size", 4)
-	_slot = (_slot + 1) % 3  # fan simultaneous numbers sideways
 	var size := label.get_minimum_size()
-	var start := Vector2(at.x - size.x * 0.5 + (_slot - 1) * 16.0, at.y - _slot * 8.0)
-	start.x = clampf(start.x, bounds.position.x, bounds.end.x - size.x)
-	start.y = clampf(start.y, bounds.position.y + 4.0, bounds.end.y - size.y)
-	label.position = start
+	label.position = _free_spot(Vector2(at.x - size.x * 0.5, at.y), size)
 	add_child(label)
+	_popups.append(label)
 	var tween := label.create_tween().set_parallel()
-	tween.tween_property(label, "position:y", start.y - 26.0, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(label, "modulate:a", 0.0, 0.3).set_delay(0.6)
+	tween.tween_property(label, "position:y", label.position.y - 22.0, life).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, life * 0.4).set_delay(life * 0.6)
 	tween.chain().tween_callback(label.queue_free)
+
+
+func _free_spot(start: Vector2, size: Vector2) -> Vector2:
+	var spot := start
+	for offset: Vector2 in [Vector2.ZERO, Vector2(0, -1.1), Vector2(1.1, 0), Vector2(-1.1, 0), Vector2(1.1, -1.1), Vector2(-1.1, -1.1), Vector2(0, -2.2), Vector2(2.2, 0), Vector2(-2.2, 0)]:
+		spot = start + offset * size
+		spot.x = clampf(spot.x, bounds.position.x, bounds.end.x - size.x)
+		spot.y = clampf(spot.y, bounds.position.y + 4.0, bounds.end.y - size.y)
+		var rect := Rect2(spot, size).grow(1.0)
+		if not _popups.any(func(popup: Label) -> bool: return rect.intersects(Rect2(popup.position, popup.get_minimum_size()))):
+			break
+	return spot
 
 
 func hit(at: Vector2, big: bool) -> void:
 	_spawn(IMPACT, at + LIFT, 0.36 if big else 0.18, GOLD if big else CREAM, {"streak_count": 8 if big else 4})
+
+
+func firework(at: Vector2, color: Color) -> void:
+	_spawn(IMPACT, at, 0.9, color, {"star_points": 8, "streak_count": 18})
+	_spawn(SPARKLE, at, 1.2, color, {"star_count": 8})
 
 
 func sparkle(at: Vector2) -> void:
