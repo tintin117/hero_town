@@ -25,8 +25,9 @@ func _ready() -> void:
 	buy.pressed.connect(func() -> void: recruit_requested.emit(hero_id))
 
 
-## `xp_needed` is 0 at the level cap. `lineup_slot` is 1-based, 0 = not in the lineup.
-func show_hero(def: HeroDef, hero: HeroState, xp_needed: int, lineup_slot: int, affordable: bool) -> void:
+## `xp_needed` is 0 at the level cap. `lineup_slot` is 1-based, 0 = not in the lineup. `hall_full`: the
+## Recruitment Hall has no room, so recruiting is off whatever the gold.
+func show_hero(def: HeroDef, hero: HeroState, xp_needed: int, lineup_slot: int, affordable: bool, hall_full := false) -> void:
 	hero_id = def.id
 	owned = hero.owned
 	card.portrait = HeroPortraits.portrait(def.id)
@@ -39,6 +40,9 @@ func show_hero(def: HeroDef, hero: HeroState, xp_needed: int, lineup_slot: int, 
 	buy.visible = not owned
 	buy.cost = def.price
 	buy.unaffordable = not affordable
+	hall_full = hall_full and not owned
+	buy.disabled = buy.disabled or hall_full
+	buy.tooltip_text = "Recruitment Hall full - upgrade it" if hall_full else ""
 	var maxed := xp_needed == 0
 	_xp.max_value = 1.0 if maxed else xp_needed
 	_xp.value = _xp.max_value if maxed else hero.xp

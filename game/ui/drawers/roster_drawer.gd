@@ -17,6 +17,7 @@ var events: Node
 var entries: Array[RosterEntry] = []
 
 @onready var hint: Label = $Column/Body/Footer/Hint
+@onready var club: Label = $Column/Body/Footer/Club
 @onready var seats_buy: CostButton = $Column/Body/Footer/Seats/Buy
 @onready var fighters_buy: CostButton = $Column/Body/Footer/Fighters/Buy
 @onready var _row: HBoxContainer = $Column/Body/Scroll/Entries
@@ -57,11 +58,14 @@ func open() -> void:
 func refresh() -> void:
 	var s: GameState = game.state
 	var t: Tuning = game.tuning
+	var owned := Roster.owned_count(s)
+	var capacity: int = game.hero_capacity()
+	club.text = "Club %d/%d heroes" % [owned, capacity]
 	for i in entries.size():
 		var def: HeroDef = game.hero_defs[i]
 		var hero := s.heroes[i]
 		entries[i].show_hero(def, hero, Roster.xp_needed(hero.level, t), s.preferred_lineup.find(i) + 1,
-				game.can_afford(def.price))
+				game.can_afford(def.price), owned >= capacity)
 	_show_expansion($Column/Body/Footer/Seats, "Seats", t.seat_tiers, s.seats_tier, Economy.seats_cost(s, t))
 	_show_expansion($Column/Body/Footer/Fighters, "Fighters", t.fighter_tiers, s.fighter_tier, Economy.fighters_cost(s, t))
 	hint.text = _lineup_hint(s, t)

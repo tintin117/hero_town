@@ -5,11 +5,13 @@ extends Control
 ##
 ## `game` / `events` default to the autoloads (which do not exist under --script); tests assign them before add_child.
 ## Shell API: signals main_menu_requested / quit_requested (forwarded from the pause menu), `router` (open drawers),
-## open_pause(). Named nodes for tests: %Gold %Fame %Hype %Seats %Text (status) %Manager %Roster %Excitement. Arena gestures: press_arena() / release_arena().
+## open_pause(). Named nodes for tests: %Gold %Fame %Hype %Seats %Text (status) %Manager %Roster %Build %Excitement.
+## Build: signal placement_requested(id, moving) for the shell, focus_building(id) from the town. Arena gestures: press_arena() / release_arena().
 
 signal main_menu_requested
 signal quit_requested
 signal plant_progress(ratio: float)  ## 0..1 while the arena is held to plant
+signal placement_requested(id: StringName, moving: bool)  ## the build drawer asked to place / move a building (the shell asks the town)
 
 const ICONS := "res://resources/ui/icons/"
 const TOAST := preload("res://game/ui/components/toast.tscn")
@@ -19,6 +21,7 @@ const DRAWERS := {
 	&"roster": "res://game/ui/drawers/roster_drawer.tscn",
 	&"manager": "res://game/ui/drawers/manager_drawer.tscn",
 	&"seeds": "res://game/ui/drawers/seed_tray.tscn",
+	&"build": "res://game/ui/drawers/build_drawer.tscn",
 }
 const TOAST_ICONS := {&"fame": "laurel", &"seats": "crowd", &"fighters": "shield", &"recruit": "sword"}
 
@@ -62,10 +65,13 @@ func _ready() -> void:
 	events.planted_changed.connect(_refresh_status)
 	%Manager.pressed.connect(toggle_drawer.bind(&"manager"))
 	%Roster.pressed.connect(toggle_drawer.bind(&"roster"))
+	%Build.pressed.connect(toggle_drawer.bind(&"build"))
+	router.drawer_changed.connect(_on_drawer_changed)
 	events.planted_changed.connect(_sync_tray)
 	events.series_started.connect(func(_info: Dictionary) -> void: _sync_tray())
 	%Roster.disabled = not router.has_drawer(&"roster")
 	%Roster.tip = "Roster" if router.has_drawer(&"roster") else "Roster: coming soon"
+	%Build.disabled = not router.has_drawer(&"build")
 
 	events.gold_changed.connect(func(gold: int, _delta: int) -> void: _gold.set_value(gold))
 	events.hype_changed.connect(_on_hype)
@@ -105,6 +111,12 @@ func toggle_drawer(key: StringName) -> void:
 		router.open(key)
 
 
+## Opens the build drawer on a building's entry (the shell calls this when the player clicks a building in the town).
+func focus_building(id: StringName) -> void:
+	if router.open(&"build"):
+		(router.get_drawer(&"build") as BuildDrawer).focus(id)
+
+
 func show_toast(icon: String, text: String, life := 2.4) -> void:
 	var slot := _toasts.find_custom(func(t) -> bool: return not is_instance_valid(t))
 	if slot < 0:
@@ -124,6 +136,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") and router.current == &"" and not _pause.visible:
 		get_viewport().set_input_as_handled()
 		open_pause()
+
+
+## The build drawer is created lazily by the router: hook its placement request when it first opens.
+func _on_drawer_changed(key: StringName) -> void:
+	if key != &"build":
+		return
+	var drawer: BuildDrawer = router.get_drawer(key) as BuildDrawer
+	if not drawer.place_requested.is_connected(_on_place_requested):
+		drawer.place_requested.connect(_on_place_requested)
+
+
+func _on_place_requested(id: StringName, moving: bool) -> void:
+	placement_requested.emit(id, moving)
 
 
 # --- top bar ---------------------------------------------------------------------------------
@@ -264,8 +289,10 @@ func _on_fight_finished(result: Dictionary) -> void:
 	_refresh_status()
 	var winner := int(result.get("winner", -1))
 	if winner >= 0 and winner < game.hero_defs.size():
-		show_toast("trophy", "%s wins!  +%d gold (%s)  +%d fame" % [game.hero_defs[winner].display_name,
-				result.payout, _multiplier_text(result.multiplier), result.fame_gained], 4.0)
+		var snacks := int(result.get("concessions", 0))
+		show_toast("trophy", "%s wins!  +%d gold (%s)  +%d fame%s" % [game.hero_defs[winner].display_name,
+				result.payout, _multiplier_text(result.multiplier), result.fame_gained,
+				"  +%d snacks" % snacks if snacks > 0 else ""], 4.0)
 
 
 func _on_series_finished(result: Dictionary) -> void:

@@ -36,6 +36,11 @@ func open(key: StringName) -> bool:
 	return true
 
 
+## The drawer instance for `key` (created on first use), or null when it is not registered.
+func get_drawer(key: StringName) -> Drawer:
+	return _drawer(key) if has_drawer(key) else null
+
+
 func close() -> void:
 	if current != &"":
 		_drawers[current].close()  # its `closed` signal clears `current`

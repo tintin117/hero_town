@@ -2,6 +2,7 @@ extends RefCounted
 ## Roster drawer against a real Game + Events pair built by CoreKit (no autoloads under --script).
 
 const Kit := preload("res://game/tests/core_kit.gd")
+const Fake := preload("res://game/tests/fake_buildings.gd")  # the real Game plus the Recruitment Hall capacity
 const SCENE := "res://game/ui/drawers/roster_drawer.tscn"
 
 var problems: Array[String] = []
@@ -12,7 +13,7 @@ var _host: Control
 
 func run() -> Array[String]:
 	var tree := Engine.get_main_loop() as SceneTree
-	_game = Kit.game()
+	_game = Fake.make()
 	_host = Control.new()
 	_host.size = Vector2(1280, 272)
 	tree.root.add_child(_host)
@@ -23,6 +24,7 @@ func run() -> Array[String]:
 
 	_states()
 	_recruit()
+	_hall_capacity()
 	_lineup()
 	_expansions()
 	_events_only()
@@ -71,6 +73,22 @@ func _recruit() -> void:
 	_check(_game.state.heroes[2].owned and _game.state.gold == 900, "recruit went through Game (owned, 100 spent)")
 	_check(not _drawer.entries[2].buy.visible, "entry flips to owned after the signal")
 	_check(_drawer.entries[2].card.hero_name == "Nia" and not _drawer.entries[2].card.disabled, "recruited card is selectable")
+
+
+func _hall_capacity() -> void:
+	# Nia made it 3 of 3: the hall is full, so the other recruit buttons are off with a reason, whatever the gold
+	_check(_drawer.club.text == "Club 3/3 heroes", "club line shows owned / capacity: %s" % _drawer.club.text)
+	_check(_drawer.entries[3].buy.disabled and _drawer.entries[3].buy.tooltip_text == "Recruitment Hall full - upgrade it", "full hall: recruit disabled with the reason")
+	_check(_drawer.entries[2].buy.tooltip_text == "" and not _drawer.entries[2].buy.visible, "an owned hero has no recruit button")
+	_game.capacity = 5
+	_game.events.roster_changed.emit()
+	_check(_drawer.club.text == "Club 3/5 heroes", "club line follows the capacity: %s" % _drawer.club.text)
+	_check(not _drawer.entries[3].buy.disabled and _drawer.entries[3].buy.tooltip_text == "", "room in the hall: recruit works again")
+	_game.capacity = 3
+	_game.events.roster_changed.emit()
+	_check(_drawer.entries[3].buy.disabled, "capacity back to 3: disabled again")
+	_game.capacity = 5
+	_game.events.roster_changed.emit()
 
 
 func _lineup() -> void:

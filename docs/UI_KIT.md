@@ -72,3 +72,14 @@ HUD wiring: gold / fame / hype / crowd pills and the hype threshold marker follo
 Shell API: `hud.main_menu_requested`, `hud.quit_requested`, `hud.open_pause()`, `hud.router`, `hud.toggle_drawer(key)`, `hud.sync_all()`, `hud.show_toast(icon_name, text)`. ESC with no drawer open opens the pause menu. Drawers receive `game` / `events` from the router context, so a new drawer script only declares `var game: Node` / `var events: Node` and falls back to the autoloads.
 
 Tests: `test_hud_widgets.gd`, `test_hud_drawers.gd`, `test_hud_menus.gd`, `test_hud_layout.gd`. Screenshots (real window): `.godot/hud_demo.gd` -> `.godot/captures/hud_*.png`. A new `class_name` (`DrawerRouter`) needs one `godot --headless --path . --import` before scripts using it load from a cold class cache.
+
+## Build drawer (gate G3)
+
+`drawers/build_drawer.tscn` (`BuildDrawer`, key `&"build"`, bottom edge like the roster, <= 1240x264): a scrollable row of `build_entry.tscn` (`BuildEntry`: icon, name, three level pips, current effect, "Next:" effect, one `CostButton` = Build / Upgrade / Max, plus Move once built). The Gym entry carries `gym_training.tscn` (`GymTraining`, dumb view): "Training n/slots", trainee rows (portrait, name, Lv / XP hint, Recall) and a row of portrait buttons to send owned, benched, non-capped fighters that are not planted or in a series; unbuilt Gym = dimmed with a hint.
+
+- Reads `game.building_defs()`, `building_level()`, `building_next_cost()`, `can_afford()`, `training_slots()`, `training_heroes()`, text from `Buildings.describe(game.catalog, id, level)`. Writes only `game.upgrade(id)`, `assign_training(id)`, `recall_training(id)`. Refreshes from `building_changed`, `hero_changed`, `roster_changed`, `gold_changed`, `planted_changed`, `series_started`, `series_finished`.
+- `signal place_requested(id, moving)`: Build (moving=false) and Move (moving=true) close the drawer and leave `Game.build` / `move_building` to the shell after the town placement. `focus(id)` scrolls to an entry and rings it for 1.6 s.
+- HUD: `%Build` opens/toggles the drawer; `signal placement_requested(id, moving)` re-emits the drawer's request; `focus_building(id)` opens the drawer on that building (the shell calls it when a building is clicked in the town). `DrawerRouter.get_drawer(key)` returns the (lazily created) instance. The bout toast appends "+N snacks" when `result.concessions > 0`.
+- Roster drawer: footer shows "Club owned/capacity heroes" (`game.hero_capacity()`); with the hall full the recruit buttons are disabled with the tooltip "Recruitment Hall full - upgrade it".
+- Autowrap labels in drawers need a `custom_minimum_size.x`: at width 0 they report a huge min height on the first layout pass and the drawer keeps that size.
+- Tests: `test_build_drawer.gd` runs against `fake_buildings.gd` (the real Game plus the building contract); `.godot/build_demo.tscn` (git-ignored) captures `.godot/captures/build_*.png`.
