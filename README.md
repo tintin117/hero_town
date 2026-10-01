@@ -19,6 +19,7 @@ The loop is **plant → grow → bell → bo5 series → repeat**, like a farm.
 - **Build drawer:** Promotion Office, Recruitment Hall, Gym and Restaurant, three levels each. Pressing Build shows a placement ghost in the town (left-click to place, right-click or ESC to cancel); you are charged only once placed. Click a building to open its entry; **Move** repositions it. The Gym trains benched heroes.
 - **Manager drawer:** the bell threshold and an on/off switch for the auto bell. **Menu** (gear, or ESC) pauses and saves; Continue resumes. Closing the game grants no offline progress.
 - Scroll the town with the middle mouse button, Shift + wheel, or the scrollbar.
+- **Desktop strip:** the game docks as a solid, borderless, always-on-top panel on the bottom edge of the screen (above the taskbar), as wide as the town. Controls sit above the scenery. The chevron collapses it to just the status bar; drag the bar to re-dock at the top or bottom. Running inside the editor's embedded game view keeps a normal window.
 
 Combat is unchanged from the previous prototype and verified against its recorded numbers (`game/tests/golden.json`): auto-chasing fighters, one skill per hero template (Heavy Strike, Sweep, Snipe, Second Wind, Drain), overtime after 60 s, 5 % stat growth per level up to level 10. There is no stamina or injury in normal play.
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://game/ui/hud.gd" id="1"]
 [ext_resource type="Theme" path="res://game/ui/theme/fight_club_theme.tres" id="2"]
@@ -17,6 +17,9 @@
 [ext_resource type="Texture2D" path="res://resources/ui/icons/shield.png" id="15"]
 [ext_resource type="Texture2D" path="res://resources/ui/icons/hammer.png" id="16"]
 [ext_resource type="Texture2D" path="res://resources/ui/icons/scroll.png" id="17"]
+[ext_resource type="Texture2D" path="res://resources/ui/icons/chevron_down.png" id="18"]
+
+[sub_resource type="StyleBoxEmpty" id="StatusStyle"]
 
 [node name="Hud" type="Control"]
 layout_mode = 3
@@ -87,6 +90,15 @@ layout_mode = 2
 size_flags_vertical = 4
 icon = ExtResource("11")
 
+[node name="Collapse" parent="Layout/TopBar/Row" instance=ExtResource("5")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+icon_texture = ExtResource("18")
+tip = "Collapse to the bar"
+
 [node name="Menu" parent="Layout/TopBar/Row" instance=ExtResource("5")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(40, 40)
@@ -102,12 +114,14 @@ mouse_filter = 2
 
 [node name="Status" type="PanelContainer" parent="Layout/Middle"]
 layout_mode = 1
-offset_left = 8.0
-offset_top = 6.0
-offset_right = 8.0
-offset_bottom = 6.0
+anchor_right = 1.0
+offset_left = 12.0
+offset_top = 8.0
+offset_right = -634.0
+offset_bottom = 34.0
 mouse_filter = 2
 theme_type_variation = &"Pill"
+theme_override_styles/panel = SubResource("StatusStyle")
 
 [node name="Row" type="HBoxContainer" parent="Layout/Middle/Status"]
 layout_mode = 2
@@ -127,64 +141,80 @@ stretch_mode = 5
 [node name="Text" type="Label" parent="Layout/Middle/Status/Row"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_type_variation = &"SmallLabel"
 text = "Hold the arena to plant"
+text_overrun_behavior = 3
+clip_text = true
 
 [node name="Action" type="Button" parent="Layout/Middle"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(190, 44)
+custom_minimum_size = Vector2(174, 44)
 layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = -60.0
-offset_right = 200.0
-offset_bottom = -16.0
-grow_vertical = 0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -616.0
+offset_top = 8.0
+offset_right = -442.0
+offset_bottom = 52.0
+grow_horizontal = 0
 theme_type_variation = &"RedButton"
 text = "Plant"
 
-[node name="Tools" type="VBoxContainer" parent="Layout/Middle"]
+[node name="Tools" type="HBoxContainer" parent="Layout/Middle"]
 layout_mode = 1
-anchors_preset = 6
+anchors_preset = 1
 anchor_left = 1.0
-anchor_top = 0.5
 anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -54.0
-offset_top = -100.0
-offset_right = -8.0
-offset_bottom = 100.0
+offset_left = -430.0
+offset_top = 8.0
+offset_right = -12.0
+offset_bottom = 52.0
 grow_horizontal = 0
-grow_vertical = 2
 theme_override_constants/separation = 6
 
 [node name="Manager" parent="Layout/Middle/Tools" instance=ExtResource("5")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(44, 44)
+custom_minimum_size = Vector2(96, 44)
 layout_mode = 2
+theme_override_constants/icon_max_width = 20
+text = "Manage"
+icon_alignment = 0
+expand_icon = true
 icon_texture = ExtResource("14")
 tip = "Manager"
 
 [node name="Roster" parent="Layout/Middle/Tools" instance=ExtResource("5")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(44, 44)
+custom_minimum_size = Vector2(112, 44)
 layout_mode = 2
+theme_override_constants/icon_max_width = 20
+text = "Fighters"
+icon_alignment = 0
+expand_icon = true
 icon_texture = ExtResource("15")
 tip = "Roster"
 
 [node name="Build" parent="Layout/Middle/Tools" instance=ExtResource("5")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(44, 44)
+custom_minimum_size = Vector2(88, 44)
 layout_mode = 2
+theme_override_constants/icon_max_width = 20
+text = "Build"
+icon_alignment = 0
+expand_icon = true
 icon_texture = ExtResource("16")
 tip = "Build"
 
 [node name="Stories" parent="Layout/Middle/Tools" instance=ExtResource("5")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(44, 44)
+custom_minimum_size = Vector2(104, 44)
 layout_mode = 2
+theme_override_constants/icon_max_width = 20
+text = "Stories"
+icon_alignment = 0
+expand_icon = true
 icon_texture = ExtResource("17")
 tip = "Stories"
 
@@ -204,11 +234,10 @@ grow_horizontal = 0
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_top = 8.0
-grow_horizontal = 2
+offset_left = 12.0
+offset_top = 40.0
+offset_right = 272.0
+offset_bottom = 92.0
 mouse_filter = 2
 
 [node name="Drawers" type="Control" parent="Layout/Middle"]

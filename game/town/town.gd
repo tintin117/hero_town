@@ -1,7 +1,7 @@
 extends Control
 ## Scrollable town strip: 48x8 cells of 32 px (16 px art at 2x) shown through this control.
 ## Owned land is columns 10-37, the arena reserves 16-31, row 7 is the public path.
-## Pure view: it holds no game state. Dim outer land is drawn by oversized rects in `World/Dim`.
+## Pure view: it holds no game state. Dim outer land is drawn by rects in `World/Dim` (strip height, oversized sideways).
 
 signal scrolled(x: float)
 signal cell_clicked(cell: Vector2i)
@@ -18,6 +18,12 @@ const WHEEL_STEP := 96.0
 const CLICK_SLOP := 4.0
 
 var scroll_x := 0.0
+## Sit the town on the bottom edge, leaving room for the HUD controls above the scenery.
+var align_bottom := false:
+	set(v):
+		align_bottom = v
+		if is_node_ready():
+			_scroll_to(scroll_x)
 var placing := false  ## true while a building ghost follows the pointer; pressed/released/cell_clicked stay silent
 var _user_scrolled := false
 var _press_position := Vector2.ZERO
@@ -127,8 +133,10 @@ func _scroll_to(x: float) -> void:
 	scroll_x = clampf(roundf(x), 0.0, max_scroll())
 	# A control wider than the strip centres it; otherwise the strip slides under the clip.
 	var x_pos := -scroll_x if max_scroll() > 0.0 else floorf((size.x - WORLD_SIZE.x) / 2.0)
-	world.position = Vector2(x_pos, floorf((size.y - WORLD_SIZE.y) / 2.0))
 	bar.visible = max_scroll() > 0.0
+	var room := size.y - WORLD_SIZE.y
+	var y_pos := room - (bar.size.y if bar.visible else 0.0) if align_bottom else room / 2.0
+	world.position = Vector2(x_pos, floorf(y_pos))
 	bar.max_value = WORLD_SIZE.x
 	bar.page = minf(size.x, WORLD_SIZE.x)
 	bar.set_value_no_signal(scroll_x)

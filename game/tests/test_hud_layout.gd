@@ -77,14 +77,29 @@ func _at_size(size: Vector2i) -> void:
 	_check(top.size.y <= 60.0, "%s: the top bar keeps its height (%s)" % [label, top.size.y])
 	_check(middle.size.y >= 300.0, "%s: room left for the town (%s)" % [label, middle.size.y])
 	_no_overlap(_kids(hud.get_node("Layout/TopBar/Row")), "%s top bar" % label)
-	_inside(_kids(hud.get_node("Layout/TopBar/Row")), window, "%s top bar" % label)
-	_inside([hud.get_node("%Manager"), hud.get_node("%Roster"), hud.get_node("%Build"), hud.get_node("%Stories")] as Array[Control], middle.get_global_rect(), "%s tool column" % label)
+	_inside(_kids(hud.get_node("Layout/TopBar/Row")), top.get_global_rect(), "%s top bar" % label)
+	var tools: Control = hud.get_node("Layout/Middle/Tools")
+	var controls: Array[Control] = [hud.get_node("Layout/Middle/Status"), hud.get_node("%Action"), tools, hud.get_node("%Excitement")]
+	_no_overlap(controls, "%s town controls" % label)
+	_inside(controls, middle.get_global_rect(), "%s town controls" % label)
+	_no_overlap(_kids(tools), "%s tool buttons" % label)
+	_inside(_kids(tools), tools.get_global_rect(), "%s tool buttons" % label)
 	_check(hud.get_node("%Excitement").visible, "%s: excitement gauge visible in a fight" % label)
-	_inside([hud.get_node("%Excitement")] as Array[Control], middle.get_global_rect(), "%s excitement" % label)
-	_inside([hud.get_node("%Text")] as Array[Control], middle.get_global_rect(), "%s status pill" % label)
+	_inside([hud.get_node("%Text")] as Array[Control], controls[0].get_global_rect(), "%s status text" % label)
 	var drawer: Drawer = load("res://game/ui/drawers/manager_drawer.tscn").instantiate()
 	_check(drawer.panel_size.y + 2.0 * drawer.margin <= middle.size.y and drawer.panel_size.x + 2.0 * drawer.margin <= size.x,
 			"%s: the manager drawer fits between the bars" % label)
 	drawer.free()
+	var menu: Control = load("res://game/ui/main_menu.tscn").instantiate()
+	menu.game = g
+	vp.add_child(menu)
+	for i in 3:
+		_layout(menu)
+	var row: Control = menu.get_node("Center/Row")
+	_inside([row], window, "%s menu row" % label)
+	_no_overlap(_kids(row), "%s menu columns" % label)
+	var buttons: Array[Control] = [menu.get_node("%NewGame"), menu.get_node("%Continue"), menu.get_node("%Quit")]
+	_no_overlap(buttons, "%s menu buttons" % label)
+	_inside(buttons, row.get_global_rect(), "%s menu buttons" % label)
 	vp.free()
 	Kit.dispose(g)

@@ -18,7 +18,7 @@ func _init() -> void:
 	custom_minimum_size = Vector2(44, 44)
 	icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
-	focus_mode = Control.FOCUS_NONE  # mouse-first idle game; keeps the gold focus ring off click
+	focus_mode = Control.FOCUS_ALL
 
 
 ## Sets a toggle button's state without emitting `toggled`.

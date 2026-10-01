@@ -27,6 +27,11 @@ func run() -> Array[String]:
 	_book_button(hud, g, fake)
 	_fight(hud, g)
 	_action_button(hud, g)
+	hud.hide()
+	g.new_game()
+	hud.show()
+	hud.sync_all()
+	_check(not hud.get_node("%Excitement").visible, "starting a new club after a fight clears the old excitement gauge")
 	vp.free()
 	Kit.dispose(g)
 	return problems

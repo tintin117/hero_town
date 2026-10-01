@@ -9,6 +9,9 @@ The old prototype lives at git tag `prototype-fight-club-v1`; read it with `git 
 ```
 game/
   main.tscn, main.gd   thin shell: shows MainMenu, then World + HUD. No rules, no drawing.
+  desktop_strip.gd     shell helper for the OS window only: borderless, always-on-top strip docked to the top or
+                       bottom of the screen, opaque background (no Windows rendering cutout), collapse to the HUD bar,
+                       drag the bar to re-dock. Off when headless or embedded in the editor. Never reads GameState.
   data/                authored content as .tres; typed schemas in data/defs/*.gd
   core/                game_state.gd, events.gd (autoload "Events"), game.gd (autoload "Game"),
                        save_store.gd

@@ -32,6 +32,8 @@ func refresh() -> void:
 	var has := has_save()
 	_continue.disabled = not has
 	_continue.tooltip_text = "" if has else "No saved game yet"
+	if is_visible_in_tree():
+		(_continue if has else %NewGame).grab_focus()
 
 
 func has_save() -> bool:

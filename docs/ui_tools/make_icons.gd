@@ -47,6 +47,8 @@ func _init() -> void:
 	save("scroll", scroll())
 	save("calm", calm())
 	save("burst", burst())
+	save("chevron_down", chevron(false))
+	save("chevron_up", chevron(true))
 	var s := Image.create(sheet.size() * 36 * 4, 36 * 4, false, Image.FORMAT_RGBA8)
 	s.fill(Color("525b66"))
 	for i in sheet.size():
@@ -298,4 +300,16 @@ func burst() -> Image:
 		q.append(Vector2(16 + cos(a) * r, 16 + sin(a) * r))
 	c.poly(q, GOLD)
 	c.circle(16, 16, 3.6, GOLD_HI)
+	return fin(c)
+
+
+## A thick gold V (the desktop strip's collapse / expand button); `up` mirrors it.
+func chevron(up: bool) -> Image:
+	var c := canvas()
+	var y := func(v: float) -> float: return 32.0 - v if up else v
+	var pts := []
+	for p in [Vector2(3, 9), Vector2(10, 9), Vector2(16, 16), Vector2(22, 9), Vector2(29, 9), Vector2(16, 24)]:
+		pts.append(Vector2(p.x, y.call(p.y)))
+	c.poly(pts, GOLD)
+	c.rect(0, 16 if up else 19, 32, 5, GOLD_DK, true)
 	return fin(c)

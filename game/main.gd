@@ -17,6 +17,7 @@ func _ready() -> void:
 	var window := get_window()
 	window.title = "Fight club"
 	window.min_size = MIN_WINDOW
+	town.align_bottom = true
 	var arena := ARENA_SCENE.instantiate()
 	town.get_node("World/ArenaSlot").add_child(arena)
 	# The arena is the control surface: tap to pick fighters, hold to plant.
@@ -37,6 +38,13 @@ func _ready() -> void:
 	menu.quit_requested.connect(get_tree().quit)
 	hud.main_menu_requested.connect(_show_menu)
 	hud.quit_requested.connect(get_tree().quit)
+	if DesktopStrip.supported():
+		var strip := DesktopStrip.new()
+		strip.hud = hud
+		strip.town = town
+		strip.covering = func() -> bool: return menu.visible or hud.is_covering()
+		hud.collapse_requested.connect(strip.toggle_collapse)
+		add_child(strip)
 	_show_menu()
 
 
@@ -55,6 +63,8 @@ func _place(id: StringName, cell: Vector2i) -> void:
 
 
 func _show_menu() -> void:
+	town.cancel_placement()
+	hud.router.close()
 	Game.set_paused(true)
 	hud.hide()
 	menu.show()

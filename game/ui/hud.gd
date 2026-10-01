@@ -1,5 +1,5 @@
 extends Control
-## The in-game HUD: top bar (gold, fame, hype, crowd, menu), a status pill, a tool column (manager, roster, locked tabs),
+## The in-game HUD: top bar (gold, fame, hype, crowd, menu), status, a row of club tools,
 ## the fight excitement gauge, a drawer host and a toast layer. It never writes state: it calls Game commands
 ## and redraws from Events signals. Only its own widgets take the mouse, so the town below stays draggable.
 ##
@@ -9,11 +9,13 @@ extends Control
 ## Build: signal placement_requested(id, moving) for the shell, focus_building(id) from the town. Arena gestures: press_arena() / release_arena().
 ## Stories: %Stories opens the stories drawer, its %Ripe badge counts ripe stories that are not the Main Event; the status pill
 ## names the Main Event (and shows the prop icon, %PropIcon) of what is planted or running.
+## Desktop strip: set_collapse_state() shows %Collapse (it emits collapse_requested); is_covering() says a drawer or the pause menu is up.
 
 signal main_menu_requested
 signal quit_requested
 signal plant_progress(ratio: float)  ## 0..1 while the arena is held to plant
 signal placement_requested(id: StringName, moving: bool)  ## the build drawer asked to place / move a building (the shell asks the town)
+signal collapse_requested  ## the desktop strip's collapse / expand button
 
 const ICONS := "res://resources/ui/icons/"
 const TOAST := preload("res://game/ui/components/toast.tscn")
@@ -70,6 +72,7 @@ func _ready() -> void:
 	_excitement.tier_marks = marks
 
 	%Menu.pressed.connect(open_pause)
+	%Collapse.pressed.connect(collapse_requested.emit)
 	_action.pressed.connect(_on_action)
 	events.planted_changed.connect(_refresh_status)
 	%Manager.pressed.connect(toggle_drawer.bind(&"manager"))
@@ -104,6 +107,7 @@ func _ready() -> void:
 
 ## Redraws everything from `game.state` (also what new_game / continue_game trigger through Events).
 func sync_all() -> void:
+	_excitement.visible = not game.fight.is_empty()
 	_gold.value = game.state.gold
 	_hype.value = game.state.hype
 	_on_fame(game.state.fame_points, Fame.tier(game.state.fame_points, game.tuning))
@@ -117,6 +121,23 @@ func sync_all() -> void:
 func open_pause() -> void:
 	router.close()
 	_pause.open()
+
+
+## True while a drawer or the pause menu is open over the town.
+func is_covering() -> bool:
+	return router.current != &"" or _pause.visible
+
+
+## Desktop strip only: shows the collapse button, its chevron pointing the way the window edge will move.
+func set_collapse_state(collapsed: bool, dock_top: bool) -> void:
+	$Layout/Middle.visible = not collapsed
+	if collapsed:
+		_taps = false
+		_stop_hold()
+	var button: IconButton = %Collapse
+	button.show()
+	button.icon_texture = load(ICONS + ("chevron_up" if collapsed != dock_top else "chevron_down") + ".png")
+	button.tip = "Expand" if collapsed else "Collapse to the bar"
 
 
 func toggle_drawer(key: StringName) -> void:
@@ -148,7 +169,7 @@ func show_toast(icon: String, text: String, life := 2.4) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel") and router.current == &"" and not _pause.visible:
+	if is_visible_in_tree() and event.is_action_pressed("ui_cancel") and router.current == &"" and not _pause.visible:
 		get_viewport().set_input_as_handled()
 		open_pause()
 

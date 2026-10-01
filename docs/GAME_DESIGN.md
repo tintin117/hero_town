@@ -43,7 +43,7 @@ You start with two fighters (Bram and Ivo) and a small arena. The pitch to yours
 
 ## 3. Platform and session model
 
-- **Desktop strip window**, 1280×420 default, 960×420 minimum (reuse the Sunnyside town from the prototype).
+- **Desktop strip window**, 1280×420 default, 960×420 minimum (reuse the Sunnyside town from the prototype). Standalone it docks to the screen edge like a desktop idle game: borderless, always on top, up to the town's width, a solid backdrop with controls above the scenery, collapsible to the HUD bar.
 - **Idle by default.** Fights run automatically. The player checks in every few minutes for decisions and can leave for hours.
 - **Session shape:** minutes of waiting, a handful of decisions, then leave. A check-in should take 10–60 seconds.
 - **Offline progress:** capped, reduced and abstract (see [§10](#10-offline-progress)).
